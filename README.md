@@ -4,3 +4,4 @@
 ---
 ### 📅 250910
 - Github Repository 생성
+- CODEOWNERS TEST
