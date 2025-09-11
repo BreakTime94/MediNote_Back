@@ -10,3 +10,4 @@
 ### 📅 250911
 - Security Config 작성 중 
 - 기존 localstorage token 발급 방식 -> HttpOnly Cookie + samesite option 사용 방식으로 변환 결정)
+- github & discord webhook 작업
