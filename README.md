@@ -11,3 +11,10 @@
 - Security Config 작성 중 
 - 기존 localstorage token 발급 방식 -> HttpOnly Cookie + samesite option 사용 방식으로 변환 결정)
 - github & discord webhook 작업
+
+### 📅 250912
+- JWTUtil 작성 중 (Security Config 설정 이전에 필요한 정보 작성)
+- secret폴더 생성 및 관련 사항 gitignore 추가
+- JWTUtil 최초 TestCode 작성(실패 -> 이후 보완 필요) 
+
+
