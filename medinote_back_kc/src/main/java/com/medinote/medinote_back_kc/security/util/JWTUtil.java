@@ -39,7 +39,6 @@ public class JWTUtil {
     return generateToken(email, "refresh");
   }
 
-
   private String generateToken(String email, String category){
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + (category.equals("access") ? accessTokenExpiration : refreshTokenExpiration));
@@ -72,7 +71,7 @@ public class JWTUtil {
   public boolean isExpired(String token) {
     try {
       return getClaims(token).getExpiration().before(new Date());
-    } catch (Exception e) { // getClaims 자체가 오류가 터질 상황을 대비하여, try-catch로 감싼다.
+    } catch (Exception e) { // getClaims 자체가 오류가 터질 상황을 대비하여, try-catch로 감싼다. 그냥 오류 전부를 하나로 묶어서 catch 처리
       return true;
     }
   }
