@@ -17,4 +17,8 @@
 - secret폴더 생성 및 관련 사항 gitignore 추가
 - JWTUtil 최초 TestCode 작성(실패 -> 이후 보완 필요) 
 
+### 📅 250913
+- 오라클 서버 db table 생성 완료
 
+### 📅 250914
+- JWTUtil 작성 완료 및 Security config와 handler, filter 구조 구상 중
