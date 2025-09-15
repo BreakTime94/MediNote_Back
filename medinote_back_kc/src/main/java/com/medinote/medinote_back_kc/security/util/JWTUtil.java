@@ -30,20 +30,21 @@ public class JWTUtil {
 
   //accessToken 싱글톤 느낌으로
 
-  public String createAccessToken(String email) {
-    return generateToken(email, "access");
+  public String createAccessToken(Long id, String email) {
+    return generateToken(id, email, "access");
   }
 
   //refreshToken 싱글톤 느낌으로
-  public String createRefreshToken(String email) {
-    return generateToken(email, "refresh");
+  public String createRefreshToken(Long id, String email) {
+    return generateToken(id , email, "refresh");
   }
 
-  private String generateToken(String email, String category){
+  private String generateToken(Long id, String email, String category){
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + (category.equals("access") ? accessTokenExpiration : refreshTokenExpiration));
     return Jwts.builder()
-            .subject(email) // 이메일 값 (main key 값은 느낌, db의 pk를 쓸 때도 있다고 함)
+            .subject(id.toString())
+            .claim("email", email) // 이메일 값 (main key 값은 느낌, db의 pk를 쓸 때도 있다고 함)
             .claim("category", category) // 토큰 종류(access, refresh)
             .issuedAt(now)
             .expiration(expiryDate)
