@@ -1,4 +1,4 @@
-package com.medinote.medinote_back_kc.config;
+package com.medinote.medinote_back_kc.security.config;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +18,6 @@ public class SecurityConfig {
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
   }
-
 
 
 

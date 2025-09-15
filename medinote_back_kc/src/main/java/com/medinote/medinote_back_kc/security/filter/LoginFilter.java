@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.security.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,6 +10,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.util.Map;
 
 @Log4j2
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
@@ -20,9 +23,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
    log.info("attemptAuthentication");
 
    try {
+
+     ObjectMapper mapper = new ObjectMapper();
+
+     Map<String,String> map = mapper.readValue(request.getInputStream(), Map.class);
+
      //JSON 방식이면 email이랑 password 가져오는 방법의 변화가 필요함
-     String email = request.getParameter("email");
-     String pw = request.getParameter("password");
+     String email = map.get("email");
+     String pw = map.get("password");
 
      UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(email, pw);
       return getAuthenticationManager().authenticate(token);
