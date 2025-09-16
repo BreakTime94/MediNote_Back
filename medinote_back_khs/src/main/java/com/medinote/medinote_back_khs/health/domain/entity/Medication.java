@@ -30,4 +30,5 @@ public class Medication {
   @LastModifiedDate
   @Column(name = "mod_date")
   private LocalDateTime modDate;
+
 }

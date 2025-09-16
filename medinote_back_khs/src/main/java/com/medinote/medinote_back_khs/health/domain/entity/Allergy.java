@@ -2,7 +2,6 @@ package com.medinote.medinote_back_khs.health.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.mapstruct.Mapper;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -29,4 +28,5 @@ public class Allergy {
   @LastModifiedDate
   @Column(name = "mod_date")
   private LocalDateTime modDate;
+
 }

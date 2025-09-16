@@ -23,5 +23,4 @@ public class MemberChronicDisease extends BaseEntity {
   private Long chronicDiseaseId;  //기저질환 FK
 
   //regdate, modate -> BaseEntity 상속
-
 }

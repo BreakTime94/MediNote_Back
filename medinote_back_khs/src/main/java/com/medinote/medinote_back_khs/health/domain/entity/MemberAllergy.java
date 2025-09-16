@@ -22,4 +22,5 @@ public class MemberAllergy extends BaseEntity {
   @Column(nullable = false)
   private Long allergyId;
 
+
 }
