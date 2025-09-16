@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Getter @Setter
 @Table(name = "tbl_health_measurement")
-public class HealthMeasurement extends BaseEntity {
+public class Measurement extends BaseEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,21 +31,17 @@ public class HealthMeasurement extends BaseEntity {
   private boolean allergyYn;
   private boolean medicationYn;
 
-  @Column(precision = 5, scale = 2)
   private Double height;
 
-  @Column(precision = 5, scale = 2)
   private Double weight;
 
   private Integer bloodPressureSystolic;  //혈압(수축기 mmHg)
   private Integer bloodPressureDiastolic;    // 혈압(이완기 mmHg)
 
-  @Column(precision = 5, scale = 2)
   private Double bloodSugar;  // 혈당 (mg/dL)
 
   private Integer heartRate;   // 심박수 (bpm)
 
-  @Column(precision = 4, scale = 2)
   private Double sleepHours;  // 평균 수면시간 (시간)
 
   @Column(nullable = false)
