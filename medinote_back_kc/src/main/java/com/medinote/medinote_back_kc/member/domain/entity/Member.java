@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.member.domain.entity;
 
+import com.medinote.medinote_back_kc.member.domain.dto.UpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,15 +47,11 @@ public class Member {
   @Column
   private LocalDateTime deletedAt;
 
-  public void updateMember(String extraEmail, String nickname, String profileImagePath, String profileMimeType) {
-    this.extraEmail = extraEmail;
-    this.nickname = nickname;
-    this.profileImagePath = profileImagePath;
-    this.profileMimeType = profileMimeType;
-  }
-
-  public void updatePassword(String password) {
-    this.password = password;
+  public void changeMyPage(UpdateRequestDTO dto) { //프론트에서 변경 없는 값은 기존 값이 등록되게 설정
+    this.extraEmail = dto.getExtraEmail();
+    this.nickname = dto.getNickname();
+    this.profileImagePath = dto.getProfileImagePath();
+    this.profileMimeType = dto.getProfileMimeType();
   }
 
 }

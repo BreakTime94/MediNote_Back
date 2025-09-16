@@ -1,6 +1,6 @@
 package com.medinote.medinote_back_kc.member.mapper;
 
-import com.medinote.medinote_back_kc.member.domain.dto.MemberResponseDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.Member;
@@ -22,8 +22,15 @@ public interface MemberMapper {
   @Mapping(target = "status", ignore = true) // table 기본값 ACTIVE
   @Mapping(target = "regDate", ignore = true) // table 기본값 current timestamp
   @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
-  Member toMember(RegisterRequestDTO dto, @Context PasswordEncoder passwordEncoder);
+  Member toRegister(RegisterRequestDTO dto, @Context PasswordEncoder passwordEncoder);
 
   //id(pk), password, status, deleted_at 을 제외한 dto 구성
-  MemberResponseDTO toMemberDTO(Member member);
+  MemberDTO toMemberDTO(Member member);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "password", expression = "java(passwordEncoder.encode(dto.getPassword()))")
+  @Mapping(target = "regDate", ignore = true) // table 기본값 current timestamp
+  @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
+  Member toMember(MemberDTO dto);
+
 }

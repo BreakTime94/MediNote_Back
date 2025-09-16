@@ -27,20 +27,20 @@ public class JWTTokenTest {
   @Test
   public void testGenerateToken() {
     JWTUtil jwtUtil = new JWTUtil(jwtProperties);
-   log.info(" accesstoken 값: {}", jwtUtil.createAccessToken("kimchan9408@gmail.com"));
-   log.info(" accesstoken 값: {}", jwtUtil.createRefreshToken("kimchan9408@gmail.com"));
+//   log.info(" accesstoken 값: {}", jwtUtil.createAccessToken("kimchan9408@gmail.com"));
+//   log.info(" accesstoken 값: {}", jwtUtil.createRefreshToken("kimchan9408@gmail.com"));
   }
 
   @Test
   public void testGetProperties() {
     JWTUtil jwtUtil = new JWTUtil(jwtProperties);
-    String accTmp = jwtUtil.createAccessToken("kimchan9408@gmail.com");
-    String refTmp = jwtUtil.createRefreshToken("kimchan9408@gmail.com");
-    log.info("access token 내 payload 내 이메일 값 = {}",jwtUtil.getUserEmail(accTmp));
-    log.info("refresh token 내 payload 내 이메일 값 = {}",jwtUtil.getUserEmail(refTmp));
-
-    log.info("accessToken 내 payload 내 유효기간 만료됨? = {}",jwtUtil.isExpired(accTmp));
-    log.info("refreshToken 내 payload 내 유효기간 만료됨? = {}",jwtUtil.isExpired(refTmp));
+//    String accTmp = jwtUtil.createAccessToken("kimchan9408@gmail.com");
+//    String refTmp = jwtUtil.createRefreshToken("kimchan9408@gmail.com");
+//    log.info("access token 내 payload 내 이메일 값 = {}",jwtUtil.getUserEmail(accTmp));
+//    log.info("refresh token 내 payload 내 이메일 값 = {}",jwtUtil.getUserEmail(refTmp));
+//
+//    log.info("accessToken 내 payload 내 유효기간 만료됨? = {}",jwtUtil.isExpired(accTmp));
+//    log.info("refreshToken 내 payload 내 유효기간 만료됨? = {}",jwtUtil.isExpired(refTmp));
 
 
 

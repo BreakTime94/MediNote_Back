@@ -8,7 +8,5 @@ import lombok.Getter;
 public class AuthMemberDTO {
   private Long id;
   private String email;
-  private String password;
   private String role;
-  private String status;
 }
