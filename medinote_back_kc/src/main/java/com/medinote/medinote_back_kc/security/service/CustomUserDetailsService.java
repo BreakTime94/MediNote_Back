@@ -14,11 +14,9 @@ public class CustomUserDetailsService implements UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+    // CustomUserDetails(UserDetail 구현하여서 암묵적 형변환 가능)
+    Member member = memberRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("등록되지 않은 email 입니다."));
 
-    //Entity -> DTO 변환
-    AuthMemberDTO dto = AuthMemberDTO.builder()
-
-            .build();
-    return null;
+    return new CustomUserDetails(member);
   }
 }

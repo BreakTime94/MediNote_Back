@@ -66,7 +66,6 @@ public class JWTUtil {
   public String getUserEmail(String token) {
     return getClaims(token).getSubject();
   }
-  // access인지 refresh인지 확인하는 용도
 
   // 만료 여부
   public boolean isExpired(String token) {
