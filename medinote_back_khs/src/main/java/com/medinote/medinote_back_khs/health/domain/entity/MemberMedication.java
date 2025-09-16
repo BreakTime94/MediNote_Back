@@ -31,6 +31,4 @@ public class MemberMedication extends BaseEntity {
   private Boolean isCurrent = true; //현재 복용 여부
 
   //regdate, modate -> BaseEntity 상속
-
-
 }
