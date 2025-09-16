@@ -8,7 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController("/board")
+@RestController("/member")
 @Log4j2
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
@@ -18,11 +18,8 @@ public class MemberController {
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@RequestBody RegisterRequestDTO dto) {
-    return ResponseEntity.ok(service.register(dto));
+    service.register(dto);
+    return ResponseEntity.ok().build();
   }
 
-  @GetMapping("/login")
-  public ResponseEntity<?> login(@RequestBody LoginRequestDTO dto) {
-    return null;
-  }
 }
