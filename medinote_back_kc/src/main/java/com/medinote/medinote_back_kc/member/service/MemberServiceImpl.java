@@ -1,7 +1,8 @@
 package com.medinote.medinote_back_kc.member.service;
 
-import com.medinote.medinote_back_kc.member.domain.dto.MemberResponseDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.RegisterRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
@@ -21,19 +22,21 @@ public class MemberServiceImpl implements MemberService{
   private PasswordEncoder passwordEncoder;
 
   @Override
-  public Long register(RegisterRequestDTO dto) {
-    Member member = mapper.toMember(dto, passwordEncoder);
-    return repository.save(member).getId();
+  public void register(RegisterRequestDTO dto) {
+    Member member = mapper.toRegister(dto, passwordEncoder);
+    repository.save(member);
   }
 
   @Override
-  public MemberResponseDTO get(Long id) {
-    return mapper.toMemberDTO(repository.findById(id).orElseThrow(() -> new UsernameNotFoundException("id를 확인하여 주시기 바랍니다.")));
+  public MemberDTO get(String email) {
+    return mapper.toMemberDTO(repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("email을 확인하여 주시기 바랍니다.")));
   }
 
   @Override
-  public void update(MemberResponseDTO dto) {
-
+  public void update(UpdateRequestDTO dto, Long id) {
+    Member member = (repository.findById(id).orElseThrow(()-> new UsernameNotFoundException("email을 확인하여 주시기 바랍니다.")));
+    member.changeMyPage(dto);
+    repository.save(member);
   }
 
   @Override
