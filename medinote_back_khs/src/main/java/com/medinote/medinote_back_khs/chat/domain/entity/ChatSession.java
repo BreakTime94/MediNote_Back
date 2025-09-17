@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.chat.domain.entity;
 
 
+import com.medinote.medinote_back_khs.chat.domain.en.ChatSessionStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,10 @@ public class ChatSession {
   private LocalDateTime endedDate;
   private LocalDateTime lastMessageDate;
 
-  private String status;  // 세션 상태: bot|waiting|connected|ended
+
+  // 세션 상태: bot|waiting|connected|ended
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private ChatSessionStatus status;
 
 }
