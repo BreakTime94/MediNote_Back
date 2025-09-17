@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.security.util;
 
+import com.medinote.medinote_back_kc.member.domain.entity.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -30,21 +31,22 @@ public class JWTUtil {
 
   //accessToken 싱글톤 느낌으로
 
-  public String createAccessToken(Long id, String email) {
-    return generateToken(id, email, "access");
+  public String createAccessToken(Long id, String email, Role role) {
+    return generateToken(id, email, role, "access");
   }
 
   //refreshToken 싱글톤 느낌으로
-  public String createRefreshToken(Long id, String email) {
-    return generateToken(id , email, "refresh");
+  public String createRefreshToken(Long id, String email, Role role) {
+    return generateToken(id , email, role, "refresh");
   }
 
-  private String generateToken(Long id, String email, String category){
+  private String generateToken(Long id, String email, Role role ,String category){
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + (category.equals("access") ? accessTokenExpiration : refreshTokenExpiration));
     return Jwts.builder()
             .subject(id.toString())
             .claim("email", email) // 이메일 값 (main key 값은 느낌, db의 pk를 쓸 때도 있다고 함)
+            .claim("role", role)
             .claim("category", category) // 토큰 종류(access, refresh)
             .issuedAt(now)
             .expiration(expiryDate)
@@ -64,10 +66,7 @@ public class JWTUtil {
   public String getUserEmail(String token) {
     return getClaims(token).getSubject();
   }
-  // access인지 refresh인지 확인하는 용도
-  public String getCategory(String token) {
-    return getClaims(token).get("category", String.class);
-  }
+
   // 만료 여부
   public boolean isExpired(String token) {
     try {
