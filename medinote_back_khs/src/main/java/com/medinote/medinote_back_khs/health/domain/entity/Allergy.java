@@ -19,9 +19,15 @@ public class Allergy {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  private String code;
+  @Column(nullable = false, unique = true)
+  private String code;  //알레르기 코드 (필수, 유니크)
+
+  @Column(nullable = false)
   private String nameEn;
+
+  @Column(nullable = false)
   private String nameKo;
+
   private String synonyms;
   private String source;  //출처
 

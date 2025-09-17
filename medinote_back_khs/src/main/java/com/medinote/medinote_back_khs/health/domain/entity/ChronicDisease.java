@@ -20,9 +20,10 @@ public class ChronicDisease  {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
+  @Column(nullable = false, unique = true)
   private String code;
 
+  @Column(nullable = false)
   private String nameEn;
 
   @Column(nullable = false)
@@ -34,6 +35,5 @@ public class ChronicDisease  {
   @LastModifiedDate
   @Column(name = "mod_date")
   private LocalDateTime modDate;
-
 
 }
