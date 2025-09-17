@@ -24,7 +24,7 @@ public class Visit {
   private Long memberId;
 
   @Column(nullable = false)
-  private Long apiId; // 외부 API 고유 ID
+  private String apiId; // 외부 API 고유 ID
 
   private LocalDateTime visitDate;  // 방문일시
 
