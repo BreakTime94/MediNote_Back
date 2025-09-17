@@ -22,22 +22,22 @@ public class Prescription {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-
   private Long id;
 
-  @Column(updatable = false)
-  private Long visitId;
-  @Column(updatable = false)
-  private Long memberId;
+  @Column(nullable = false, updatable = false)
+  private Long visitId;       // 방문 ID (필수, 변경불가)
+
+  @Column(nullable = false, updatable = false)
+  private Long memberId;      // 회원 ID (필수, 변경불가)
 
   private String apiId;
 
-  private LocalDateTime issuedDate;
-  private String note;  //비고
+  @Column(nullable = false)
+  private LocalDateTime issuedDate;  // 처방일 (필수)
+
+  private String note;        // 비고 (선택)
 
   @CreatedDate
   @Column(updatable = false)
   private LocalDateTime regDate;
-
-
 }
