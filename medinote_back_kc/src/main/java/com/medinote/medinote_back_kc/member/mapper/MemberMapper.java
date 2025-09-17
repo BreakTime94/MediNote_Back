@@ -27,10 +27,4 @@ public interface MemberMapper {
   //id(pk), password, status, deleted_at 을 제외한 dto 구성
   MemberDTO toMemberDTO(Member member);
 
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "password", expression = "java(passwordEncoder.encode(dto.getPassword()))")
-  @Mapping(target = "regDate", ignore = true) // table 기본값 current timestamp
-  @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
-  Member toMember(MemberDTO dto);
-
 }
