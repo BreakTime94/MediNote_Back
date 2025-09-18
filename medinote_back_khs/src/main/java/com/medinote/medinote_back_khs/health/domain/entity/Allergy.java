@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.entity;
 
+import com.medinote.medinote_back_khs.common.entity.ModiEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "mlist_allergy")
-public class Allergy {
+public class Allergy extends ModiEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,9 +31,5 @@ public class Allergy {
 
   private String synonyms;
   private String source;  //출처
-
-  @LastModifiedDate
-  @Column(name = "mod_date")
-  private LocalDateTime modDate;
 
 }

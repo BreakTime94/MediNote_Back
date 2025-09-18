@@ -1,12 +1,10 @@
 package com.medinote.medinote_back_khs.health.domain.entity;
 
 
+import com.medinote.medinote_back_khs.common.entity.ModiEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
@@ -14,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "mlist_chronic_disease" )
-public class ChronicDisease  {
+public class ChronicDisease extends ModiEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,9 +29,5 @@ public class ChronicDisease  {
 
   private String synonyms;  // 동의어/별칭
   private String source;   // 데이터 출처 (WHO ICD-11 등)
-
-  @LastModifiedDate
-  @Column(name = "mod_date")
-  private LocalDateTime modDate;
 
 }
