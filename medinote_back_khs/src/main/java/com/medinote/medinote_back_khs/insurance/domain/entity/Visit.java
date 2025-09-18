@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.insurance.domain.entity;
 
 
+import com.medinote.medinote_back_khs.common.entity.CreateEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Getter @Setter
 @Table(name = "tbl_visit")
-public class Visit {
+public class Visit extends CreateEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +25,7 @@ public class Visit {
   private Long memberId;
 
   @Column(nullable = false)
-  private String apiId; // 외부 API 고유 ID
+  private String apiId; // 외부 API 고유 ID(공공데이터/보험청구 API 연동)
 
   private LocalDateTime visitDate;  // 방문일시
 
@@ -32,5 +33,4 @@ public class Visit {
   private String diagnosis; // 진단명
   private String claimCode; // 보험 청구 코드
 
-  private LocalDateTime regDate;  // 수집일(=API 동기화 시각)
 }
