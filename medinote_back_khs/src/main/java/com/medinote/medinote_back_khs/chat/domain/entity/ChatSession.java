@@ -1,10 +1,12 @@
 package com.medinote.medinote_back_khs.chat.domain.entity;
 
 
+import com.medinote.medinote_back_khs.chat.domain.en.ChatSessionStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "tbl_chat_session")
 public class ChatSession {
 
@@ -26,6 +29,10 @@ public class ChatSession {
   private LocalDateTime endedDate;
   private LocalDateTime lastMessageDate;
 
-  private String status;  // 세션 상태: bot|waiting|connected|ended
+
+  // 세션 상태: bot|waiting|connected|ended
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private ChatSessionStatus status;
 
 }

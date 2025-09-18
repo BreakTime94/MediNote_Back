@@ -22,3 +22,11 @@
 
 ### 📅 250914
 - JWTUtil 작성 완료 및 Security config와 handler, filter 구조 구상 중
+
+### 📅 250915
+- Spring Security 구조와 React 구조를 고려한 Member Entity 및 기타 기능 DTO 생성
+
+### 📅 250916
+- 일반 MemberLogin, Register 초안 구현 완료, SecurityContext 등록에 필요한 UserDetails, UserDetailsService 토큰 검증에 필요한, JWTAuthentication 초안 구현 완료
+
+
