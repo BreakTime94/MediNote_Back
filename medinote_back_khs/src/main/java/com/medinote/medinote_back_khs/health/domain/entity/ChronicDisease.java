@@ -4,10 +4,7 @@ package com.medinote.medinote_back_khs.health.domain.entity;
 import com.medinote.medinote_back_khs.common.entity.ModiEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
 
 @Entity
 @AllArgsConstructor
