@@ -1,12 +1,11 @@
 package com.medinote.medinote_back_khs.health.domain.entity;
 
 
+import com.medinote.medinote_back_khs.common.entity.ModiEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 
 @Entity
 @NoArgsConstructor
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "mlist_medication" )
-public class Medication {
+public class Medication extends ModiEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,9 +31,5 @@ public class Medication {
   private String form;        // 약 제형 (선택)
   private String company;     // 제약회사 (선택)
   private String source;      // 식약처 의약품 정보 API (선택)
-
-  @LastModifiedDate
-  @Column(name = "mod_date")
-  private LocalDateTime modDate;
 
 }
