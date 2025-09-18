@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "tbl_member")
 public class Member {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +40,7 @@ public class Member {
   private String profileMimeType;
 
   @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   private Status status;
 
   @Column(nullable = false)

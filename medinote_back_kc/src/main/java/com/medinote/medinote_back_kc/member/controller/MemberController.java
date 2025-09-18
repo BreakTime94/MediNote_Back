@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController("/member")
 @Log4j2
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:6006")
 public class MemberController {
 
   private final MemberService service;
