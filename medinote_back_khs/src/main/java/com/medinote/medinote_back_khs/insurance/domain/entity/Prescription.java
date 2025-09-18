@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.insurance.domain.entity;
 
 
+import com.medinote.medinote_back_khs.common.entity.CreateEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @Setter
 @Table(name = "tbl_prescription")
 @EntityListeners(AuditingEntityListener.class)
-public class Prescription {
+public class Prescription extends CreateEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +38,5 @@ public class Prescription {
 
   private String note;        // 비고 (선택)
 
-  @CreatedDate
-  @Column(updatable = false)
-  private LocalDateTime regDate;
+
 }

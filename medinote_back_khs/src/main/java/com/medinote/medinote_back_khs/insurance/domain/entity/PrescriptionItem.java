@@ -31,7 +31,6 @@ public class PrescriptionItem {
   private String dosage;          // 1회 복용량
   private String frequency;       // 복용 주기
   private Integer days;           // 복용 기간
-  private String route;           // 복용 경로
 
   @Column(columnDefinition = "TEXT")
   private String caution;         // 주의사항 (선택, TEXT 타입)
