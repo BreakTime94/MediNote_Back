@@ -1,6 +1,8 @@
 package com.medinote.medinote_back_khs.preference.domain.entity;
 
 import com.medinote.medinote_back_khs.common.entity.BaseEntity;
+import com.medinote.medinote_back_khs.preference.domain.en.ChartPreferencePeriodTypeStatus;
+import com.medinote.medinote_back_khs.preference.domain.en.TargetTypeStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +17,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "tbl_chart_preference")
 public class ChartPreference extends BaseEntity {
-  // tbl_chart_preference (공용) 차트표시선호도
+  // tbl_chart_preference (공용) 차트표시선호 설정
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,10 +26,13 @@ public class ChartPreference extends BaseEntity {
   @Column(nullable = false)
   private Long memberId;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String targetType;  //적용 대상 (health|insurance)
+  private TargetTypeStatus targetType;  //적용 대상 (health|insurance)
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String periodType;  // 기간 유형 (week|month|quarter|year)
+  private ChartPreferencePeriodTypeStatus periodType = ChartPreferencePeriodTypeStatus.WEEK;
+  // 기간 유형 (week|month|quarter|half|year) 디폴트 일주일
 
 }
