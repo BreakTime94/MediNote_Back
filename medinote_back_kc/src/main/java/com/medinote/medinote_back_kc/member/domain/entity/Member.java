@@ -29,9 +29,9 @@ public class Member {
   @Column(nullable = false)
   private String nickname;
 
-  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
-  private Role role;
+  @Builder.Default()
+  private Role role = Role.USER;
 
   @Column
   private String profileImagePath;
@@ -39,12 +39,13 @@ public class Member {
   @Column
   private String profileMimeType;
 
-  @Column(nullable = false)
   @Enumerated(EnumType.STRING)
-  private Status status;
+  @Builder.Default
+  private Status status = Status.ACTIVE;
 
-  @Column(nullable = false)
-  private LocalDateTime regDate;
+  @Column
+  @Builder.Default
+  private LocalDateTime regDate = LocalDateTime.now();
 
   @Column
   private LocalDateTime deletedAt;
