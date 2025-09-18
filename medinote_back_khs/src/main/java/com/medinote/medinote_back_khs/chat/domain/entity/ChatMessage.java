@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.chat.domain.entity;
 
 
+import com.medinote.medinote_back_khs.common.entity.CreateEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "tbl_chat_message")
-public class ChatMessage {
+public class ChatMessage extends CreateEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,9 +33,5 @@ public class ChatMessage {
   private String content; //메세지 내용
 
   private Long faqId; // FAQ 참조 (NULL 허용)
-
-  @CreatedDate
-  @Column(updatable = false)   // 추가: 생성일은 변경 불가
-  private LocalDateTime regDate;
 
 }
