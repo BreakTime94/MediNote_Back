@@ -1,10 +1,7 @@
 package com.medinote.medinote_back_kys.board.domain.entity;
 
 import com.medinote.medinote_back_kys.common.entity.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -12,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Table(name = "tbl_board_category")
 @ToString
 public class BoardCategory extends BaseEntity {
 
@@ -19,5 +17,6 @@ public class BoardCategory extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "category_name", nullable = false)
     private String categoryName;
 }
