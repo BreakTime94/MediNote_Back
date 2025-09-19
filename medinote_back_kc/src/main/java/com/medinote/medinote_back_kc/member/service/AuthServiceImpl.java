@@ -62,6 +62,7 @@ public class AuthServiceImpl implements AuthService{
     ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken)
             .httpOnly(true)
             .sameSite("Lax")
+            .secure(false)
             .path("/")
             .maxAge(Duration.ofMillis(util.getAccessTokenExpiration()))
             .build();
@@ -69,6 +70,7 @@ public class AuthServiceImpl implements AuthService{
     ResponseCookie refreshCookie = ResponseCookie.from("REFRESH_TOKEN", refreshToken)
             .httpOnly(true)
             .sameSite("Lax")
+            .secure(false)
             .path("/")
             .maxAge(Duration.ofMillis(util.getRefreshTokenExpiration()))
             .build();
