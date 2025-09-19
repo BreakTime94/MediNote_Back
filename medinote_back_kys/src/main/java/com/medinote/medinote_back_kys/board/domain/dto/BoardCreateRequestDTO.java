@@ -2,20 +2,37 @@ package com.medinote.medinote_back_kys.board.domain.dto;
 
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Getter;
-import org.antlr.v4.runtime.misc.NotNull;
-import org.springframework.data.annotation.CreatedDate;
+import lombok.Data;
 
-@Getter
+
+@Data
 @Builder
-public class BoardUpsertDto {
-    private Long memberId;          // 토큰/다른 서비스에서 온 식별자
-    private Long boardCategoryId;   // 카테고리 식별자
+public class BoardCreateRequestDTO {
+
+    @NotNull(message = "회원 ID는 필수값입니다.")
+    private Long memberId;
+
+    @NotNull(message = "카테고리 ID는 필수값입니다.")
+    private Long boardCategoryId;
+
+    @NotBlank(message = "제목은 비워둘 수 없습니다.")
     private String title;
+
+    @NotBlank(message = "내용은 비워둘 수 없습니다.")
     private String content;
-    private Boolean isPublic;       // null이면 엔티티의 기본값 유지 전략 적용 가능
+
+    /** 기본값 true (서비스/엔티티에서 처리) */
+    private Boolean isPublic;
+
+    /** 관리자 승인 필요 여부 (기본값 false) */
     private Boolean requireAdminPost;
+
+    /** QnA 상태 (기본값 WAITING) */
     private QnaStatus qnaStatus;
+
+    /** 게시글 상태 (기본값 DRAFT) */
     private PostStatus postStatus;
 }
