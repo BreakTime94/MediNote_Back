@@ -1,7 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.entity;
 
 
-import com.medinote.medinote_back_khs.chat.domain.en.ChatSessionStatus;
 import com.medinote.medinote_back_khs.common.entity.BaseEntity;
 import com.medinote.medinote_back_khs.health.domain.en.MeasurementStatus;
 import jakarta.persistence.*;
