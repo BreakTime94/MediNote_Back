@@ -34,7 +34,7 @@ public class Board extends BaseEntity {
 
     @Column(name = "is_public", nullable = false, columnDefinition = "tinyint(1)")
     @Builder.Default
-    private Boolean isPulbic = true; //0,1 기본값 1
+    private Boolean isPublic = true; //0,1 기본값 1
 
     @Lob
     @Column(name = "content", nullable = false, columnDefinition = "text")
@@ -54,6 +54,6 @@ public class Board extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "post_status", nullable = false, length = 16)
     @Builder.Default
-    private PostStatus postStatus = PostStatus.DRAFT;
+    private PostStatus postStatus = PostStatus.PUBLISHED;
 
 }
