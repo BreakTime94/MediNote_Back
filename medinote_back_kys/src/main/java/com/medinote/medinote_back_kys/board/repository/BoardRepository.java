@@ -1,4 +1,7 @@
 package com.medinote.medinote_back_kys.board.repository;
 
-public interface BoardRepository {
+import com.medinote.medinote_back_kys.board.domain.entity.Board;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BoardRepository extends JpaRepository<Board, Long> {
 }
