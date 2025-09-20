@@ -75,8 +75,8 @@ public class AuthServiceImpl implements AuthService{
             .maxAge(Duration.ofMillis(util.getRefreshTokenExpiration()))
             .build();
 
-    log.info(accessCookie.toString());
-    log.info(refreshCookie.toString());
+    log.info( "accessToken이 담긴 쿠키 ~ :{}",accessCookie.toString());
+    log.info("refreshToken이 담긴 쿠키 ~ :{}",refreshCookie.toString());
     response.addHeader("Set-Cookie", accessCookie.toString());
     response.addHeader("Set-Cookie", refreshCookie.toString());
   }

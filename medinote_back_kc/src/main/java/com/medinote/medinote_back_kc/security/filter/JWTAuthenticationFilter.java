@@ -47,7 +47,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
       try {
       //3-1. AccessToken에서 Email 추출
       String email = util.getUserEmail(accessToken);
-
+      log.info("email 값이지로오옹 : {}",email);
       // 4. DB에서 사용자 조회 -> UserDetails 변환 (Security Context 등록 준비)
       CustomUserDetails user = (CustomUserDetails) service.loadUserByUsername(email);
 
@@ -68,17 +68,10 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
     filterChain.doFilter(request, response);
   }
   private String getCookieValue(HttpServletRequest request, String cookieName) {
-    String cookieHeader = request.getHeader("Cookie");
-    if (cookieHeader != null) {
-      String[] cookies = cookieHeader.split(";");
-      for (String cookie : cookies) {
-        String[] kv = cookie.trim().split("=", 2); // value 안에 '=' 들어갈 수도 있으니 2개만 split
-        if (kv.length == 2) {
-          String name = kv[0].trim();
-          String value = kv[1].trim();
-          if (cookieName.equals(name)) {
-            return value;
-          }
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if (cookieName.equals(cookie.getName())) {
+          return cookie.getValue();
         }
       }
     }
