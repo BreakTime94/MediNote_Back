@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -44,10 +45,11 @@ public class SecurityConfig {
     log.info("security 필터 체인 들어왔다 이 자식아");
     http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
         .csrf(c -> c.disable())
-        .cors(c -> c.configurationSource(corsConfig.corsConfiguration()))
+        .cors(c -> c.configurationSource(corsConfig.corsConfigurationSource()))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(a -> a
                 .requestMatchers("/member/auth/login", "/member/register").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/member/update", "/member/delete", "/member/get").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
                 .anyRequest().authenticated())
         .formLogin(f -> f.disable())

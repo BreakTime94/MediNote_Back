@@ -44,8 +44,8 @@ public class JWTUtil {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + (category.equals("access") ? accessTokenExpiration : refreshTokenExpiration));
     return Jwts.builder()
-            .subject(id.toString())
-            .claim("email", email) // 이메일 값 (main key 값은 느낌, db의 pk를 쓸 때도 있다고 함)
+            .subject(email) // 이메일 값
+            .claim("id", id) // pk
             .claim("role", role)
             .claim("category", category) // 토큰 종류(access, refresh)
             .issuedAt(now)
