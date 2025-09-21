@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(
-        // 테스트에서 Security 자동설정 제외(임시계정/비밀번호 메시지 억제)
         properties = {
+                // Security 자동설정 제외 (테스트 시 불필요한 계정 메시지 제거)
                 "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
         }
 )
@@ -29,40 +29,37 @@ class BoardRepositoryTest {
     private BoardMapper boardMapper;
 
     @Autowired
-    private EntityManager entityManager; // ✅ JPA 엔티티 매니저 주입
+    private EntityManager entityManager;
 
     @Test
     @Order(1)
-    @DisplayName("Board 생성: DTO null → 엔티티 @Builder.Default & DB DEFAULT 유지 확인")
-    @Transactional // 테스트 트랜잭션 (기본 롤백)
+    @DisplayName("Board 생성: DTO null → 엔티티 기본값 & DB DEFAULT 확인")
+    @Transactional
     void createBoard_withDefaults_success() {
-        // given: 일부 필드는 null로 둬서 기본값 경로를 타게 함
+        // given
         BoardCreateRequestDTO dto = BoardCreateRequestDTO.builder()
                 .memberId(1L)
                 .boardCategoryId(2L)
                 .title("hello")
                 .content("content")
-                // isPublic, requireAdminPost, qnaStatus, postStatus intentionally null
+                // 나머지 필드 null → 엔티티의 @Builder.Default 또는 DB default 사용
                 .build();
 
         // when
-        Board entity = boardMapper.toEntity(dto);    // MapStruct: null 무시 → 엔티티 기본값 유지
-        Board saved  = boardRepository.save(entity);
+        Board entity = boardMapper.toEntity(dto);
+        Board saved = boardRepository.save(entity);
 
-        // DB가 채운 DEFAULT를 검증하려면 반드시 flush/clear 후 재조회
+        // flush & clear 후 재조회 (DB default 확인)
         entityManager.flush();
         entityManager.clear();
-
         Board found = boardRepository.findById(saved.getId()).orElseThrow();
 
-        // then (Boolean은 null-safe 비교)
+        // then
         Assertions.assertAll(
                 () -> Assertions.assertEquals(Boolean.TRUE,  found.getIsPublic()),
                 () -> Assertions.assertEquals(Boolean.FALSE, found.getRequireAdminPost()),
-                // NOTE: post_status 기본값은 현재 DB='PUBLISHED', 엔티티 빌더='DRAFT'로 불일치.
-                // 둘 중 하나로 통일한 뒤 아래 단언을 해주세요.
-                () -> Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus()),
-                () -> Assertions.assertEquals(QnaStatus.WAITING,   found.getQnaStatus())
+                () -> Assertions.assertEquals(QnaStatus.WAITING, found.getQnaStatus()),
+                () -> Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus()) // DB/엔티티 default 통일 필요
         );
     }
 
@@ -80,30 +77,31 @@ class BoardRepositoryTest {
                 .isPublic(false)                   // default(true) 덮어쓰기
                 .requireAdminPost(true)            // default(false) 덮어쓰기
                 .qnaStatus(QnaStatus.ANSWERED)     // default(WAITING) 덮어쓰기
-                .postStatus(PostStatus.PUBLISHED)  // default(DRAFT) 덮어쓰기
+                .postStatus(PostStatus.PUBLISHED)  // default(DRAFT or PUBLISHED 중 택1)
                 .build();
 
         // when
         Board saved = boardRepository.save(boardMapper.toEntity(dto));
 
-        // then (영속성 컨텍스트 내 값 검증: DTO가 덮어쓴 값이 그대로 있어야 함)
+        // then
         Assertions.assertAll(
                 () -> Assertions.assertNotNull(saved.getId()),
                 () -> Assertions.assertFalse(saved.getIsPublic()),
                 () -> Assertions.assertTrue(saved.getRequireAdminPost()),
-                () -> Assertions.assertEquals(QnaStatus.ANSWERED,  saved.getQnaStatus()),
+                () -> Assertions.assertEquals(QnaStatus.ANSWERED, saved.getQnaStatus()),
                 () -> Assertions.assertEquals(PostStatus.PUBLISHED, saved.getPostStatus())
         );
     }
 
     @Test
-    @DisplayName("Board 단순 삽입 테스트")
+    @Order(3)
+    @DisplayName("Board 단순 삽입 테스트 (Entity 직접 사용)")
     @Transactional
-    void insertBoard() {
+    void insertBoard_entityDirect_success() {
         // given
         Board board = Board.builder()
-                .memberId(1L)           // 존재하는 member_id
-                .boardCategoryId(2L)    // 존재하는 category_id
+                .memberId(1L)
+                .boardCategoryId(2L)
                 .title("단순 삽입 테스트 제목")
                 .content("단순 삽입 테스트 내용")
                 .build();

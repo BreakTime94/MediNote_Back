@@ -16,12 +16,11 @@ public class BoardService {
     private final BoardMapper boardMapper;
 
     @Transactional
-    public Board createBoard(BoardCreateRequestDTO dto){
-        //1. 추후 검증 로직 추가
-
-        //2.
+    public Board createBoard(BoardCreateRequestDTO dto) {
+        // DTO → Entity 변환
         Board entity = boardMapper.toEntity(dto);
 
+        // 저장
         return boardRepository.save(entity);
     }
 
