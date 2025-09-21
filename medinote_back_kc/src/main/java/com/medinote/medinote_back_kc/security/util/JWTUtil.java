@@ -76,6 +76,16 @@ public class JWTUtil {
     }
   }
 
+  //만료시간이 5분 이내인지 여부
+  private boolean isExpiredSoon(String token) {
+    try {
+      return getClaims(token).getExpiration().before(new Date(new Date().getTime() - 5 * 60 * 1000));
+    } catch (Exception e) {
+      return true;
+    }
+  }
+
+
 
 
 

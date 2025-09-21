@@ -50,7 +50,7 @@ public class SecurityConfig {
         .authorizeHttpRequests(a -> a
                 .requestMatchers("/member/auth/login", "/member/register").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/member/update", "/member/delete", "/member/get").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
+                .requestMatchers("/member/update", "/member/delete", "/member/get", "member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
                 .anyRequest().authenticated())
         .formLogin(f -> f.disable())
         .httpBasic(b -> b.disable());
