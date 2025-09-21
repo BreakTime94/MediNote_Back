@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kys.board;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
@@ -87,5 +88,72 @@ class BoardServiceTest {
         Assertions.assertFalse(found.getRequireAdminPost(), "requireAdminPost 기본값(false)이 적용되어야 합니다.");
         Assertions.assertEquals(QnaStatus.WAITING, found.getQnaStatus(), "QnA 기본상태는 WAITING 이어야 합니다.");
         Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus(), "게시글 기본상태는 PUBLISHED 이어야 합니다.");
+    }
+
+    @Test
+    @DisplayName("updateBoard: null은 무시하고 지정한 필드만 수정된다")
+    void updateBoard_partialUpdate_success() {
+        // 1) given: 우선 게시글을 하나 생성(시드 데이터)
+        BoardCreateRequestDTO createDto = BoardCreateRequestDTO.builder()
+                .memberId(1L)
+                .boardCategoryId(2L)
+                .title("원본 제목")
+                .content("원본 내용")
+                // 선택필드는 비워 기본값 적용(isPublic=true, requireAdminPost=false, WAITING, PUBLISHED 등)
+                .build();
+
+        Board saved = boardService.createBoard(createDto);
+
+        // 2) when: 일부 필드만 채운 Update DTO로 수정 호출 (null은 무시되어 원본 유지)
+        BoardUpdateRequestDTO updateDto = BoardUpdateRequestDTO.builder()
+                .id(saved.getId())
+                // boardCategoryId는 null로 두어 기존(2L) 유지
+                .title("수정된 제목")
+                .content("수정된 내용")
+                .isPublic(false)                 // 공개 → 비공개
+                .requireAdminPost(true)          // 승인 필요로 변경
+                .qnaStatus(QnaStatus.ANSWERED)   // WAITING → ANSWERED
+                .postStatus(PostStatus.DRAFT)    // PUBLISHED → DRAFT
+                .build();
+
+        Board updatedManaged = boardService.updateBoard(updateDto);
+
+        // 3) then: DB 반영 확인을 위해 flush/clear 후 재조회
+        entityManager.flush();
+        entityManager.clear();
+
+        Board reloaded = boardRepository.findById(saved.getId()).orElseThrow();
+
+        // 변경된 필드들
+        Assertions.assertAll(
+                () -> Assertions.assertEquals("수정된 제목", reloaded.getTitle()),
+                () -> Assertions.assertEquals("수정된 내용", reloaded.getContent()),
+                () -> Assertions.assertFalse(reloaded.getIsPublic()),
+                () -> Assertions.assertTrue(reloaded.getRequireAdminPost()),
+                () -> Assertions.assertEquals(QnaStatus.ANSWERED, reloaded.getQnaStatus()),
+                () -> Assertions.assertEquals(PostStatus.DRAFT, reloaded.getPostStatus())
+        );
+
+        // 변경하지 않은 필드들은 원본 유지(NullValuePropertyMappingStrategy.IGNORE 검증)
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(1L, reloaded.getMemberId(), "memberId는 유지되어야 합니다."),
+                () -> Assertions.assertEquals(2L, reloaded.getBoardCategoryId(), "boardCategoryId는 유지되어야 합니다.")
+        );
+    }
+
+    @Test
+    @DisplayName("updateBoard: 존재하지 않는 ID 수정 시 IllegalArgumentException 발생")
+    void updateBoard_notFound_throwsException() {
+        // given
+        BoardUpdateRequestDTO updateDto = BoardUpdateRequestDTO.builder()
+                .id(999_999L) // 존재하지 않는 ID 가정
+                .title("아무 제목")
+                .content("아무 내용")
+                .build();
+
+        // when & then
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> boardService.updateBoard(updateDto),
+                "존재하지 않는 게시글 ID면 IllegalArgumentException이 발생해야 합니다.");
     }
 }

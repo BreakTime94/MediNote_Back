@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kys.board;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
@@ -113,4 +114,49 @@ class BoardRepositoryTest {
         Assertions.assertNotNull(saved.getId());
         System.out.println("==== 삽입된 Board ID: " + saved.getId() + " ====");
     }
+
+    @Test
+    @Order(4)
+    @DisplayName("Board 수정: Update DTO 적용 후 반영 확인")
+    @Transactional
+    void updateBoard_success() {
+        // given: 기존 데이터(id=10)가 존재한다고 가정
+        BoardUpdateRequestDTO updateDto = BoardUpdateRequestDTO.builder()
+                .id(10L)                          // 수정 대상 게시글 번호
+                .boardCategoryId(2L)             // 카테고리 유지
+                .title("수정된 제목")
+                .content("수정된 내용")
+                .isPublic(false)                 // 공개 여부 변경
+                .requireAdminPost(true)          // 관리자 승인 필요로 변경
+                .qnaStatus(QnaStatus.ANSWERED)   // 상태 변경
+                .postStatus(PostStatus.DRAFT)    // 임시저장 상태로 변경
+                .build();
+
+        // when: 기존 엔티티 조회 후 DTO 값 반영
+        Board found = boardRepository.findById(updateDto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
+
+        // BoardMapper 활용해 부분 수정
+        boardMapper.updateEntityFromDto(updateDto, found);
+
+        // 저장
+        Board updated = boardRepository.save(found);
+
+        // flush & clear 후 재조회
+        entityManager.flush();
+        entityManager.clear();
+        Board reloaded = boardRepository.findById(10L).orElseThrow();
+
+        // then
+        Assertions.assertAll(
+                () -> Assertions.assertEquals("수정된 제목", reloaded.getTitle()),
+                () -> Assertions.assertEquals("수정된 내용", reloaded.getContent()),
+                () -> Assertions.assertFalse(reloaded.getIsPublic()),
+                () -> Assertions.assertTrue(reloaded.getRequireAdminPost()),
+                () -> Assertions.assertEquals(QnaStatus.ANSWERED, reloaded.getQnaStatus()),
+                () -> Assertions.assertEquals(PostStatus.DRAFT, reloaded.getPostStatus())
+        );
+    }
+
+
 }
