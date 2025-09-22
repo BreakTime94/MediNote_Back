@@ -1,11 +1,15 @@
 server:
-  port: 8081
+  port: 8083
   servlet:
     context-path: /api
     encoding:
       charset: UTF-8
       enabled: true
       force: true
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
 
 spring:
   config:
