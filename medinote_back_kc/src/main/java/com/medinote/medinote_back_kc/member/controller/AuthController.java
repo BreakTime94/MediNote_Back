@@ -4,6 +4,7 @@ import com.medinote.medinote_back_kc.member.domain.dto.LoginRequestDTO;
 
 import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
 import com.medinote.medinote_back_kc.member.service.AuthService;
+import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import java.time.Duration;
 public class AuthController {
 
   private final AuthService service;
-  private final JWTUtil jwtUtil;
+  private final CookieUtil cookieUtil;
 
   @PostMapping("/login")
   public ResponseEntity<?> Login (@RequestBody LoginRequestDTO dto, HttpServletResponse response) {
@@ -36,23 +37,10 @@ public class AuthController {
 
   @PostMapping("/logout")
   public ResponseEntity<?> Logout (HttpServletResponse response) {
-    ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", "")
-            .httpOnly(true)
-            .sameSite("Lax")
-            .secure(false)
-            .path("/")
-            .maxAge(0)
-            .build();
+    log.info("======Logout Controller======");
+    ResponseCookie accessCookie = cookieUtil.deleteAccessCookie();
+    ResponseCookie refreshCookie = cookieUtil.deleteRefreshCookie();
 
-    ResponseCookie refreshCookie = ResponseCookie.from("REFRESH_TOKEN", "")
-            .httpOnly(true)
-            .sameSite("Lax")
-            .secure(false)
-            .path("/")
-            .maxAge(0)
-            .build();
-
-    log.info("쿠키 재발급의 영역");
     response.addHeader("Set-Cookie", accessCookie.toString());
     response.addHeader("Set-Cookie", refreshCookie.toString());
 

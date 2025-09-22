@@ -16,11 +16,9 @@ import java.util.Date;
 @Getter
 public class JWTUtil {
 
-  private final SecretKey secret ;
-
-  private final Long accessTokenExpiration ;
-
-  private final Long refreshTokenExpiration ;
+  private final SecretKey secret;
+  private final Long accessTokenExpiration;
+  private final Long refreshTokenExpiration;
 
   // secret jwt yaml 파일 가져오기 위한 과정
   public JWTUtil(JWTProperties jwtProperties) {
@@ -29,23 +27,21 @@ public class JWTUtil {
     this.refreshTokenExpiration = jwtProperties.getRefreshTokenExpiration();
   }
 
-  //accessToken 싱글톤 느낌으로
-
-  public String createAccessToken(Long id, String email, Role role) {
-    return generateToken(id, email, role, "access");
+  //accessToken 공통 generateToken 메서드에서 parameter를 통해 토큰 종류를 나눠서 발급
+  public String createAccessToken(Long id, Role role) {
+    return generateToken(id, role, "access");
   }
 
-  //refreshToken 싱글톤 느낌으로
-  public String createRefreshToken(Long id, String email, Role role) {
-    return generateToken(id , email, role, "refresh");
+  //refreshToken 공통 generateToken 메서드에서 parameter를 통해 토큰 종류를 나눠서 발급
+  public String createRefreshToken(Long id, Role role) {
+    return generateToken(id , role, "refresh");
   }
 
-  private String generateToken(Long id, String email, Role role ,String category){
+  private String generateToken(Long id, Role role, String category){
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + (category.equals("access") ? accessTokenExpiration : refreshTokenExpiration));
     return Jwts.builder()
-            .subject(email) // 이메일 값
-            .claim("id", id) // pk
+            .subject(id.toString()) // pk
             .claim("role", role)
             .claim("category", category) // 토큰 종류(access, refresh)
             .issuedAt(now)
@@ -55,6 +51,7 @@ public class JWTUtil {
   }
 
   //payload 내 claim(subject 포함) 공통 추출 메서드
+  // parser를 통해 유효성 검증을 한다.
   private Claims getClaims(String token){
     return Jwts.parser()
             .verifyWith(secret)
@@ -63,8 +60,16 @@ public class JWTUtil {
             .getPayload();
   }
   // 토큰 내 payload 내에 저장되어 있는 이메일 값 추출
-  public String getUserEmail(String token) {
-    return getClaims(token).getSubject();
+  public Long getUserId(String token) {
+    return Long.parseLong(getClaims(token).getSubject());
+  }
+
+  public Role getRole(String token) {
+    return Role.valueOf(getClaims(token).get("role").toString());
+  }
+
+  public Date getExpirationDate(String token) {
+    return getClaims(token).getExpiration();
   }
 
   // 만료 여부
@@ -77,16 +82,12 @@ public class JWTUtil {
   }
 
   //만료시간이 5분 이내인지 여부
-  private boolean isExpiredSoon(String token) {
+  public boolean isExpiredSoon(String token) {
     try {
-      return getClaims(token).getExpiration().before(new Date(new Date().getTime() - 5 * 60 * 1000));
+      return (getClaims(token).getExpiration().getTime() - new Date().getTime()) <= 5 * 60 * 1000;
     } catch (Exception e) {
       return true;
     }
   }
-
-
-
-
 
 }
