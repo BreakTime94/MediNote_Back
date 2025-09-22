@@ -57,7 +57,7 @@ class BoardRepositoryTest {
 
         // then
         Assertions.assertAll(
-                () -> Assertions.assertEquals(Boolean.TRUE,  found.getIsPublic()),
+                () -> Assertions.assertEquals(Boolean.TRUE, found.getIsPublic()),
                 () -> Assertions.assertEquals(Boolean.FALSE, found.getRequireAdminPost()),
                 () -> Assertions.assertEquals(QnaStatus.WAITING, found.getQnaStatus()),
                 () -> Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus()) // DB/엔티티 default 통일 필요
@@ -158,5 +158,77 @@ class BoardRepositoryTest {
         );
     }
 
+    @Test
+    @Order(5)
+    @DisplayName("목록 조회: Criteria → Pageable → Page → BoardListResponseDTO 매핑 검증")
+    @Transactional
+    void listBoards_pagination_and_mapping_success() {
+        // given: 25건 심기 (정렬/페이지 검증용)
+        for (int i = 1; i <= 25; i++) {
+            Board b = Board.builder()
+                    .memberId(1L)
+                    .boardCategoryId(2L)
+                    .title("목록테스트-" + i)
+                    .content("내용-" + i)
+                    // isPublic/requireAdminPost/qnaStatus/postStatus 는 엔티티 기본값 사용
+                    .build();
+            boardRepository.save(b);
+        }
 
+        // Criteria: 2페이지, size=10, 정렬: id,desc
+        var c = new com.medinote.medinote_back_kys.common.paging.Criteria();
+        c.setPage(2);
+        c.setSize(10);
+        c.setSort(java.util.List.of("id,desc")); // 네가 만든 검증 파이프 그대로 사용
+        c.setKeyword("목록테스트");               // 굳이 필터 안 써도 keyword echo만 확인
+
+        // 화이트리스트: 클라이언트 필드명 → 실제 컬럼/프로퍼티명
+        var whitelist = java.util.Map.of(
+                "id", "id",
+                "title", "title",
+                "regDate", "regDate",
+                "postStatus", "postStatus",
+                "qnaStatus", "qnaStatus"
+        );
+
+        var pageable = c.toPageable(whitelist);
+
+        // when: 단순 전체 조회로 Page 얻기 (커스텀 검색 메서드 없으면 findAll로 충분)
+        var page = boardRepository.findAll(pageable);
+
+        // 매퍼로 DTO 변환
+        var dto = boardMapper.toListResponse(page, c);
+
+        // then
+        // 1) 페이지 메타
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(28L, dto.getPage().getTotalElements()),
+                () -> Assertions.assertEquals(10, dto.getPage().getSize()),
+                () -> Assertions.assertEquals(3, dto.getPage().getTotalPages()), // 25 / 10 => 3
+                () -> Assertions.assertEquals(2, dto.getPage().getPage())        // 요청한 현재 페이지(2)
+        );
+
+        // 2) 아이템 수: 2페이지면 10건
+        Assertions.assertEquals(10, dto.getItems().size());
+
+        // 3) 정렬(id desc) 확인: 첫 아이템 id > 마지막 아이템 id
+        var firstId = dto.getItems().get(0).getId();
+        var lastId = dto.getItems().get(dto.getItems().size() - 1).getId();
+        Assertions.assertTrue(firstId > lastId, "정렬(id desc) 실패: " + firstId + " <= " + lastId);
+
+        // 4) 일부 필드 매핑 sanity check
+        var any = dto.getItems().get(0);
+        Assertions.assertAll(
+                () -> Assertions.assertNotNull(any.getTitle()),
+                () -> Assertions.assertNotNull(any.getMemberId()),
+                () -> Assertions.assertNotNull(any.getBoardCategoryId()),
+                () -> Assertions.assertNotNull(any.getIsPublic()),
+                () -> Assertions.assertNotNull(any.getRequireAdminPost()),
+                () -> Assertions.assertNotNull(any.getQnaStatus()),
+                () -> Assertions.assertNotNull(any.getPostStatus())
+        );
+
+        // 5) keyword echo
+        Assertions.assertEquals("목록테스트", dto.getKeyword());
+    }
 }
