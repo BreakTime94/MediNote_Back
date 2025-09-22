@@ -6,6 +6,7 @@ import com.medinote.medinote_back_kc.member.domain.entity.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.security.dto.AuthMemberDTO;
+import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,8 @@ public class AuthServiceImpl implements AuthService{
 
   private final MemberRepository repository;
   private final MemberMapper mapper;
-  private final JWTUtil util;
+  private final JWTUtil jwtUtil;
+  private final CookieUtil cookieUtil;
   private final PasswordEncoder encoder;
 
   @Override
@@ -35,51 +37,33 @@ public class AuthServiceImpl implements AuthService{
 
     // 1. member Email을 확인하여 없는 경우 예외를 던짐
     Member member = repository.findByEmail(dto.getEmail()).orElseThrow(() -> new UsernameNotFoundException("올바른 email이 아닙니다."));
-
     //2. password 확인
     if(!encoder.matches(dto.getPassword(), member.getPassword())) {
       throw new BadCredentialsException("비밀번호가 일치하지 않습니다") {
       };
     }
-
     //3. 계정 status 확인
     checkStatus(member);
 
     //4. 쿠키에 token 부여
-    String accessToken = util.createAccessToken(member.getId(), member.getEmail(), member.getRole());
-    String refreshToken = util.createRefreshToken(member.getId(), member.getEmail(), member.getRole());
+    String accessToken = jwtUtil.createAccessToken(member.getId(), member.getRole());
+    String refreshToken = jwtUtil.createRefreshToken(member.getId(), member.getRole());
     log.info("accessToken : {}",accessToken);
     log.info("refreshToken : {}",refreshToken);
-    //아래 private Method로 Cookie 생성 메서드 구현
-    createCookies(response,accessToken,refreshToken);
-    log.info(response.getHeader("Set-Cookie"));
-    //5. MemberDTO 반환
 
+    //5. CookieUtil로 별도 cookie 생성 메서드 구현
+    ResponseCookie accessCookie = cookieUtil.createAccessCookie(accessToken);
+    ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(refreshToken);
+
+    //6. response header에 쿠키 추가
+    response.addHeader("Set-Cookie", accessCookie.toString());
+    response.addHeader("Set-Cookie", refreshCookie.toString());
+    log.info(response.getHeader("Set-Cookie"));
+
+    //7. MemberDTO 반환
     return mapper.toMemberDTO(member);
   }
 
-  private void createCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-    ResponseCookie accessCookie = ResponseCookie.from("ACCESS_TOKEN", accessToken)
-            .httpOnly(true)
-            .sameSite("Lax")
-            .secure(false)
-            .path("/")
-            .maxAge(Duration.ofMillis(util.getAccessTokenExpiration()))
-            .build();
-
-    ResponseCookie refreshCookie = ResponseCookie.from("REFRESH_TOKEN", refreshToken)
-            .httpOnly(true)
-            .sameSite("Lax")
-            .secure(false)
-            .path("/")
-            .maxAge(Duration.ofMillis(util.getRefreshTokenExpiration()))
-            .build();
-
-    log.info( "accessToken이 담긴 쿠키 ~ :{}",accessCookie.toString());
-    log.info("refreshToken이 담긴 쿠키 ~ :{}",refreshCookie.toString());
-    response.addHeader("Set-Cookie", accessCookie.toString());
-    response.addHeader("Set-Cookie", refreshCookie.toString());
-  }
 
   private void checkStatus(Member member) {
     if(member.getStatus().equals("DISABLED")) {
