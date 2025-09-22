@@ -3,12 +3,13 @@ package com.medinote.medinote_back_kc.security.util;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-@Component
+@Configuration
 @RequiredArgsConstructor
 @Log4j2
 public class CookieUtil {
