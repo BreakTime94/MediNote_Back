@@ -1,14 +1,17 @@
 package com.medinote.medinote_back_kc.security.util;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
 public class RedisUtil {
+
   private final RedisTemplate<String, Object> redisTemplate;
 
   public void set(String key, String value, long timeoutMillis) {

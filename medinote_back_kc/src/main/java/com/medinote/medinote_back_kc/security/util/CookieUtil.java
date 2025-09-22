@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
-@Configuration
+@Component
 @RequiredArgsConstructor
 @Log4j2
 public class CookieUtil {
