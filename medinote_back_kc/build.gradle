@@ -82,7 +82,6 @@ dependencies {
     //redis 관련
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-
 }
 
 tasks.named('test') {

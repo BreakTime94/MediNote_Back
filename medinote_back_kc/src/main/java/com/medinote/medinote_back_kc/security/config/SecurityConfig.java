@@ -2,6 +2,7 @@ package com.medinote.medinote_back_kc.security.config;
 
 import com.medinote.medinote_back_kc.security.filter.JWTAuthenticationFilter;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetailsService;
+import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -26,12 +27,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
   private final JWTUtil jwtUtil;
+  private final CookieUtil cookieUtil;
   private final CustomUserDetailsService customUserDetailsService;
   private final CORSConfig corsConfig;
 
   @Bean
   public JWTAuthenticationFilter jwtAuthenticationFilter() {
-    return new JWTAuthenticationFilter(jwtUtil, customUserDetailsService);
+    return new JWTAuthenticationFilter(jwtUtil, cookieUtil, customUserDetailsService);
   }
 
   @Bean
