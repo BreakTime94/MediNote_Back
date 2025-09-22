@@ -20,8 +20,7 @@ public class dbTest {
     void testConnection() throws Exception {
         try (Connection conn = dataSource.getConnection()) {
             log.info("DB 연결 성공: {}", conn.getMetaData().getURL());
-            Assert.isNonEmpty(conn);
-//            assertThat(conn).isNotNull(); // 연결 객체가 null이 아님을 검증
+            Assert.isNonEmpty(conn);// 연결 객체가 null이 아님을 검증
         }
     }
 }
