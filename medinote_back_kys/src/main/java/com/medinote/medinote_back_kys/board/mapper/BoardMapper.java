@@ -1,23 +1,30 @@
 package com.medinote.medinote_back_kys.board.mapper;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import org.mapstruct.*;
 
-@Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-        nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS
-)
+@Mapper(componentModel = "spring")
 public interface BoardMapper {
 
-    // 신규 생성: id 등 DTO에 없는 필드는 무시
-    @Mapping(target = "id", ignore = true)
+    /** Create DTO → Entity */
     Board toEntity(BoardCreateRequestDTO dto);
 
-    // 부분 갱신(옵션): dto의 null 필드는 건드리지 않음 → 엔티티 기존값 유지
+    /** Entity → Create DTO (필요 시) */
+    BoardCreateRequestDTO toCreateDTO(Board entity);
+
+    /** Update DTO → Entity (id 포함) */
+    @Mapping(target = "id", source = "id")
+    Board toEntity(BoardUpdateRequestDTO dto);
+
+    /** Entity → Update DTO (필요 시) */
+    BoardUpdateRequestDTO toUpdateDTO(Board entity);
+
+    /**
+     * 부분 수정 (Patch 성격)
+     * null 값은 무시하고 기존 엔티티에 덮어씀
+     */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    void updateEntityFromDto(BoardCreateRequestDTO dto, @MappingTarget Board entity);
+    void updateEntityFromDto(BoardUpdateRequestDTO dto, @MappingTarget Board entity);
 }
