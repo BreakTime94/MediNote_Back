@@ -34,4 +34,8 @@ public class RedisUtil {
   public boolean hasKey(String key) {
     return redisTemplate.hasKey(key);
   }
+
+  public long getTtl(String key) {
+    return redisTemplate.getExpire(key);
+  }
 }

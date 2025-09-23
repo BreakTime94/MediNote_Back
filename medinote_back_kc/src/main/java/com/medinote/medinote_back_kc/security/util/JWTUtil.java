@@ -1,11 +1,11 @@
 package com.medinote.medinote_back_kc.security.util;
 
 import com.medinote.medinote_back_kc.member.domain.entity.Role;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.medinote.medinote_back_kc.security.status.TokenStatus;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +15,7 @@ import java.util.Date;
 
 @Component
 @Getter
+@Log4j2
 public class JWTUtil {
 
   private final SecretKey secret;
@@ -88,6 +89,25 @@ public class JWTUtil {
       return (getClaims(token).getExpiration().getTime() - new Date().getTime()) <= 5 * 60 * 1000;
     } catch (Exception e) {
       return true;
+    }
+  }
+
+  public TokenStatus validateToken(String token) {
+    try {
+      getClaims(token); // 여기서 예외 터지면 catch로 감
+      return TokenStatus.VALID;
+    } catch (ExpiredJwtException e) {
+      log.warn("토큰 만료: {}", e.getMessage());
+      return TokenStatus.EXPIRED;
+    } catch (SecurityException e) {
+      log.warn("토큰 서명 불일치(위조 가능): {}", e.getMessage());
+      return TokenStatus.INVALID;
+    } catch (MalformedJwtException e) {
+      log.warn("토큰 구조 이상: {}", e.getMessage());
+      return TokenStatus.MALFORMED;
+    } catch (Exception e) {
+      log.error("토큰이 없거나 알 수 없는 토큰 오류", e);
+      return TokenStatus.UNKNOWN;
     }
   }
 

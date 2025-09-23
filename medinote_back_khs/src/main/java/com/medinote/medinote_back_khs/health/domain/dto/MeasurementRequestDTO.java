@@ -65,5 +65,13 @@ public class MeasurementRequestDTO {
     @Max(value = 1000, message = "혈당은 1000mg/dL 이하여야 합니다")
     private Double bloodSugar;
 
+    @Min(value = 30, message = "심박수는 30bpm 이상이어야 합니다.")
+    @Max(value = 250, message = "심박수는 250bpm 이하여야 합니다.")
+    private Integer heartRate;          // 심박수 (bpm)
+
+    @Positive(message = "수면 시간은 0 이상이어야 합니다.")
+    @Max(value = 24, message = "하루 수면 시간은 24시간을 초과할 수 없습니다.")
+    private Double sleepHours;          // 수면 시간 (시간 단위)
+
 
 }
