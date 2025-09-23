@@ -19,17 +19,39 @@ public class Medication extends ModiEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false, unique = true)
-  private String drugCode;    // 식약처 코드 (필수, 유니크)
+  @Column(nullable = false, unique = true) // 필수
+  private String drugCode;     // itemSeq
 
   @Column(nullable = false)
-  private String nameKo;      // 한글명 (필수)
+  private String nameKo;     // itemName
 
-  @Column(nullable = false)
-  private String ingredient;  // 주요성분 (필수)
+  private String company;    // entpName
 
-  private String form;        // 약 제형 (선택)
-  private String company;     // 제약회사 (선택)
-  private String source;      // 식약처 의약품 정보 API (선택)
+  @Column(columnDefinition = "TEXT")
+  private String effect;     // efcyQesitm
 
+  @Column(columnDefinition = "TEXT")
+  private String useMethod;  // useMethodQesitm
+
+  @Column(columnDefinition = "TEXT")
+  private String warning;    // atpnWarnQesitm
+
+  @Column(columnDefinition = "TEXT")
+  private String caution;    // atpnQesitm
+
+  @Column(columnDefinition = "TEXT")
+  private String interaction;  // intrcQesitm
+
+  @Column(columnDefinition = "TEXT")
+  private String sideEffect;   // seQesitm
+
+  @Column(columnDefinition = "TEXT")
+  private String storage;      // depositMethodQesitm
+
+  private String openDate;
+  private String updateDate;
+  private String image;
+  private String bizNo;
+
+  private String source;  // API 출처
 }
