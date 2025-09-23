@@ -3,8 +3,10 @@ package com.medinote.medinote_back_kc.security.filter;
 import com.medinote.medinote_back_kc.member.domain.entity.Role;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetailsService;
+import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
+import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
@@ -29,6 +31,8 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
   private final JWTUtil jwtUtil;
   private final CookieUtil cookieUtil;
   private final CustomUserDetailsService service;
+  private final RedisUtil redisUtil;
+  private final TokenAuthService tokenAuthService;
 
   @PostConstruct
   public void init() {
@@ -39,41 +43,52 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
     log.info("토큰 검증 필터 들어갑니다~");
-    //1. 쿠키에서 AccessToken 추출
+    // 1. 쿠키에서 AccessToken & RefreshToken 추출
     String accessToken = getCookieValue(request,"ACCESS_COOKIE");
-    String refreshToken = getCookieValue(request,"REFRESH_COOKIE"); //refreshToken도 무언가 조치가 필요해 보인다...?
+    String refreshToken = getCookieValue(request,"REFRESH_COOKIE");//refreshToken도 무언가 조치가 필요해 보인다...?
 
-    log.info(accessToken);
-    log.info(refreshToken);
-
-    try{
-      // accessToken과 refreshToken 둘다 있는 경우!
-      if(accessToken != null && refreshToken != null) {
-        //1) accessToken이 곧 만료되는 경우 (5분 이내)
-        if(jwtUtil.isExpiredSoon(accessToken)) {
-            accessToken = reissueAccessToken(refreshToken);
-            response.addHeader("Set-Cookie", cookieUtil.createAccessCookie(accessToken).toString());
-            setAuthenticaionFromToken(accessToken);
-        } else { //2. accessToken 유효기간 충분한 경우
-          setAuthenticaionFromToken(accessToken);
-        }
-
-      } else if(accessToken == null && refreshToken != null) { //3) refreshToken만 살아 있는 경우
-        accessToken = reissueAccessToken(refreshToken);
-        response.addHeader("Set-Cookie", cookieUtil.createAccessCookie(accessToken).toString());
-        setAuthenticaionFromToken(accessToken);
-      } else{ // 4) 그 외의 경우는 쿠키를 지워주고, Anonymous Context로 처리한다. 재 로그인을 해야한다.
-        response.addHeader("Set-Cookie", cookieUtil.deleteAccessCookie().toString());
-        response.addHeader("Set-Cookie", cookieUtil.deleteRefreshCookie().toString());
-        SecurityContextHolder.clearContext();
-      }
-    } catch (Exception e){
-      SecurityContextHolder.clearContext();
-    } finally {
-      //다음 필터로 진행
+    //2. RefreshToken 유효성 검사 (만료, 사인검증, 구조 등 전부 포함)
+    if(!tokenAuthService.refreshTokenIsValid(refreshToken)) {
+      checkAndDeleteRedis(refreshToken);
+      clearAuth(response);
       filterChain.doFilter(request, response);
+      return;
     }
+    // 3. AccessToken 유효성 검사 (Refresh는 정상으로 간주)
 
+    switch (tokenAuthService.accessTokenStatus(accessToken)) {
+      case VALID: //accessToken 존재
+          // 1-1) accessToken이 곧 만료되는 경우 (5분 이내)
+          if(jwtUtil.isExpiredSoon(accessToken)) {
+            if(tokenAuthService.checkRedis(refreshToken)) {
+              accessToken = tokenAuthService.reissueAccessToken(refreshToken);
+              response.addHeader("Set-Cookie", cookieUtil.createAccessCookie(accessToken).toString());
+              setAuthenticationFromToken(accessToken);
+            } else{
+              // 1-2) accessToken이 곧 만료되는데 redis가 정상이 아닌 경우
+              redisUtil.delete(jwtUtil.getUserId(refreshToken).toString());
+              clearAuth(response);
+            }
+          } else { // 2) accessToken 유효기간 충분
+            setAuthenticationFromToken(accessToken);
+          }
+          break;
+      case EXPIRED: // 3) accessToken 유효기간 만료
+        if(tokenAuthService.checkRedis(refreshToken)) {
+          accessToken = tokenAuthService.reissueAccessToken(refreshToken);
+          response.addHeader("Set-Cookie", cookieUtil.createAccessCookie(accessToken).toString());
+          setAuthenticationFromToken(accessToken);
+        } else{ //redis가 정상이 아닌경우
+          redisUtil.delete(jwtUtil.getUserId(refreshToken).toString());
+          clearAuth(response);
+        }
+        break;
+      case MALFORMED, INVALID, UNKNOWN: // 4) 그냥 비정상인 경우
+        checkAndDeleteRedis(refreshToken);
+        clearAuth(response);
+        break;
+    }
+    filterChain.doFilter(request, response);
   }
 
   //Cookie 파싱 (Token 꺼냄)
@@ -88,14 +103,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
     return null;
   }
 
-  private String reissueAccessToken(String refreshToken) {
-    Long id = jwtUtil.getUserId(refreshToken);
-    Role role = jwtUtil.getRole(refreshToken);
-
-    return jwtUtil.createAccessToken(id, role);
-  }
-
-  private void setAuthenticaionFromToken(String accessToken) {
+  private void setAuthenticationFromToken(String accessToken) {
     //3. AccessToken에서 id 추출
     Long id = jwtUtil.getUserId(accessToken);
 
@@ -107,6 +115,18 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
 
     //6. Security Context 등록
     SecurityContextHolder.getContext().setAuthentication(authentication);
+  }
+
+  private void clearAuth(HttpServletResponse response) {
+    response.addHeader("Set-Cookie", cookieUtil.deleteAccessCookie().toString());
+    response.addHeader("Set-Cookie", cookieUtil.deleteRefreshCookie().toString());
+    SecurityContextHolder.clearContext();
+  }
+
+  private void checkAndDeleteRedis(String refreshToken) {
+    if(tokenAuthService.checkRedis(refreshToken)) {
+      redisUtil.delete(jwtUtil.getUserId(refreshToken).toString());
+    }
   }
 
 }

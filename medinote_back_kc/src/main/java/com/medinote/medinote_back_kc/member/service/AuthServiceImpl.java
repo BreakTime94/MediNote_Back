@@ -8,6 +8,7 @@ import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.security.dto.AuthMemberDTO;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
+import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,7 @@ public class AuthServiceImpl implements AuthService{
   private final MemberMapper mapper;
   private final JWTUtil jwtUtil;
   private final CookieUtil cookieUtil;
+  private final RedisUtil redisUtil;
   private final PasswordEncoder encoder;
 
   @Override
@@ -58,9 +61,11 @@ public class AuthServiceImpl implements AuthService{
     //6. response header에 쿠키 추가
     response.addHeader("Set-Cookie", accessCookie.toString());
     response.addHeader("Set-Cookie", refreshCookie.toString());
-    log.info(response.getHeader("Set-Cookie"));
+    log.info("헤더의 쿠키 좀 볼까? : {}", response.getHeader("Set-Cookie"));
 
-    //7. MemberDTO 반환
+    //7. redis에 refresh token 추가
+    redisUtil.set(member.getId().toString(), refreshToken, jwtUtil.getExpirationDate(refreshToken).getTime() - System.currentTimeMillis());
+    //8. MemberDTO 반환
     return mapper.toMemberDTO(member);
   }
 
