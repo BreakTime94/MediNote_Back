@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController //json으로 요청/응답 처리
-@RequestMapping("/measurement")
+@RequestMapping("/health/measurement")
 @RequiredArgsConstructor
 public class MeasurementController {
   //HTTP 요청(JSON) → DTO로 변환해서 Service에 전달.
