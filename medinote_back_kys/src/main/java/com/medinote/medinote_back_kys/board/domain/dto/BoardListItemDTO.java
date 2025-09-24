@@ -15,7 +15,7 @@ public class BoardListItemDTO {
     private Long memberId;
     private Long boardCategoryId;
     private String title;
-    private Boolean isPublic;
+        private Boolean isPublic;
     private Boolean requireAdminPost;
     private QnaStatus qnaStatus;
     private PostStatus postStatus;
