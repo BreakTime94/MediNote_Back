@@ -5,19 +5,23 @@ import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
+import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import com.medinote.medinote_back_kys.board.mapper.BoardMapper;
 import com.medinote.medinote_back_kys.board.repository.BoardRepository;
+import com.medinote.medinote_back_kys.board.repository.BoardSpecs;
 import com.medinote.medinote_back_kys.common.paging.Criteria;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -51,29 +55,27 @@ public class BoardService {
         return entity;
     }
 
+    /** 기본 화이트리스트 (클라이언트 정렬필드 → 실제 엔티티 프로퍼티) */
+    private static final Map<String, String> DEFAULT_SORT_WHITELIST = Map.of(
+            "id", "id",
+            "title", "title",
+            "regDate", "regDate",
+            "postStatus", "postStatus",
+            "qnaStatus", "qnaStatus"
+    );
+
+    /** ✅ 필터링 적용된 목록 조회(기본 화이트리스트 사용) */
     public BoardListResponseDTO listBoards(Criteria criteria) {
-        // 테스트에서 사용한 화이트리스트와 동일한 매핑
-        Map<String, String> whitelist = Map.of(
-                "id", "id",
-                "title", "title",
-                "regDate", "regDate",
-                "postStatus", "postStatus",
-                "qnaStatus", "qnaStatus"
-        );
-
-        Pageable pageable = criteria.toPageable(whitelist);
-        Page<Board> page = boardRepository.findAll(pageable);
-
-        // 매퍼로 페이지 메타 + 아이템 매핑
-        return boardMapper.toListResponse(page, criteria);
+        return listBoards(criteria, DEFAULT_SORT_WHITELIST);
     }
 
-    /**
-     * 목록 조회(확장 버전): 호출 측에서 화이트리스트(클라이언트 필드 → 실제 프로퍼티) 지정 가능.
-     */
+    /** ✅ 필터링 적용된 목록 조회(사용자 정의 화이트리스트 지원) */
     public BoardListResponseDTO listBoards(Criteria criteria, Map<String, String> whitelist) {
         Pageable pageable = criteria.toPageable(whitelist);
-        Page<Board> page = boardRepository.findAll(pageable);
+        Specification<Board> spec = buildSpecFromCriteria(criteria);
+        Page<Board> page = (spec == null)
+                ? boardRepository.findAll(pageable)
+                : boardRepository.findAll(spec, pageable);
         return boardMapper.toListResponse(page, criteria);
     }
 
@@ -93,5 +95,123 @@ public class BoardService {
         }
 
         return boardMapper.toDetailResponse(board);
+    }
+
+
+    // ===================== 내부 헬퍼 =====================
+
+    /**
+     * Criteria → Specification<Board>
+     * - keyword: 제목/내용 like
+     * - filters:
+     *   categoryId, qnaStatus, writerId, requireAdminPost, from, to, statuses
+     * - 기본은 userVisibleBaseline() 적용
+     *   (단, filters.statuses 가 명시되면 해당 집합으로 대체)
+     */
+    private Specification<Board> buildSpecFromCriteria(Criteria c) {
+        // 1) 기본 가시성 정책
+        Specification<Board> spec = BoardSpecs.userVisibleBaseline();
+
+        // 2) keyword
+        if (c.getKeyword() != null && !c.getKeyword().isBlank()) {
+            spec = Specification.allOf(spec, BoardSpecs.keywordLike(c.getKeyword()));
+        }
+
+        // 3) 동적 필터 해석
+        Map<String, String> f = Optional.ofNullable(c.getFilters()).orElseGet(HashMap::new);
+
+        // categoryId
+        Long categoryId = parseLong(f.get("categoryId")).orElse(null);
+        if (categoryId != null) {
+            spec = Specification.allOf(spec, BoardSpecs.categoryEquals(categoryId));
+        }
+
+        // qnaStatus
+        QnaStatus qna = parseEnum(f.get("qnaStatus"), QnaStatus.class).orElse(null);
+        if (qna != null) {
+            spec = Specification.allOf(spec, BoardSpecs.qnaStatusEquals(qna));
+        }
+
+        // writerId (memberId)
+        Long writerId = parseLong(f.get("writerId")).orElse(null);
+        if (writerId != null) {
+            spec = Specification.allOf(spec, BoardSpecs.writerEquals(writerId));
+        }
+
+        // requireAdminPost
+        Boolean require = parseBoolean(f.get("requireAdminPost")).orElse(null);
+        if (require != null) {
+            spec = Specification.allOf(spec, BoardSpecs.requireAdminPost(require));
+        }
+
+        // regDate between
+        LocalDateTime from = parseDateTime(f.get("from")).orElse(null);
+        LocalDateTime to   = parseDateTime(f.get("to")).orElse(null);
+        if (from != null || to != null) {
+            spec = Specification.allOf(spec, BoardSpecs.regBetween(from, to));
+        }
+
+        // statuses: 명시되면 기본 baseline 대체
+        // 예: filters[statuses]=PUBLISHED,HIDDEN
+        if (f.containsKey("statuses")) {
+            Set<PostStatus> set = parseStatuses(f.get("statuses"));
+            if (!set.isEmpty()) {
+                // baseline 제거 효과를 위해: 새로 구성
+                spec = Specification.allOf(
+                        // 공개 여부는 유지(요구사항에 따라 제거 가능)
+                        BoardSpecs.isPublicTrue(),
+                        BoardSpecs.statusIn(set),
+                        // 나머지 조건은 위에서 이미 spec에 누적되었으므로 OK
+                        spec // 누적 조건 포함
+                );
+            }
+        }
+
+        return spec;
+    }
+
+    private Optional<Long> parseLong(String s) {
+        try {
+            return (s == null || s.isBlank()) ? Optional.empty() : Optional.of(Long.parseLong(s.trim()));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Boolean> parseBoolean(String s) {
+        if (s == null) return Optional.empty();
+        String v = s.trim().toLowerCase(Locale.ROOT);
+        return switch (v) {
+            case "true", "1", "y", "yes", "on" -> Optional.of(true);
+            case "false", "0", "n", "no", "off" -> Optional.of(false);
+            default -> Optional.empty();
+        };
+    }
+
+    private <E extends Enum<E>> Optional<E> parseEnum(String s, Class<E> type) {
+        if (s == null || s.isBlank()) return Optional.empty();
+        try {
+            return Optional.of(Enum.valueOf(type, s.trim().toUpperCase(Locale.ROOT)));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<LocalDateTime> parseDateTime(String s) {
+        if (s == null || s.isBlank()) return Optional.empty();
+        try {
+            return Optional.of(LocalDateTime.parse(s.trim()));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
+    }
+
+    private Set<PostStatus> parseStatuses(String s) {
+        if (s == null || s.isBlank()) return Collections.emptySet();
+        Set<PostStatus> set = EnumSet.noneOf(PostStatus.class);
+        for (String token : s.split(",")) {
+            parseEnum(token, PostStatus.class).ifPresent(set::add);
+        }
+        return set;
     }
 }
