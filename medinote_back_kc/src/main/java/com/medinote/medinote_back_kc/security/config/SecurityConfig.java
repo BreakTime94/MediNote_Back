@@ -2,6 +2,7 @@ package com.medinote.medinote_back_kc.security.config;
 
 import com.medinote.medinote_back_kc.security.filter.JWTAuthenticationFilter;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetailsService;
+import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
@@ -31,11 +32,12 @@ public class SecurityConfig {
   private final CookieUtil cookieUtil;
   private final CustomUserDetailsService customUserDetailsService;
   private final RedisUtil redisUtil;
+  private final TokenAuthService tokenAuthService;
   private final CORSConfig corsConfig;
 
   @Bean
   public JWTAuthenticationFilter jwtAuthenticationFilter() {
-    return new JWTAuthenticationFilter(jwtUtil, cookieUtil, customUserDetailsService, redisUtil);
+    return new JWTAuthenticationFilter(jwtUtil, cookieUtil, customUserDetailsService, redisUtil, tokenAuthService);
   }
 
   @Bean
