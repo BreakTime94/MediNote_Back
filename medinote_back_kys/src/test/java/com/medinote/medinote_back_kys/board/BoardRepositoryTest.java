@@ -1,90 +1,111 @@
 package com.medinote.medinote_back_kys.board;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import com.medinote.medinote_back_kys.board.mapper.BoardMapper;
 import com.medinote.medinote_back_kys.board.repository.BoardRepository;
+import com.medinote.medinote_back_kys.board.repository.BoardSpecs;
+import com.medinote.medinote_back_kys.common.paging.Criteria;
 import jakarta.persistence.EntityManager;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest(
-        properties = {
-                // Security 자동설정 제외 (테스트 시 불필요한 계정 메시지 제거)
-                "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
-        }
-)
-@TestMethodOrder(OrderAnnotation.class)
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+@SpringBootTest(properties = {
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
+})
+@Transactional
 class BoardRepositoryTest {
 
-    @Autowired
-    private BoardRepository boardRepository;
+    @Autowired private BoardRepository boardRepository;
+    @Autowired private BoardMapper boardMapper;
+    @Autowired private EntityManager em;
 
-    @Autowired
-    private BoardMapper boardMapper;
+    // ===== 유틸 =====
+    private void flushClear() {
+        em.flush();
+        em.clear();
+    }
 
-    @Autowired
-    private EntityManager entityManager;
+    private Map<String, String> whitelist() {
+        return Map.of(
+                "id", "id",
+                "title", "title",
+                "regDate", "regDate",
+                "postStatus", "postStatus",
+                "qnaStatus", "qnaStatus"
+        );
+    }
 
+    private BoardListResponseDTO toListDTO(Specification<Board> spec, Criteria c) {
+        Pageable pageable = c.toPageable(whitelist());
+        var page = boardRepository.findAll(spec, pageable);
+        return boardMapper.toListResponse(page, c);
+    }
+
+    private void seedMany(int count, String titlePrefix) {
+        for (int i = 1; i <= count; i++) {
+            boardRepository.save(Board.builder()
+                    .memberId(1L)
+                    .boardCategoryId(2L)
+                    .title(titlePrefix + "-" + i)
+                    .content("내용-" + i)
+                    .build());
+        }
+    }
+
+    // ===== 생성 =====
     @Test
-    @Order(1)
-    @DisplayName("Board 생성: DTO null → 엔티티 기본값 & DB DEFAULT 확인")
-    @Transactional
-    void createBoard_withDefaults_success() {
-        // given
-        BoardCreateRequestDTO dto = BoardCreateRequestDTO.builder()
+    @DisplayName("생성: DTO null 필드는 엔티티/DB 기본값이 적용된다")
+    void create_withDefaults_success() {
+        var dto = BoardCreateRequestDTO.builder()
                 .memberId(1L)
                 .boardCategoryId(2L)
                 .title("hello")
                 .content("content")
-                // 나머지 필드 null → 엔티티의 @Builder.Default 또는 DB default 사용
                 .build();
 
-        // when
-        Board entity = boardMapper.toEntity(dto);
-        Board saved = boardRepository.save(entity);
-
-        // flush & clear 후 재조회 (DB default 확인)
-        entityManager.flush();
-        entityManager.clear();
+        Board saved = boardRepository.save(boardMapper.toEntity(dto));
+        flushClear();
         Board found = boardRepository.findById(saved.getId()).orElseThrow();
 
-        // then
         Assertions.assertAll(
                 () -> Assertions.assertEquals(Boolean.TRUE, found.getIsPublic()),
                 () -> Assertions.assertEquals(Boolean.FALSE, found.getRequireAdminPost()),
                 () -> Assertions.assertEquals(QnaStatus.WAITING, found.getQnaStatus()),
-                () -> Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus()) // DB/엔티티 default 통일 필요
+                () -> Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus())
         );
     }
 
     @Test
-    @Order(2)
-    @DisplayName("Board 생성: DTO 지정값으로 기본값 덮어쓰기")
-    @Transactional
-    void createBoard_overrideDefaults_success() {
-        // given
-        BoardCreateRequestDTO dto = BoardCreateRequestDTO.builder()
+    @DisplayName("생성: DTO 지정값으로 기본값을 덮어쓴다")
+    void create_overrideDefaults_success() {
+        var dto = BoardCreateRequestDTO.builder()
                 .memberId(1L)
                 .boardCategoryId(2L)
                 .title("[테스트] 공개글 아님 + ADMIN 승인 필요")
                 .content("승인 필요한 글입니다.")
-                .isPublic(false)                   // default(true) 덮어쓰기
-                .requireAdminPost(true)            // default(false) 덮어쓰기
-                .qnaStatus(QnaStatus.ANSWERED)     // default(WAITING) 덮어쓰기
-                .postStatus(PostStatus.PUBLISHED)  // default(DRAFT or PUBLISHED 중 택1)
+                .isPublic(false)
+                .requireAdminPost(true)
+                .qnaStatus(QnaStatus.ANSWERED)
+                .postStatus(PostStatus.PUBLISHED)
                 .build();
 
-        // when
         Board saved = boardRepository.save(boardMapper.toEntity(dto));
 
-        // then
         Assertions.assertAll(
                 () -> Assertions.assertNotNull(saved.getId()),
                 () -> Assertions.assertFalse(saved.getIsPublic()),
@@ -95,59 +116,46 @@ class BoardRepositoryTest {
     }
 
     @Test
-    @Order(3)
-    @DisplayName("Board 단순 삽입 테스트 (Entity 직접 사용)")
-    @Transactional
-    void insertBoard_entityDirect_success() {
-        // given
-        Board board = Board.builder()
+    @DisplayName("단순 삽입(Entity 직접)도 정상 동작한다")
+    void insert_entityDirect_success() {
+        Board saved = boardRepository.save(Board.builder()
                 .memberId(1L)
                 .boardCategoryId(2L)
                 .title("단순 삽입 테스트 제목")
                 .content("단순 삽입 테스트 내용")
-                .build();
-
-        // when
-        Board saved = boardRepository.save(board);
-
-        // then
+                .build());
         Assertions.assertNotNull(saved.getId());
-        System.out.println("==== 삽입된 Board ID: " + saved.getId() + " ====");
     }
 
+    // ===== 수정 =====
     @Test
-    @Order(4)
-    @DisplayName("Board 수정: Update DTO 적용 후 반영 확인")
-    @Transactional
-    void updateBoard_success() {
-        // given: 기존 데이터(id=10)가 존재한다고 가정
-        BoardUpdateRequestDTO updateDto = BoardUpdateRequestDTO.builder()
-                .id(10L)                          // 수정 대상 게시글 번호
-                .boardCategoryId(2L)             // 카테고리 유지
+    @DisplayName("수정: Update DTO 적용 후 반영 확인")
+    void update_success() {
+        Board base = boardRepository.save(Board.builder()
+                .memberId(1L).boardCategoryId(2L)
+                .title("원본 제목").content("원본 내용")
+                .isPublic(true).requireAdminPost(false)
+                .qnaStatus(QnaStatus.WAITING).postStatus(PostStatus.PUBLISHED)
+                .build());
+
+        var updateDto = BoardUpdateRequestDTO.builder()
+                .id(base.getId())
+                .boardCategoryId(2L)
                 .title("수정된 제목")
                 .content("수정된 내용")
-                .isPublic(false)                 // 공개 여부 변경
-                .requireAdminPost(true)          // 관리자 승인 필요로 변경
-                .qnaStatus(QnaStatus.ANSWERED)   // 상태 변경
-                .postStatus(PostStatus.DRAFT)    // 임시저장 상태로 변경
+                .isPublic(false)
+                .requireAdminPost(true)
+                .qnaStatus(QnaStatus.ANSWERED)
+                .postStatus(PostStatus.DRAFT)
                 .build();
 
-        // when: 기존 엔티티 조회 후 DTO 값 반영
-        Board found = boardRepository.findById(updateDto.getId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 게시글이 존재하지 않습니다."));
-
-        // BoardMapper 활용해 부분 수정
+        Board found = boardRepository.findById(updateDto.getId()).orElseThrow();
         boardMapper.updateEntityFromDto(updateDto, found);
+        boardRepository.save(found);
 
-        // 저장
-        Board updated = boardRepository.save(found);
+        flushClear();
+        Board reloaded = boardRepository.findById(base.getId()).orElseThrow();
 
-        // flush & clear 후 재조회
-        entityManager.flush();
-        entityManager.clear();
-        Board reloaded = boardRepository.findById(10L).orElseThrow();
-
-        // then
         Assertions.assertAll(
                 () -> Assertions.assertEquals("수정된 제목", reloaded.getTitle()),
                 () -> Assertions.assertEquals("수정된 내용", reloaded.getContent()),
@@ -158,108 +166,22 @@ class BoardRepositoryTest {
         );
     }
 
+    // ===== 단일 조회 =====
     @Test
-    @Order(5)
-    @DisplayName("목록 조회: Criteria → Pageable → Page → BoardListResponseDTO 매핑 검증")
-    @Transactional
-    void listBoards_pagination_and_mapping_success() {
-        // given: 25건 심기 (정렬/페이지 검증용)
-        for (int i = 1; i <= 25; i++) {
-            Board b = Board.builder()
-                    .memberId(1L)
-                    .boardCategoryId(2L)
-                    .title("목록테스트-" + i)
-                    .content("내용-" + i)
-                    // isPublic/requireAdminPost/qnaStatus/postStatus 는 엔티티 기본값 사용
-                    .build();
-            boardRepository.save(b);
-        }
-
-        // Criteria: 2페이지, size=10, 정렬: id,desc
-        var c = new com.medinote.medinote_back_kys.common.paging.Criteria();
-        c.setPage(2);
-        c.setSize(10);
-        c.setSort(java.util.List.of("id,desc")); // 네가 만든 검증 파이프 그대로 사용
-        c.setKeyword("목록테스트");               // 굳이 필터 안 써도 keyword echo만 확인
-
-        // 화이트리스트: 클라이언트 필드명 → 실제 컬럼/프로퍼티명
-        var whitelist = java.util.Map.of(
-                "id", "id",
-                "title", "title",
-                "regDate", "regDate",
-                "postStatus", "postStatus",
-                "qnaStatus", "qnaStatus"
-        );
-
-        var pageable = c.toPageable(whitelist);
-
-        // when: 단순 전체 조회로 Page 얻기 (커스텀 검색 메서드 없으면 findAll로 충분)
-        var page = boardRepository.findAll(pageable);
-
-        // 매퍼로 DTO 변환
-        var dto = boardMapper.toListResponse(page, c);
-
-        // then
-        // 1) 페이지 메타
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(28L, dto.getPage().getTotalElements()),
-                () -> Assertions.assertEquals(10, dto.getPage().getSize()),
-                () -> Assertions.assertEquals(3, dto.getPage().getTotalPages()), // 25 / 10 => 3
-                () -> Assertions.assertEquals(2, dto.getPage().getPage())        // 요청한 현재 페이지(2)
-        );
-
-        // 2) 아이템 수: 2페이지면 10건
-        Assertions.assertEquals(10, dto.getItems().size());
-
-        // 3) 정렬(id desc) 확인: 첫 아이템 id > 마지막 아이템 id
-        var firstId = dto.getItems().get(0).getId();
-        var lastId = dto.getItems().get(dto.getItems().size() - 1).getId();
-        Assertions.assertTrue(firstId > lastId, "정렬(id desc) 실패: " + firstId + " <= " + lastId);
-
-        // 4) 일부 필드 매핑 sanity check
-        var any = dto.getItems().get(0);
-        Assertions.assertAll(
-                () -> Assertions.assertNotNull(any.getTitle()),
-                () -> Assertions.assertNotNull(any.getMemberId()),
-                () -> Assertions.assertNotNull(any.getBoardCategoryId()),
-                () -> Assertions.assertNotNull(any.getIsPublic()),
-                () -> Assertions.assertNotNull(any.getRequireAdminPost()),
-                () -> Assertions.assertNotNull(any.getQnaStatus()),
-                () -> Assertions.assertNotNull(any.getPostStatus())
-        );
-
-        // 5) keyword echo
-        Assertions.assertEquals("목록테스트", dto.getKeyword());
-    }
-
-    @Test
-    @Order(6)
-    @DisplayName("단일 조회: Repository → Entity → Mapper → BoardDetailResponseDTO 매핑 성공")
-    @Transactional
+    @DisplayName("단일 조회: Entity → BoardDetailResponseDTO 매핑 성공")
     void findOne_and_map_to_detail_dto_success() {
-        // given: 명시적 값으로 엔티티 저장
-        Board seed = Board.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("단일조회-제목")
-                .content("단일조회-본문")
-                .isPublic(false)
-                .requireAdminPost(true)
-                .qnaStatus(QnaStatus.ANSWERED)
-                .postStatus(PostStatus.DRAFT)
-                .build();
+        Board saved = boardRepository.save(Board.builder()
+                .memberId(1L).boardCategoryId(2L)
+                .title("단일조회-제목").content("단일조회-본문")
+                .isPublic(false).requireAdminPost(true)
+                .qnaStatus(QnaStatus.ANSWERED).postStatus(PostStatus.DRAFT)
+                .build());
 
-        Board saved = boardRepository.save(seed);
+        flushClear();
 
-        // 영속성 컨텍스트 비우고 실제 DB에서 다시 조회해 매핑 검증
-        entityManager.flush();
-        entityManager.clear();
-
-        // when: 단일 조회 후 매퍼로 DTO 변환
         Board found = boardRepository.findById(saved.getId()).orElseThrow();
         var dto = boardMapper.toDetailResponse(found);
 
-        // then: 주요 필드 매핑 검증
         Assertions.assertAll(
                 () -> Assertions.assertEquals(saved.getId(), dto.getId()),
                 () -> Assertions.assertEquals(1L, dto.getMemberId()),
@@ -270,22 +192,144 @@ class BoardRepositoryTest {
                 () -> Assertions.assertTrue(dto.getRequireAdminPost()),
                 () -> Assertions.assertEquals(QnaStatus.ANSWERED, dto.getQnaStatus()),
                 () -> Assertions.assertEquals(PostStatus.DRAFT, dto.getPostStatus()),
-                () -> Assertions.assertNotNull(dto.getRegDate(), "regDate는 null이 아니어야 합니다."),
-                () -> Assertions.assertNotNull(dto.getModDate(), "modDate는 null이 아니어야 합니다.")
+                () -> Assertions.assertNotNull(dto.getRegDate()),
+                () -> Assertions.assertNotNull(dto.getModDate())
         );
     }
 
     @Test
-    @Order(7)
-    @DisplayName("단일 조회: 존재하지 않는 ID는 Optional.empty() 반환")
+    @DisplayName("단일 조회: 존재하지 않는 ID는 Optional.empty()")
     void findOne_not_found_returns_empty_optional() {
-        // given
-        long notExistId = 9_999_999L;
+        var opt = boardRepository.findById(9_999_999L);
+        Assertions.assertTrue(opt.isEmpty());
+    }
 
-        // when
-        var opt = boardRepository.findById(notExistId);
+    // ===== 목록 & 필터 =====
+    @Test
+    @DisplayName("목록: 스펙 + 페이지네이션 + 매핑 + 정렬")
+    void list_with_specs_pagination_mapping_sort_success() {
+        seedMany(25, "목록테스트");
 
-        // then
-        Assertions.assertTrue(opt.isEmpty(), "존재하지 않는 ID는 Optional.empty()여야 합니다.");
+        var spec = Specification.allOf(
+                BoardSpecs.userVisibleBaseline(),
+                BoardSpecs.keywordLike("목록테스트")
+        );
+
+        var c = new Criteria();
+        c.setPage(2);
+        c.setSize(10);
+        c.setSort(List.of("id,desc"));
+        c.setKeyword("목록테스트");
+
+        var dto = toListDTO(spec, c);
+
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(25L, dto.getPage().getTotalElements()),
+                () -> Assertions.assertEquals(10, dto.getPage().getSize()),
+                () -> Assertions.assertEquals(3, dto.getPage().getTotalPages()),
+                () -> Assertions.assertEquals(2, dto.getPage().getPage()),
+                () -> Assertions.assertEquals(10, dto.getItems().size())
+        );
+
+        var firstId = dto.getItems().get(0).getId();
+        var lastId  = dto.getItems().get(dto.getItems().size() - 1).getId();
+        Assertions.assertTrue(firstId > lastId, "정렬(id desc) 실패");
+
+        var any = dto.getItems().get(0);
+        Assertions.assertAll(
+                () -> Assertions.assertNotNull(any.getTitle()),
+                () -> Assertions.assertNotNull(any.getMemberId()),
+                () -> Assertions.assertNotNull(any.getBoardCategoryId()),
+                () -> Assertions.assertNotNull(any.getIsPublic()),
+                () -> Assertions.assertNotNull(any.getRequireAdminPost()),
+                () -> Assertions.assertNotNull(any.getQnaStatus()),
+                () -> Assertions.assertNotNull(any.getPostStatus())
+        );
+        Assertions.assertEquals("목록테스트", dto.getKeyword());
+    }
+
+    @Test
+    @DisplayName("필터: 공개글 + 상태(PUBLISHED/HIDDEN)만 노출")
+    void filter_user_visible_baseline_only() {
+        Board pub = boardRepository.save(Board.builder().memberId(1L).boardCategoryId(2L)
+                .title("pub").content("c").isPublic(true).postStatus(PostStatus.PUBLISHED).build());
+        Board hidden = boardRepository.save(Board.builder().memberId(1L).boardCategoryId(2L)
+                .title("hidden").content("c").isPublic(true).postStatus(PostStatus.HIDDEN).build());
+        boardRepository.save(Board.builder().memberId(1L).boardCategoryId(2L)
+                .title("draft").content("c").isPublic(true).postStatus(PostStatus.DRAFT).build());
+        boardRepository.save(Board.builder().memberId(1L).boardCategoryId(2L)
+                .title("deleted").content("c").isPublic(true).postStatus(PostStatus.DELETED).build());
+        boardRepository.save(Board.builder().memberId(1L).boardCategoryId(2L)
+                .title("private").content("c").isPublic(false).postStatus(PostStatus.PUBLISHED).build());
+
+        var c = new Criteria();
+        c.setPage(1);
+        c.setSize(50);
+        c.setSort(List.of("id,asc"));
+
+        var dto = toListDTO(BoardSpecs.userVisibleBaseline(), c);
+
+        var titles = dto.getItems().stream().map(i -> i.getTitle()).toList();
+        Assertions.assertTrue(titles.contains("pub"));
+        Assertions.assertTrue(titles.contains("hidden"));
+        Assertions.assertFalse(titles.contains("draft"));
+        Assertions.assertFalse(titles.contains("deleted"));
+        Assertions.assertFalse(titles.contains("private"));
+    }
+
+    @Test
+    @DisplayName("필터: 카테고리(2) + QnA 상태(ANSWERED) + 키워드(바나나) + 등록일 범위")
+    void filter_category_qna_keyword_regDate() {
+        LocalDateTime now = LocalDateTime.now();
+
+        // 카테고리 1 (사과) 5건
+        for (int i = 1; i <= 5; i++) {
+            boardRepository.save(Board.builder()
+                    .memberId(1L).boardCategoryId(1L)
+                    .title("필터테스트-사과-" + i).content("사과 내용 " + i)
+                    .qnaStatus(QnaStatus.WAITING)
+                    .isPublic(true).postStatus(PostStatus.PUBLISHED)
+                    .build());
+        }
+
+        // 카테고리 2 (바나나) 5건 - QnA 상태 사용되는 게시판
+        for (int i = 1; i <= 5; i++) {
+            boardRepository.save(Board.builder()
+                    .memberId(2L).boardCategoryId(2L)
+                    .title("필터테스트-바나나-" + i).content("바나나 내용 " + i)
+                    .qnaStatus(QnaStatus.ANSWERED)
+                    .isPublic(true).postStatus(PostStatus.PUBLISHED)
+                    .build());
+        }
+
+        var c = new Criteria();
+        c.setPage(1);
+        c.setSize(100);
+        c.setSort(List.of("id,asc"));
+        // 굳이 Criteria에도 넣고 싶다면 유지, 아니면 주석 처리
+        c.setKeyword("바나나");
+
+        var spec = Specification.allOf(
+                BoardSpecs.userVisibleBaseline(),         // 공개/PUBLISHED 등 기본 가시성
+                BoardSpecs.categoryEquals(2L),            // ✅ 존재하는 카테고리로 수정
+                BoardSpecs.qnaStatusEquals(QnaStatus.ANSWERED),
+                BoardSpecs.keywordLike("바나나"),
+                BoardSpecs.regBetween(now.minusHours(1), now.plusHours(1))
+        );
+
+        var dto = toListDTO(spec, c);
+
+        // 결과가 존재해야 함 (카테고리2 + ANSWERED + 바나나 = 5건 예상)
+        Assertions.assertTrue(dto.getItems().size() > 0, "필터 결과가 비어 있습니다.");
+
+        // 전 항목 검증
+        dto.getItems().forEach(item -> {
+            Assertions.assertEquals(2L, item.getBoardCategoryId(), "카테고리가 2가 아닙니다.");
+            Assertions.assertEquals(QnaStatus.ANSWERED, item.getQnaStatus(), "QnA 상태가 ANSWERED가 아닙니다.");
+            Assertions.assertTrue(item.getTitle().contains("바나나"), "제목에 '바나나'가 없습니다.");
+        });
+
+        // Criteria 반영 검증(선택)
+        Assertions.assertEquals("바나나", dto.getKeyword(), "DTO의 keyword 반영이 예상과 다릅니다.");
     }
 }
