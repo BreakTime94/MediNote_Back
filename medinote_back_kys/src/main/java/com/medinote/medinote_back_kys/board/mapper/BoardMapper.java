@@ -1,9 +1,6 @@
 package com.medinote.medinote_back_kys.board.mapper;
 
-import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardListItemDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.*;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import com.medinote.medinote_back_kys.common.paging.Criteria;
 import org.mapstruct.*;
@@ -50,4 +47,7 @@ public interface BoardMapper {
                 .keyword(c.getKeyword())
                 .build();
     }
+
+    //단일조회
+    BoardDetailResponseDTO toDetailResponse(Board entity);
 }

@@ -1,8 +1,10 @@
 package com.medinote.medinote_back_kys.board.service;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import com.medinote.medinote_back_kys.board.mapper.BoardMapper;
 import com.medinote.medinote_back_kys.board.repository.BoardRepository;
@@ -10,8 +12,10 @@ import com.medinote.medinote_back_kys.common.paging.Criteria;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -19,6 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BoardService {
+
     private final BoardRepository  boardRepository;
     private final BoardMapper boardMapper;
 
@@ -70,5 +75,23 @@ public class BoardService {
         Pageable pageable = criteria.toPageable(whitelist);
         Page<Board> page = boardRepository.findAll(pageable);
         return boardMapper.toListResponse(page, criteria);
+    }
+
+
+    //단일조회
+    public BoardDetailResponseDTO getBoard(Long id) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found: " + id));
+
+        // (선택) 접근 제어 필요 시 여기서 체크
+        // if (!board.getIsPublic()) { ... 권한 체크 ... }
+        // if (board.getPostStatus() == PostStatus.DELETED) { throw new ResourceNotFoundException(...); }
+        //접근제한 삭제된 글
+        if (board.getPostStatus() == PostStatus.DELETED) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Board not found: " + id);
+        }
+
+        return boardMapper.toDetailResponse(board);
     }
 }
