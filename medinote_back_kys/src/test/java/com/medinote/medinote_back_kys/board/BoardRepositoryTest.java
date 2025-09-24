@@ -231,4 +231,61 @@ class BoardRepositoryTest {
         // 5) keyword echo
         Assertions.assertEquals("목록테스트", dto.getKeyword());
     }
+
+    @Test
+    @Order(6)
+    @DisplayName("단일 조회: Repository → Entity → Mapper → BoardDetailResponseDTO 매핑 성공")
+    @Transactional
+    void findOne_and_map_to_detail_dto_success() {
+        // given: 명시적 값으로 엔티티 저장
+        Board seed = Board.builder()
+                .memberId(1L)
+                .boardCategoryId(2L)
+                .title("단일조회-제목")
+                .content("단일조회-본문")
+                .isPublic(false)
+                .requireAdminPost(true)
+                .qnaStatus(QnaStatus.ANSWERED)
+                .postStatus(PostStatus.DRAFT)
+                .build();
+
+        Board saved = boardRepository.save(seed);
+
+        // 영속성 컨텍스트 비우고 실제 DB에서 다시 조회해 매핑 검증
+        entityManager.flush();
+        entityManager.clear();
+
+        // when: 단일 조회 후 매퍼로 DTO 변환
+        Board found = boardRepository.findById(saved.getId()).orElseThrow();
+        var dto = boardMapper.toDetailResponse(found);
+
+        // then: 주요 필드 매핑 검증
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(saved.getId(), dto.getId()),
+                () -> Assertions.assertEquals(1L, dto.getMemberId()),
+                () -> Assertions.assertEquals(2L, dto.getBoardCategoryId()),
+                () -> Assertions.assertEquals("단일조회-제목", dto.getTitle()),
+                () -> Assertions.assertEquals("단일조회-본문", dto.getContent()),
+                () -> Assertions.assertFalse(dto.getIsPublic()),
+                () -> Assertions.assertTrue(dto.getRequireAdminPost()),
+                () -> Assertions.assertEquals(QnaStatus.ANSWERED, dto.getQnaStatus()),
+                () -> Assertions.assertEquals(PostStatus.DRAFT, dto.getPostStatus()),
+                () -> Assertions.assertNotNull(dto.getRegDate(), "regDate는 null이 아니어야 합니다."),
+                () -> Assertions.assertNotNull(dto.getModDate(), "modDate는 null이 아니어야 합니다.")
+        );
+    }
+
+    @Test
+    @Order(7)
+    @DisplayName("단일 조회: 존재하지 않는 ID는 Optional.empty() 반환")
+    void findOne_not_found_returns_empty_optional() {
+        // given
+        long notExistId = 9_999_999L;
+
+        // when
+        var opt = boardRepository.findById(notExistId);
+
+        // then
+        Assertions.assertTrue(opt.isEmpty(), "존재하지 않는 ID는 Optional.empty()여야 합니다.");
+    }
 }

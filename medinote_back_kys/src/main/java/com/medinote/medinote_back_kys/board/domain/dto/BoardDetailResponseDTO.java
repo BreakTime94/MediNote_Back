@@ -3,18 +3,18 @@ package com.medinote.medinote_back_kys.board.domain.dto;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Getter
+@Data
 @Builder
-public class BoardListItemDTO {
-
+public class BoardDetailResponseDTO {
     private Long id;
     private Long memberId;
     private Long boardCategoryId;
     private String title;
+    private String content;
     private Boolean isPublic;
     private Boolean requireAdminPost;
     private QnaStatus qnaStatus;
