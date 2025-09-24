@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kys.board;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest(properties = {
         // 보안 자동 설정 제외 (테스트 시 불필요한 사용자/패스워드 로그 억제)
@@ -155,5 +157,50 @@ class BoardServiceTest {
         Assertions.assertThrows(IllegalArgumentException.class,
                 () -> boardService.updateBoard(updateDto),
                 "존재하지 않는 게시글 ID면 IllegalArgumentException이 발생해야 합니다.");
+    }
+
+    @Test
+    @DisplayName("단일 조회: 존재하는 게시글을 DTO로 반환")
+    @Transactional
+    void getBoard_success() {
+        // given: 테스트용 게시글 저장
+        Board saved = boardRepository.save(
+                Board.builder()
+                        .memberId(1L)
+                        .boardCategoryId(2L)
+                        .title("단일조회-제목")
+                        .content("단일조회-내용")
+                        .build()
+        );
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        BoardDetailResponseDTO dto = boardService.getBoard(saved.getId());
+
+        // then
+        Assertions.assertAll(
+                () -> Assertions.assertEquals(saved.getId(), dto.getId()),
+                () -> Assertions.assertEquals(1L, dto.getMemberId()),
+                () -> Assertions.assertEquals(2L, dto.getBoardCategoryId()),
+                () -> Assertions.assertEquals("단일조회-제목", dto.getTitle()),
+                () -> Assertions.assertEquals("단일조회-내용", dto.getContent()),
+                () -> Assertions.assertNotNull(dto.getRegDate()),
+                () -> Assertions.assertNotNull(dto.getModDate())
+        );
+    }
+
+    @Test
+    @DisplayName("단일 조회: 없는 ID면 404(ResponseStatusException)")
+    void getBoard_notFound_throws404() {
+        // given
+        long notExistId = 9_999_999L;
+
+        // when & then
+        ResponseStatusException ex = Assertions.assertThrows(
+                ResponseStatusException.class,
+                () -> boardService.getBoard(notExistId)
+        );
+        Assertions.assertEquals(404, ex.getStatusCode().value());
     }
 }

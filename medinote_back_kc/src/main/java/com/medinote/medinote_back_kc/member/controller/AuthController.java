@@ -11,6 +11,7 @@ import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -65,4 +67,18 @@ public class AuthController {
 
     return ResponseEntity.ok("로그아웃 완료");
   }
+
+  @GetMapping("/check")
+  public ResponseEntity<?> checkAuth(Authentication authentication) {
+    if (authentication == null) {
+      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+              .body(Map.of("status", "UNAUTHORIZED"));
+    }
+    return ResponseEntity.ok(Map.of(
+            "status", "OK",
+            "email", authentication.getName(),
+            "roles", authentication.getAuthorities()
+    ));
+  }
+
 }
