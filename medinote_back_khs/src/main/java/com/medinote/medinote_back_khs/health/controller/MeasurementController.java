@@ -16,7 +16,7 @@ public class MeasurementController {
 
   private final MeasurementService measurementService;
 
-  @PostMapping  //create
+  @PostMapping ("/create") //create
   public ResponseEntity<Long> createMeasurement(@RequestBody @Valid MeasurementRequestDTO dto) {
     Long id = measurementService.saveMeasurement(dto);
     return ResponseEntity.ok(id); //w저장된 pk 반환
