@@ -33,6 +33,7 @@ public class TokenAuthServiceImpl implements TokenAuthService {
     } else {
       try{
         String redisToken = redisUtil.get(jwtUtil.getUserId(refreshToken).toString());
+        log.info("Redis 검증 중: {}", redisToken);
         return redisToken != null && redisToken.equals(refreshToken);
       } catch (Exception e) {
         log.error(e.getMessage());
