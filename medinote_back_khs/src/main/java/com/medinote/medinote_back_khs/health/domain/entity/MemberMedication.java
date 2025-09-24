@@ -15,6 +15,7 @@ import java.time.LocalDate;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "tbl_member_medication")
 public class MemberMedication extends BaseEntity {
+  //복용중일 때 추가 정보(복용량, 기간, 현재 복용여부 등)
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +26,8 @@ public class MemberMedication extends BaseEntity {
 
   @Column(nullable = false)
   private Long medicationId;
+
+  private String dosage;  //복용량
 
   private LocalDate startDate;
   private LocalDate endDate;

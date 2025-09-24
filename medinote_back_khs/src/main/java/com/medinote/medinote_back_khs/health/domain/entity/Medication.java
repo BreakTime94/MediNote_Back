@@ -22,7 +22,7 @@ public class Medication extends ModiEntity {
   @Column(nullable = false, unique = true) // 필수
   private String drugCode;     // itemSeq
 
-  @Column(nullable = false)
+  @Column(nullable = false, length = 1000)
   private String nameKo;     // itemName
 
   private String company;    // entpName
