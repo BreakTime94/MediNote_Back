@@ -9,14 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController //json으로 요청/응답 처리
-@RequestMapping("/measurement")
+@RequestMapping("/health/measurement")
 @RequiredArgsConstructor
 public class MeasurementController {
   //HTTP 요청(JSON) → DTO로 변환해서 Service에 전달.
 
   private final MeasurementService measurementService;
 
-  @PostMapping  //create
+  @PostMapping ("/create") //create
   public ResponseEntity<Long> createMeasurement(@RequestBody @Valid MeasurementRequestDTO dto) {
     Long id = measurementService.saveMeasurement(dto);
     return ResponseEntity.ok(id); //w저장된 pk 반환
