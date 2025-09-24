@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kys.board.controller;
 
 import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
 import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
 import com.medinote.medinote_back_kys.board.service.BoardService;
@@ -52,5 +53,10 @@ public class BoardController {
         }
 
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<BoardDetailResponseDTO> getBoard(@PathVariable Long id) {
+        return ResponseEntity.ok(boardService.getBoard(id));
     }
 }
