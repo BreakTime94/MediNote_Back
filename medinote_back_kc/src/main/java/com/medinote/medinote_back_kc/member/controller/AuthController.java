@@ -68,17 +68,4 @@ public class AuthController {
     return ResponseEntity.ok("로그아웃 완료");
   }
 
-  @GetMapping("/check")
-  public ResponseEntity<?> checkAuth(Authentication authentication) {
-    if (authentication == null) {
-      return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-              .body(Map.of("status", "UNAUTHORIZED"));
-    }
-    return ResponseEntity.ok(Map.of(
-            "status", "OK",
-            "email", authentication.getName(),
-            "roles", authentication.getAuthorities()
-    ));
-  }
-
 }

@@ -23,6 +23,7 @@ public class CORSConfig {//CORSFilter가 스프링에 내장되어 있으므로,
             "http://localhost:5173",
             "http://localhost:6006"));
     config.setExposedHeaders(List.of("Set-Cookie"));
+    config.setAllowedHeaders(List.of("*"));
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
