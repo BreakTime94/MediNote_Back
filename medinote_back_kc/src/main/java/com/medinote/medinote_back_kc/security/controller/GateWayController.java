@@ -29,6 +29,7 @@ public class GateWayController {
 
     //2. 내부 서비스 추출
     String originUri = request.getRequestURI();
+    String queryString = request.getQueryString();
     String path = originUri.replace("/api", "");
     log.info("Origin URI: " + originUri);
     log.info("Path: " + path);
@@ -46,7 +47,7 @@ public class GateWayController {
       targetBase = "http://localhost:8082/api";
     }
 
-    String targetUri = targetBase + path;
+    String targetUri = targetBase + path + (queryString != null ? "?" + queryString : "") ;
 
     HttpMethod method = HttpMethod.valueOf(request.getMethod());
 
