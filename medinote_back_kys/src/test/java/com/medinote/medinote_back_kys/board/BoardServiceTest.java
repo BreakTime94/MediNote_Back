@@ -231,4 +231,74 @@ class BoardServiceTest {
         Long last  = dto.getItems().get(dto.getItems().size() - 1).getId();
         Assertions.assertTrue(first > last, "정렬(id desc) 실패: " + first + " <= " + last);
     }
+
+    // ========= 삭제 =========
+    @Test
+    @DisplayName("deleteBoard: 요청자 본인이면 soft delete 성공")
+    void deleteBoard_success() {
+        // given
+        Board saved = boardRepository.save(Board.builder()
+                .memberId(1L)
+                .boardCategoryId(2L)
+                .title("삭제 대상")
+                .content("삭제될 내용")
+                .isPublic(true)
+                .postStatus(PostStatus.PUBLISHED)
+                .build());
+        flushClear();
+
+        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
+                .id(saved.getId())
+                .memberId(1L) // 본인
+                .build();
+
+        // when
+        boardService.deletedBoard(deleteDto);
+        flushClear();
+
+        // then
+        Board reloaded = boardRepository.findById(saved.getId()).orElseThrow();
+        Assertions.assertAll(
+                () -> Assertions.assertFalse(reloaded.getIsPublic(), "삭제 후 공개여부는 false 여야 한다"),
+                () -> Assertions.assertEquals(PostStatus.DELETED, reloaded.getPostStatus(), "삭제 후 상태는 DELETED 여야 한다"),
+                () -> Assertions.assertEquals("삭제 대상", reloaded.getTitle(), "제목은 그대로 유지되어야 한다"),
+                () -> Assertions.assertEquals("삭제될 내용", reloaded.getContent(), "본문은 그대로 유지되어야 한다")
+        );
+    }
+
+    @Test
+    @DisplayName("deleteBoard: 본인 아닌 사용자가 삭제 시 예외 발생")
+    void deleteBoard_notOwner_throwsException() {
+        // given
+        Board saved = boardRepository.save(Board.builder()
+                .memberId(1L)
+                .boardCategoryId(2L)
+                .title("삭제 대상")
+                .content("삭제될 내용")
+                .isPublic(true)
+                .postStatus(PostStatus.PUBLISHED)
+                .build());
+        flushClear();
+
+        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
+                .id(saved.getId())
+                .memberId(99L) // 다른 사용자
+                .build();
+
+        // when & then
+        Assertions.assertThrows(IllegalStateException.class,
+                () -> boardService.deletedBoard(deleteDto));
+    }
+
+    @Test
+    @DisplayName("deleteBoard: 없는 ID 삭제 시 IllegalArgumentException 발생")
+    void deleteBoard_notFound_throwsException() {
+        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
+                .id(9_999_999L)
+                .memberId(1L)
+                .build();
+
+        Assertions.assertThrows(IllegalArgumentException.class,
+                () -> boardService.deletedBoard(deleteDto));
+    }
 }
