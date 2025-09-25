@@ -1,4 +1,4 @@
-package com.medinote.medinote_back_kc.member.domain.dto;
+package com.medinote.medinote_back_kc.member.domain.dto.member;
 
 import com.medinote.medinote_back_kc.member.domain.entity.Role;
 import lombok.AllArgsConstructor;
@@ -19,5 +19,6 @@ public class MemberDTO {
   private Role role;
   private String profileImagePath;
   private String profileMimeType;
+  private boolean fromSocial;
   private LocalDateTime regDate;
 }

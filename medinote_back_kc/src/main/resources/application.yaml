@@ -19,6 +19,7 @@ spring:
       - optional:classpath:secret/jwt.yml
       - optional:classpath:secret/redis.yml
       - optional:classpath:secret/api.yml
+      - optional:classpath:secret/application-oauth.yml
   application:
     name: board
   jpa:
