@@ -1,6 +1,6 @@
 package com.medinote.medinote_back_kc.member.domain.entity;
 
-import com.medinote.medinote_back_kc.member.domain.dto.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,10 +20,10 @@ public class Member {
   @Column(nullable = false, unique = true)
   private String email;
 
-  @Column(nullable = false)
+  @Column
   private String password;
 
-  @Column(nullable = false)
+  @Column
   private String extraEmail;
 
   @Column(nullable = false)
@@ -42,6 +42,10 @@ public class Member {
   @Enumerated(EnumType.STRING)
   @Builder.Default
   private Status status = Status.ACTIVE;
+
+  @Column(nullable = false)
+  @Builder.Default
+  private boolean fromSocial = false;
 
   @Column
   @Builder.Default

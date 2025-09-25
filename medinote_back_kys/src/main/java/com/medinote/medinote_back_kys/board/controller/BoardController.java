@@ -59,4 +59,10 @@ public class BoardController {
     public ResponseEntity<BoardDetailResponseDTO> getBoard(@PathVariable Long id) {
         return ResponseEntity.ok(boardService.getBoard(id));
     }
+
+    @DeleteMapping(consumes = "application/json")
+    public ResponseEntity<String> deleteBoard(@Valid @RequestBody com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO dto) {
+        boardService.deletedBoard(dto);
+        return ResponseEntity.ok("DELETED");
+    }
 }

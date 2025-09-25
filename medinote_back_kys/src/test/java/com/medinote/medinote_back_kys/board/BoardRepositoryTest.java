@@ -332,4 +332,39 @@ class BoardRepositoryTest {
         // Criteria 반영 검증(선택)
         Assertions.assertEquals("바나나", dto.getKeyword(), "DTO의 keyword 반영이 예상과 다릅니다.");
     }
+
+    @Test
+    @DisplayName("삭제: Delete DTO 적용 후 isPublic=false, postStatus=DELETED 반영")
+    void softDelete_success() {
+        // given: 기본 게시글 생성
+        Board base = boardRepository.save(Board.builder()
+                .memberId(1L).boardCategoryId(2L)
+                .title("삭제 대상").content("삭제될 내용")
+                .isPublic(true).requireAdminPost(false)
+                .qnaStatus(QnaStatus.WAITING).postStatus(PostStatus.PUBLISHED)
+                .build());
+
+        flushClear();
+
+        // when: DeleteRequestDTO 로 소프트 삭제 적용
+        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
+                .id(base.getId())
+                .memberId(1L) // 요청자 id
+                .build();
+
+        Board found = boardRepository.findById(deleteDto.getId()).orElseThrow();
+        boardMapper.deleteEntityFromDto(deleteDto, found);
+        boardRepository.save(found);
+
+        flushClear();
+
+        // then: isPublic=false, postStatus=DELETED 로 변경되었는지 확인
+        Board reloaded = boardRepository.findById(base.getId()).orElseThrow();
+        Assertions.assertAll(
+                () -> Assertions.assertFalse(reloaded.getIsPublic(), "isPublic 값이 false가 아님"),
+                () -> Assertions.assertEquals(PostStatus.DELETED, reloaded.getPostStatus(), "postStatus 가 DELETED 가 아님"),
+                () -> Assertions.assertEquals("삭제 대상", reloaded.getTitle(), "제목은 그대로 유지되어야 함"),
+                () -> Assertions.assertEquals("삭제될 내용", reloaded.getContent(), "본문은 그대로 유지되어야 함")
+        );
+    }
 }

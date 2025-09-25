@@ -1,8 +1,8 @@
 package com.medinote.medinote_back_kc.member.service;
 
-import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.RegisterRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 
 public interface MemberService {
   //등록

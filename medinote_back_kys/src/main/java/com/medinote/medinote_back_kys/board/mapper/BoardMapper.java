@@ -50,4 +50,10 @@ public interface BoardMapper {
 
     //단일조회
     BoardDetailResponseDTO toDetailResponse(Board entity);
+
+    /** 삭제 요청 DTO → 기존 엔티티에 소프트 삭제 적용 */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "isPublic", constant = "false")
+    @Mapping(target = "postStatus", expression = "java(com.medinote.medinote_back_kys.board.domain.en.PostStatus.DELETED)")
+    void deleteEntityFromDto(BoardDeleteRequestDTO dto, @MappingTarget Board entity);
 }
