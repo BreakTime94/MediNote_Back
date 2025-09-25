@@ -1,9 +1,6 @@
 package com.medinote.medinote_back_kys.board.service;
 
-import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.*;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
@@ -95,6 +92,25 @@ public class BoardService {
         }
 
         return boardMapper.toDetailResponse(board);
+    }
+
+    @Transactional
+    public void deletedBoard(BoardDeleteRequestDTO dto) {
+        // 1) 대상 엔티티 조회
+        Board entity = boardRepository.findById(dto.getId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("게시글이 존재하지 않습니다. id=" + dto.getId()));
+
+        // 2) 작성자 검증 (옵션: 본인 또는 관리자만 삭제 가능)
+        if (!entity.getMemberId().equals(dto.getMemberId())) {
+            throw new IllegalStateException("삭제 권한이 없습니다.");
+        }
+
+        // 3) Mapper를 통해 soft delete 적용
+        boardMapper.deleteEntityFromDto(dto, entity);
+
+        // 4) 저장 (isPublic=false, postStatus=DELETED 로 반영됨)
+        boardRepository.save(entity);
     }
 
 
@@ -214,4 +230,6 @@ public class BoardService {
         }
         return set;
     }
+
+
 }
