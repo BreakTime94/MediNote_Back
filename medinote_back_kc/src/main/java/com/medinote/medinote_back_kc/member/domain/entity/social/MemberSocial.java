@@ -1,5 +1,6 @@
-package com.medinote.medinote_back_kc.member.domain.entity;
+package com.medinote.medinote_back_kc.member.domain.entity.social;
 
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,13 +25,14 @@ public class MemberSocial {
   @JoinColumn(name = "member_id", nullable = false)
   private Member member;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String provider; // google, kakao, naver ...
+  private Provider provider; // google, kakao, naver ...
 
   @Column(nullable = false)
   private String providerUserId; // 소셜 서비스에서 제공한 고유 ID
 
-  @Column
+  @Column(nullable = false)
   private String email; // 소셜에서 가져온 이메일
 
   @Column
@@ -45,7 +47,7 @@ public class MemberSocial {
 
   private LocalDateTime disconnectedAt;
 
-  @Column
+  @Column(nullable = false)
   private String rawProfileJson; // 소셜 API 응답 원본 JSON
 }
 

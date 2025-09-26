@@ -1,8 +1,8 @@
-package com.medinote.medinote_back_kc.member.service;
+package com.medinote.medinote_back_kc.member.service.member;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.entity.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
