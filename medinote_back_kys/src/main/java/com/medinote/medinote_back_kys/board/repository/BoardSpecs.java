@@ -12,76 +12,71 @@ import java.util.Set;
 
 public class BoardSpecs {
 
-    //조회용
-    //JpaSpecificationExecutor는 findAll(Specification, Pageable)를 제공함
-
     private BoardSpecs() {}
 
+    /** 공개 여부 = true */
     public static Specification<Board> isPublicTrue() {
         return (root, q, cb) -> cb.isTrue(root.get("isPublic"));
     }
 
+    /** 카테고리 ID 일치 */
     public static Specification<Board> categoryEquals(Long categoryId) {
         if (categoryId == null) return null;
         return (root, q, cb) -> cb.equal(root.get("boardCategoryId"), categoryId);
     }
 
-    /** 제목+내용 LIKE 검색 (간단 버전, 필요시 lower/escape 처리 확장) */
+    /** 제목+내용 LIKE 검색 */
     public static Specification<Board> keywordLike(String keyword) {
         if (keyword == null || keyword.isBlank()) return null;
         final String like = "%" + keyword.trim() + "%";
 
         return (root, q, cb) -> {
-            // title은 VARCHAR 라면 lower 사용 가능하지만, 굳이 안 써도 됨
-            var pTitle = cb.like(root.get("title"), like);     // ci collation이면 대소문자 무시
-
-            // content가 TEXT(@Lob/text/longtext)라면 lower() 적용 금지
-            var pContent = cb.like(root.get("content"), like); // 그대로 LIKE
-
+            var pTitle   = cb.like(root.get("title"), like);
+            var pContent = cb.like(root.get("content"), like);
             return cb.or(pTitle, pContent);
         };
     }
 
+    /** QnA 상태 일치 */
     public static Specification<Board> qnaStatusEquals(QnaStatus status) {
         if (status == null) return null;
-        return (root, q, cb) -> cb.and(
-                cb.equal(root.get("boardCategoryId"), 2L),
-                cb.equal(root.get("qnaStatus"), status)
-        );}
+        return (root, q, cb) -> cb.equal(root.get("qnaStatus"), status);
+    }
 
+    /** 작성자 ID 일치 */
     public static Specification<Board> writerEquals(Long writerId) {
         if (writerId == null) return null;
         return (root, q, cb) -> cb.equal(root.get("memberId"), writerId);
     }
 
+    /** 관리자 전용 글 여부 */
     public static Specification<Board> requireAdminPost(Boolean require) {
         if (require == null) return null;
         return (root, q, cb) -> cb.equal(root.get("requireAdminPost"), require);
     }
 
+    /** 상태 집합 포함 여부 */
     public static Specification<Board> statusIn(Set<PostStatus> statuses) {
         if (statuses == null || statuses.isEmpty()) return null;
         return (root, q, cb) -> root.get("postStatus").in(statuses);
     }
 
-    /** [from, to) 반열림 구간 */
+    /** 등록일 범위 [from, to) */
     public static Specification<Board> regBetween(LocalDateTime from, LocalDateTime to) {
         if (from == null && to == null) return null;
         return (root, q, cb) -> {
             Path<LocalDateTime> reg = root.get("regDate");
-            if (from != null && to != null) return cb.between(reg, from, to); // inclusive, 필요시 < 로 바꿔도 됨
+            if (from != null && to != null) return cb.between(reg, from, to);
             if (from != null) return cb.greaterThanOrEqualTo(reg, from);
-            return cb.lessThan(reg, to); // [ , to)
+            return cb.lessThan(reg, to);
         };
     }
 
-    /** 유저 목록용 베이스 정책: 공개글 + (PUBLISHED/HIDDEN) */
+    /** 유저 조회용 기본 정책: 공개글 + PUBLISHED/HIDDEN */
     public static Specification<Board> userVisibleBaseline() {
         return Specification.allOf(
                 isPublicTrue(),
                 statusIn(EnumSet.of(PostStatus.PUBLISHED, PostStatus.HIDDEN))
         );
     }
-
-
 }
