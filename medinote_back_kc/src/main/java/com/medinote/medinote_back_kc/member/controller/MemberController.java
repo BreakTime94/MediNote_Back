@@ -1,7 +1,7 @@
 package com.medinote.medinote_back_kc.member.controller;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
-import com.medinote.medinote_back_kc.member.service.MemberService;
+import com.medinote.medinote_back_kc.member.service.member.MemberService;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

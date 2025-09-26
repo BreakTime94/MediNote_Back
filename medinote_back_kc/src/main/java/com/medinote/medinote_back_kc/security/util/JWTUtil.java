@@ -1,12 +1,11 @@
 package com.medinote.medinote_back_kc.security.util;
 
-import com.medinote.medinote_back_kc.member.domain.entity.Role;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Role;
 import com.medinote.medinote_back_kc.security.status.TokenStatus;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;

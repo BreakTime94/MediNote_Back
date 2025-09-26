@@ -1,8 +1,8 @@
 package com.medinote.medinote_back_kc.security.service;
 
-import com.medinote.medinote_back_kc.member.domain.entity.Member;
-import com.medinote.medinote_back_kc.member.domain.entity.Role;
-import com.medinote.medinote_back_kc.member.domain.entity.Status;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Role;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Status;
 import lombok.Getter;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,6 +1,6 @@
 package com.medinote.medinote_back_kc.security.service;
 
-import com.medinote.medinote_back_kc.member.domain.entity.Role;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Role;
 import com.medinote.medinote_back_kc.security.status.TokenStatus;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;

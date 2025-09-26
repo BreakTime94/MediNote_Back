@@ -55,12 +55,12 @@ public class SecurityConfig {
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 권한별 접근 가능한 controller 분리
         .authorizeHttpRequests(a -> a
-                .requestMatchers("/member/auth/login", "/member/register").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/member/update", "/member/delete", "/member/get", "member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
+                .requestMatchers("/member/auth/login", "/member/register", "/oauth2/**", "/login/oauth2/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
+                .requestMatchers("/member/update", "/member/delete", "/member/get", "/member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
                 .anyRequest().authenticated())
             //form 로그인 불가
-        .formLogin(f -> f.disable())
+        //.formLogin(f -> f.disable())
             //대신 oauth 로그인은 열어둠
         .oauth2Login(o -> o.defaultSuccessUrl("/user", true))
         .httpBasic(b -> b.disable());

@@ -3,7 +3,7 @@ package com.medinote.medinote_back_kc.member.controller;
 import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
-import com.medinote.medinote_back_kc.member.service.AuthService;
+import com.medinote.medinote_back_kc.member.service.member.AuthService;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;

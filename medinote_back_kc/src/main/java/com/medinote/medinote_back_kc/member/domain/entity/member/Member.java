@@ -1,10 +1,13 @@
-package com.medinote.medinote_back_kc.member.domain.entity;
+package com.medinote.medinote_back_kc.member.domain.entity.member;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.entity.social.MemberSocial;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -53,6 +56,11 @@ public class Member {
 
   @Column
   private LocalDateTime deletedAt;
+
+  // 🔑 소셜 로그인 계정들
+  @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
+  @Builder.Default
+  private List<MemberSocial> socialAccounts = new ArrayList<>();
 
   public void changeMyPage(UpdateRequestDTO dto) { //프론트에서 변경 없는 값은 기존 값이 등록되게 설정
     this.extraEmail = dto.getExtraEmail();
