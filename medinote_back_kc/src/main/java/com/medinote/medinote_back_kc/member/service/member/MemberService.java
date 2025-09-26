@@ -1,4 +1,4 @@
-package com.medinote.medinote_back_kc.member.service;
+package com.medinote.medinote_back_kc.member.service.member;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
