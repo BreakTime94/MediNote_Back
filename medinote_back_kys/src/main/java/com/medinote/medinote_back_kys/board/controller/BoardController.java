@@ -1,69 +1,80 @@
 package com.medinote.medinote_back_kys.board.controller;
 
-import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.*;
 import com.medinote.medinote_back_kys.board.service.BoardService;
-import com.medinote.medinote_back_kys.common.paging.Criteria;
+import com.medinote.medinote_back_kys.common.paging.PageCriteria;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
-@CrossOrigin(origins = "http://localhost:6006")
 @RestController
 @RequestMapping("/boards")
 @RequiredArgsConstructor
+@Validated
 public class BoardController {
     private final BoardService boardService;
 
-    @PostMapping(consumes = "application/json")
-    public ResponseEntity<String> createBoard(@Valid @RequestBody BoardCreateRequestDTO dto) {
-        boardService.createBoard(dto);
-        return ResponseEntity.ok("OK");
+    // ===== 생성 =====
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public IdResponse create(@Valid @RequestBody BoardCreateRequestDTO dto) {
+        Long id = boardService.create(dto);
+        return new IdResponse(id);
     }
 
-    @PutMapping(consumes = "application/json")
-    public ResponseEntity<String> updateBoard(@Valid @RequestBody BoardUpdateRequestDTO dto) {
-        boardService.updateBoard(dto);
-        return ResponseEntity.ok("UPDATED");
-    }
-
-    @GetMapping
-    public ResponseEntity<BoardListResponseDTO> listBoards(@ModelAttribute Criteria criteria) {
-        // 1) 정렬 화이트리스트(클라이언트 필드 → 실제 엔티티 프로퍼티)
-        Map<String, String> whitelist = Map.of(
-                "id", "id",
-                "title", "title",
-                "regDate", "regDate",
-                "postStatus", "postStatus",
-                "qnaStatus", "qnaStatus"
-        );
-
-        // 2) 1차 조회
-        BoardListResponseDTO dto = boardService.listBoards(criteria, whitelist);
-
-        // 3) 요청 페이지가 전체 페이지를 초과했다면 마지막 페이지로 보정 후 재조회
-        int totalPages = dto.getPage().getTotalPages(); // 0일 수도 있음(데이터 없음)
-        if (totalPages > 0 && criteria.getPage() > totalPages) {
-            criteria.setPage(totalPages); // 마지막 페이지로 이동
-            dto = boardService.listBoards(criteria, whitelist);
-        }
-
-        return ResponseEntity.ok(dto);
-    }
-
+    // ===== 단일 조회 =====
     @GetMapping("/{id}")
-    public ResponseEntity<BoardDetailResponseDTO> getBoard(@PathVariable Long id) {
-        return ResponseEntity.ok(boardService.getBoard(id));
+    public BoardDetailResponseDTO get(@PathVariable @NotNull Long id) {
+        return boardService.getDetail(id);
     }
 
-    @DeleteMapping(consumes = "application/json")
-    public ResponseEntity<String> deleteBoard(@Valid @RequestBody com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO dto) {
-        boardService.deletedBoard(dto);
-        return ResponseEntity.ok("DELETED");
+    // ===== 부분 수정(Patch) =====
+    @PatchMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void update(@PathVariable Long id, @Valid @RequestBody BoardUpdateRequestDTO dto) {
+        // path id와 body id가 다르면 방어
+        if (dto.id() == null || !id.equals(dto.id())) {
+            throw new IllegalArgumentException("Path id와 body id가 일치해야 합니다.");
+        }
+        boardService.update(dto);
     }
+
+    // ===== 소프트 삭제 =====
+    // reason/requesterId를 바디로 받아 path id로 DTO 생성
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id, @Valid @RequestBody BoardDeleteBody body) {
+        BoardDeleteRequestDTO dto = new BoardDeleteRequestDTO(id, body.requesterId(), body.reason());
+        boardService.delete(dto);
+    }
+
+    // ===== 목록(분리된 엔드포인트) =====
+    @PostMapping("/notice/list")
+    public BoardListResponseDTO noticeList(@Valid @RequestBody BoardListRequest req) {
+        // null 방어: service에서도 한 번 더 안전망이 있으나 컨트롤러에서도 기본값 보정
+        PageCriteria criteria = (req.criteria() != null) ? req.criteria() : new PageCriteria();
+        return boardService.listNotice(req.cond(), criteria);
+    }
+
+    @PostMapping("/faq/list")
+    public BoardListResponseDTO faqList(@Valid @RequestBody BoardListRequest req) {
+        PageCriteria criteria = (req.criteria() != null) ? req.criteria() : new PageCriteria();
+        return boardService.listFaq(req.cond(), criteria);
+    }
+
+    @PostMapping("/qna/list")
+    public BoardListResponseDTO qnaList(@Valid @RequestBody BoardListRequest req) {
+        PageCriteria criteria = (req.criteria() != null) ? req.criteria() : new PageCriteria();
+        return boardService.listQna(req.cond(), criteria);
+    }
+
+    // ===== 내부용 간단 응답 DTO =====
+    public record IdResponse(Long id) {}
+    public record BoardDeleteBody(
+            @NotNull Long requesterId,
+            String reason
+    ) {}
 }

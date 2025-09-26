@@ -1,4 +1,4 @@
-package com.medinote.medinote_back_kc.member.domain.dto;
+package com.medinote.medinote_back_kc.member.domain.dto.member;
 
 import lombok.Getter;
 

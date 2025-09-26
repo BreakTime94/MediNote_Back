@@ -1,11 +1,10 @@
 package com.medinote.medinote_back_kc.member.service;
 
-import com.medinote.medinote_back_kc.member.domain.dto.LoginRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
-import com.medinote.medinote_back_kc.security.dto.AuthMemberDTO;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
@@ -15,13 +14,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor

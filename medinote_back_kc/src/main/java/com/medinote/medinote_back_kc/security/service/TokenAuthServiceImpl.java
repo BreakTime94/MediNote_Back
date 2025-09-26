@@ -18,6 +18,10 @@ public class TokenAuthServiceImpl implements TokenAuthService {
 
   @Override
   public TokenStatus accessTokenStatus(String accessToken) {
+    if (accessToken == null || accessToken.isBlank()) {
+      log.info("AccessToken 없음 → EXPIRED로 처리");
+      return TokenStatus.EXPIRED;
+    }
     return jwtUtil.validateToken(accessToken);
   }
 
