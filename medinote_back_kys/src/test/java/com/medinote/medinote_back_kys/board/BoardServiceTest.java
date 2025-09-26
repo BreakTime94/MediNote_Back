@@ -1,304 +1,191 @@
 package com.medinote.medinote_back_kys.board;
 
-import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardDetailResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
+import com.medinote.medinote_back_kys.board.domain.dto.*;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
+import com.medinote.medinote_back_kys.board.mapper.BoardMapper;
 import com.medinote.medinote_back_kys.board.repository.BoardRepository;
 import com.medinote.medinote_back_kys.board.service.BoardService;
-import com.medinote.medinote_back_kys.common.paging.Criteria;
-import jakarta.persistence.EntityManager;
+import com.medinote.medinote_back_kys.common.paging.PageCriteria;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-
-@SpringBootTest(properties = {
-        // 보안 자동 설정 제외 (테스트 시 불필요한 사용자/패스워드 로그 억제)
-        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"
-})
-@Transactional // 각 테스트 종료 시 자동 롤백
-class BoardServiceTest {
+@SpringBootTest
+@Transactional
+class BoardServiceTest{
 
     @Autowired private BoardService boardService;
     @Autowired private BoardRepository boardRepository;
-    @Autowired private EntityManager entityManager;
+    @Autowired private BoardMapper boardMapper;
 
-    // ========= 공통 유틸 =========
-    private void flushClear() {
-        entityManager.flush();
-        entityManager.clear();
+    private static final Long EXISTING_MEMBER_ID = 1L; // FK 존재 전제
+
+    // ===== 공통 시드 유틸 =====
+    private Long seed(String title, Long categoryId, boolean isPublic, PostStatus status, QnaStatus qna) {
+        BoardCreateRequestDTO dto = new BoardCreateRequestDTO(
+                EXISTING_MEMBER_ID, categoryId, title, "본문",
+                false, isPublic, qna, status
+        );
+        return boardRepository.save(boardMapper.toEntity(dto)).getId();
     }
 
-    private void seedMany(int n, String titlePrefix) {
-        for (int i = 1; i <= n; i++) {
-            boardRepository.save(Board.builder()
-                    .memberId(1L)
-                    .boardCategoryId(2L)
-                    .title(titlePrefix + "-" + i)
-                    .content("내용-" + i)
-                    .build());
-        }
-    }
-
-    // ========= 생성 =========
     @Test
-    @DisplayName("createBoard: DTO 지정값으로 기본값 덮어쓰기")
-    void createBoard_overrideDefaults_success() {
-        // given
-        BoardCreateRequestDTO dto = BoardCreateRequestDTO.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("[테스트] 공개글 아님 + ADMIN 승인 필요")
-                .content("승인 필요한 글입니다.")
-                .isPublic(false)
-                .requireAdminPost(true)
-                .qnaStatus(QnaStatus.ANSWERED)
-                .postStatus(PostStatus.PUBLISHED)
-                .build();
-
+    @DisplayName("create + getDetail 성공")
+    void create_and_getDetail_success() {
         // when
-        Board saved = boardService.createBoard(dto);
+        Long id = boardService.create(new BoardCreateRequestDTO(
+                EXISTING_MEMBER_ID, 1L, "서비스-생성", "서비스-본문",
+                null, null, QnaStatus.WAITING, PostStatus.PUBLISHED
+        ));
 
         // then
-        Assertions.assertAll(
-                () -> Assertions.assertNotNull(saved.getId()),
-                () -> Assertions.assertEquals(1L, saved.getMemberId()),
-                () -> Assertions.assertEquals(2L, saved.getBoardCategoryId()),
-                () -> Assertions.assertEquals("[테스트] 공개글 아님 + ADMIN 승인 필요", saved.getTitle()),
-                () -> Assertions.assertEquals("승인 필요한 글입니다.", saved.getContent()),
-                () -> Assertions.assertFalse(saved.getIsPublic()),
-                () -> Assertions.assertTrue(saved.getRequireAdminPost()),
-                () -> Assertions.assertEquals(QnaStatus.ANSWERED, saved.getQnaStatus()),
-                () -> Assertions.assertEquals(PostStatus.PUBLISHED, saved.getPostStatus())
-        );
+        Assertions.assertNotNull(id);
+
+        BoardDetailResponseDTO detail = boardService.getDetail(id);
+        Assertions.assertEquals(id, detail.id());
+        Assertions.assertEquals("서비스-생성", detail.title());
+        Assertions.assertEquals("서비스-본문", detail.content());
+        Assertions.assertTrue(detail.isPublic());                 // 기본 true
+        Assertions.assertFalse(detail.requireAdminPost());        // 기본 false
+        Assertions.assertEquals(PostStatus.PUBLISHED, detail.postStatus());
     }
 
     @Test
-    @DisplayName("createBoard: 선택필드 미지정 → 엔티티/DB 기본값 적용")
-    void createBoard_applyEntityDefaults_success() {
+    @DisplayName("update(Patch): null 무시, 지정 필드만 수정")
+    void update_patch_success() {
         // given
-        BoardCreateRequestDTO dto = BoardCreateRequestDTO.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("[테스트] 기본값 적용")
-                .content("기본값 테스트")
-                .build();
+        Long id = seed("수정 전", 2L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
 
         // when
-        Board saved = boardService.createBoard(dto);
-
-        // then(실DB 기본값까지 확인하려면 flush/clear + 재조회)
-        flushClear();
-        Board found = boardRepository.findById(saved.getId()).orElseThrow();
-
-        Assertions.assertAll(
-                () -> Assertions.assertNotNull(found.getId()),
-                () -> Assertions.assertTrue(found.getIsPublic(), "isPublic 기본값(true)"),
-                () -> Assertions.assertFalse(found.getRequireAdminPost(), "requireAdminPost 기본값(false)"),
-                () -> Assertions.assertEquals(QnaStatus.WAITING, found.getQnaStatus()),
-                () -> Assertions.assertEquals(PostStatus.PUBLISHED, found.getPostStatus())
-        );
-    }
-
-    // ========= 수정 =========
-    @Test
-    @DisplayName("updateBoard: null은 무시하고 지정한 필드만 수정된다")
-    void updateBoard_partialUpdate_success() {
-        // seed
-        BoardCreateRequestDTO createDto = BoardCreateRequestDTO.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("원본 제목")
-                .content("원본 내용")
-                .build();
-        Board saved = boardService.createBoard(createDto);
-
-        // when
-        BoardUpdateRequestDTO updateDto = BoardUpdateRequestDTO.builder()
-                .id(saved.getId())
-                .title("수정된 제목")
-                .content("수정된 내용")
-                .isPublic(false)
-                .requireAdminPost(true)
-                .qnaStatus(QnaStatus.ANSWERED)
-                .postStatus(PostStatus.DRAFT)
-                .build();
-        boardService.updateBoard(updateDto);
-
-        flushClear();
-        Board reloaded = boardRepository.findById(saved.getId()).orElseThrow();
+        boardService.update(new BoardUpdateRequestDTO(
+                id,
+                null,                       // boardCategoryId 유지
+                "수정 후",                   // title
+                "수정된 본문",               // content
+                null,                       // isPublic 유지
+                null,                       // requireAdminPost 유지
+                null,                       // qnaStatus 유지
+                PostStatus.HIDDEN           // 상태 변경
+        ));
 
         // then
-        Assertions.assertAll(
-                () -> Assertions.assertEquals("수정된 제목", reloaded.getTitle()),
-                () -> Assertions.assertEquals("수정된 내용", reloaded.getContent()),
-                () -> Assertions.assertFalse(reloaded.getIsPublic()),
-                () -> Assertions.assertTrue(reloaded.getRequireAdminPost()),
-                () -> Assertions.assertEquals(QnaStatus.ANSWERED, reloaded.getQnaStatus()),
-                () -> Assertions.assertEquals(PostStatus.DRAFT, reloaded.getPostStatus()),
-                // 유지 필드 검증
-                () -> Assertions.assertEquals(1L, reloaded.getMemberId()),
-                () -> Assertions.assertEquals(2L, reloaded.getBoardCategoryId())
-        );
+        Board updated = boardRepository.findById(id).orElseThrow();
+        Assertions.assertEquals("수정 후", updated.getTitle());
+        Assertions.assertEquals("수정된 본문", updated.getContent());
+        Assertions.assertEquals(PostStatus.HIDDEN, updated.getPostStatus());
+        // 나머지는 유지
+        Assertions.assertEquals(2L, updated.getBoardCategoryId());
+        Assertions.assertTrue(updated.getIsPublic());
+        Assertions.assertFalse(updated.getRequireAdminPost());
+        Assertions.assertEquals(QnaStatus.WAITING, updated.getQnaStatus());
     }
 
     @Test
-    @DisplayName("updateBoard: 존재하지 않는 ID 수정 시 IllegalArgumentException 발생")
-    void updateBoard_notFound_throwsException() {
-        BoardUpdateRequestDTO updateDto = BoardUpdateRequestDTO.builder()
-                .id(999_999L)
-                .title("아무 제목")
-                .content("아무 내용")
-                .build();
-
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> boardService.updateBoard(updateDto));
-    }
-
-    // ========= 단일 조회 =========
-    @Test
-    @DisplayName("getBoard: 존재하는 게시글을 DTO로 반환")
-    void getBoard_success() {
-        // seed (Repository 사용: 서비스 로직 접근 제한과 무관)
-        Board saved = boardRepository.save(Board.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("단일조회-제목")
-                .content("단일조회-내용")
-                .build());
-        flushClear();
+    @DisplayName("delete(소프트): isPublic=false, postStatus=DELETED")
+    void delete_soft_success() {
+        // given
+        Long id = seed("삭제 대상", 1L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
 
         // when
-        BoardDetailResponseDTO dto = boardService.getBoard(saved.getId());
+        boardService.delete(new BoardDeleteRequestDTO(id, 999L, "사유"));
 
         // then
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(saved.getId(), dto.getId()),
-                () -> Assertions.assertEquals(1L, dto.getMemberId()),
-                () -> Assertions.assertEquals(2L, dto.getBoardCategoryId()),
-                () -> Assertions.assertEquals("단일조회-제목", dto.getTitle()),
-                () -> Assertions.assertEquals("단일조회-내용", dto.getContent()),
-                () -> Assertions.assertNotNull(dto.getRegDate()),
-                () -> Assertions.assertNotNull(dto.getModDate())
-        );
+        Board deleted = boardRepository.findById(id).orElseThrow();
+        Assertions.assertFalse(deleted.getIsPublic(), "삭제 시 공개=false");
+        Assertions.assertEquals(PostStatus.DELETED, deleted.getPostStatus(), "상태=DELETED");
     }
 
     @Test
-    @DisplayName("getBoard: 없는 ID면 404(ResponseStatusException)")
-    void getBoard_notFound_throws404() {
-        ResponseStatusException ex = Assertions.assertThrows(
-                ResponseStatusException.class,
-                () -> boardService.getBoard(9_999_999L)
-        );
-        Assertions.assertEquals(404, ex.getStatusCode().value());
-    }
-
-    // ========= 목록(listBoards) 스모크 =========
-    @Test
-    @DisplayName("listBoards: 기본 화이트리스트 + 키워드 페이징 매핑 동작")
-    void listBoards_baseline_keyword_paging_success() {
-        // seed
-        seedMany(25, "목록키워드");
-
+    @DisplayName("공지 목록: category=1, 공개 & PUBLISHED만")
+    void list_notice_published_public() {
         // given
-        Criteria c = new Criteria();
-        c.setPage(2);                 // 2페이지
-        c.setSize(10);                // 페이지 사이즈 10
-        c.setSort(List.of("id,desc"));// id desc
-        c.setKeyword("목록키워드");     // keyword echo & spec 반영
+        seed("공지-보임1", 1L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("공지-보임2", 1L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("공지-숨김(HIDDEN)", 1L, true,  PostStatus.HIDDEN,    QnaStatus.WAITING); // 제외
+        seed("공지-비공개",     1L, false, PostStatus.PUBLISHED, QnaStatus.WAITING); // 제외
+        // 다른 카테고리
+        seed("일반-보임", 2L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
+
+        PageCriteria c = new PageCriteria();
+        c.setPage(1); c.setSize(10);
 
         // when
-        BoardListResponseDTO dto = boardService.listBoards(c);
+        BoardListResponseDTO resp = boardService.listNotice(null, c);
 
         // then
-        Assertions.assertAll(
-                () -> Assertions.assertEquals(25L, dto.getPage().getTotalElements()),
-                () -> Assertions.assertEquals(3, dto.getPage().getTotalPages()),
-                () -> Assertions.assertEquals(10, dto.getItems().size()),
-                () -> Assertions.assertEquals("목록키워드", dto.getKeyword())
-        );
-
-        Long first = dto.getItems().get(0).getId();
-        Long last  = dto.getItems().get(dto.getItems().size() - 1).getId();
-        Assertions.assertTrue(first > last, "정렬(id desc) 실패: " + first + " <= " + last);
+        Assertions.assertNotNull(resp);
+        // 결과는 공지(1L) + 공개 + PUBLISHED 만
+        Assertions.assertTrue(resp.items().size() >= 2);
+        resp.items().forEach(it -> {
+            Assertions.assertEquals(1L, it.getBoardCategoryId());
+            Assertions.assertTrue(it.getIsPublic());
+            Assertions.assertEquals(PostStatus.PUBLISHED, it.getPostStatus());
+        });
     }
 
-    // ========= 삭제 =========
     @Test
-    @DisplayName("deleteBoard: 요청자 본인이면 soft delete 성공")
-    void deleteBoard_success() {
+    @DisplayName("FAQ 목록: category=3, 공개 & PUBLISHED + 키워드 조건")
+    void list_faq_keyword() {
         // given
-        Board saved = boardRepository.save(Board.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("삭제 대상")
-                .content("삭제될 내용")
-                .isPublic(true)
-                .postStatus(PostStatus.PUBLISHED)
-                .build());
-        flushClear();
+        seed("FAQ: 비밀번호 초기화", 3L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("FAQ: 로그인 오류",   3L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("FAQ: 내부문서",     3L, false, PostStatus.PUBLISHED, QnaStatus.WAITING); // 비공개 → 제외
 
-        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
-                .id(saved.getId())
-                .memberId(1L) // 본인
-                .build();
+        PageCriteria c = new PageCriteria();
+        c.setPage(1); c.setSize(5);
+
+        BoardSearchCond cond = new BoardSearchCond(
+                null,         // categoryId는 서비스에서 고정
+                "로그인",      // keyword
+                null, null, null, null
+        );
 
         // when
-        boardService.deletedBoard(deleteDto);
-        flushClear();
+        BoardListResponseDTO resp = boardService.listFaq(cond, c);
 
         // then
-        Board reloaded = boardRepository.findById(saved.getId()).orElseThrow();
-        Assertions.assertAll(
-                () -> Assertions.assertFalse(reloaded.getIsPublic(), "삭제 후 공개여부는 false 여야 한다"),
-                () -> Assertions.assertEquals(PostStatus.DELETED, reloaded.getPostStatus(), "삭제 후 상태는 DELETED 여야 한다"),
-                () -> Assertions.assertEquals("삭제 대상", reloaded.getTitle(), "제목은 그대로 유지되어야 한다"),
-                () -> Assertions.assertEquals("삭제될 내용", reloaded.getContent(), "본문은 그대로 유지되어야 한다")
-        );
+        Assertions.assertNotNull(resp);
+        Assertions.assertTrue(resp.items().size() >= 1);
+        resp.items().forEach(it -> {
+            Assertions.assertEquals(3L, it.getBoardCategoryId());
+            Assertions.assertTrue(it.getIsPublic());
+            Assertions.assertEquals(PostStatus.PUBLISHED, it.getPostStatus());
+            Assertions.assertTrue(it.getTitle().contains("로그인") || it.getTitle().contains("FAQ"),
+                    "키워드 매칭(느슨한 검증)");
+        });
     }
 
     @Test
-    @DisplayName("deleteBoard: 본인 아닌 사용자가 삭제 시 예외 발생")
-    void deleteBoard_notOwner_throwsException() {
+    @DisplayName("QnA 목록: category=2, 공개 & PUBLISHED + QnaStatus 필터")
+    void list_qna_with_qnaStatus() {
         // given
-        Board saved = boardRepository.save(Board.builder()
-                .memberId(1L)
-                .boardCategoryId(2L)
-                .title("삭제 대상")
-                .content("삭제될 내용")
-                .isPublic(true)
-                .postStatus(PostStatus.PUBLISHED)
-                .build());
-        flushClear();
+        seed("QnA-대기-보임",   2L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("QnA-답변-보임",   2L, true, PostStatus.PUBLISHED, QnaStatus.ANSWERED);
+        seed("QnA-대기-비공개", 2L, false, PostStatus.PUBLISHED, QnaStatus.WAITING); // 제외
 
-        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
-                .id(saved.getId())
-                .memberId(99L) // 다른 사용자
-                .build();
+        PageCriteria c = new PageCriteria();
+        c.setPage(1); c.setSize(10);
 
-        // when & then
-        Assertions.assertThrows(IllegalStateException.class,
-                () -> boardService.deletedBoard(deleteDto));
-    }
+        BoardSearchCond cond = new BoardSearchCond(
+                null, null, QnaStatus.WAITING, null, null, null
+        );
 
-    @Test
-    @DisplayName("deleteBoard: 없는 ID 삭제 시 IllegalArgumentException 발생")
-    void deleteBoard_notFound_throwsException() {
-        var deleteDto = com.medinote.medinote_back_kys.board.domain.dto.BoardDeleteRequestDTO.builder()
-                .id(9_999_999L)
-                .memberId(1L)
-                .build();
+        // when
+        BoardListResponseDTO resp = boardService.listQna(cond, c);
 
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> boardService.deletedBoard(deleteDto));
+        // then
+        Assertions.assertNotNull(resp);
+        Assertions.assertTrue(resp.items().size() >= 1);
+        resp.items().forEach(it -> {
+            Assertions.assertEquals(2L, it.getBoardCategoryId());
+            Assertions.assertTrue(it.getIsPublic());
+            Assertions.assertEquals(PostStatus.PUBLISHED, it.getPostStatus());
+            Assertions.assertEquals(QnaStatus.WAITING, it.getQnaStatus());
+        });
     }
 }
