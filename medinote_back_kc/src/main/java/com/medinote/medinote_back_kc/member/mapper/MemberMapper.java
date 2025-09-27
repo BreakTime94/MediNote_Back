@@ -17,12 +17,14 @@ public interface MemberMapper {
   //1. 일반 회원가입
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "password", expression = "java(passwordEncoder.encode(dto.getPassword()))")
-  @Mapping(target = "role", ignore = true) // table 기본값 USER
-  @Mapping(target = "extraEmail", ignore = true)
+  @Mapping(target = "role", ignore = true)// table 기본값 USER
+  @Mapping(target = "profileImagePath", ignore = true)
+  @Mapping(target = "profileMimeType", ignore = true)
   @Mapping(target = "status", ignore = true) // table 기본값 ACTIVE
   @Mapping(target = "regDate", ignore = true) // table 기본값 current timestamp
   @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
   @Mapping(target = "fromSocial", ignore = true) // fromSocial false/true 기본값 false
+  @Mapping(target = "socialAccounts", ignore = true)
   Member toRegister(RegisterRequestDTO dto, @Context PasswordEncoder passwordEncoder);
 
   //id(pk), password, status, deleted_at 을 제외한 dto 구성
@@ -32,9 +34,10 @@ public interface MemberMapper {
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "password", ignore = true) // password 없음
   @Mapping(target = "role", ignore = true) //Default -> User
+  @Mapping(target = "status", ignore = true) // table 기본값 ACTIVE
   @Mapping(target = "regDate", ignore = true) // table 기본값 current timestamp
   @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
-  @Mapping(target = "fromSocial", constant = "true") // 소셜 가입임을 표시
+  @Mapping(target = "socialAccounts", ignore = true)
   Member socialToMemberRegister(SocialToMemberRegisterDTO dto);
 
 }
