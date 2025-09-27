@@ -49,5 +49,7 @@ public class MemberSocial {
 
   @Column(nullable = false)
   private String rawProfileJson; // 소셜 API 응답 원본 JSON
+
+
 }
 
