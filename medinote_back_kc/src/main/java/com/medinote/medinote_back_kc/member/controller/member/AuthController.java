@@ -1,4 +1,4 @@
-package com.medinote.medinote_back_kc.member.controller;
+package com.medinote.medinote_back_kc.member.controller.member;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
 
