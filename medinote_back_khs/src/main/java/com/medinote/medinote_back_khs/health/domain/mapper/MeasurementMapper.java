@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.health.domain.mapper;
 
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
+import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -14,8 +15,12 @@ public interface MeasurementMapper {
   @Mapping(target = "measuredDate" , expression = "java(java.time.LocalDateTime.now())" ) //측정일시 자동 저장
   Measurement toEntity(MeasurementRequestDTO dto);
 
-  //entity -> dto
+  //entity -> dto(등록, 수정시)
   MeasurementRequestDTO toDTO(Measurement entity);
+
+  // entity -> responseDTO (조회용)
+  MeasurementResponseDTO toResponseDTO(Measurement entity);
+
 
   void updateFromDto(MeasurementRequestDTO dto, @MappingTarget Measurement entity);
 }

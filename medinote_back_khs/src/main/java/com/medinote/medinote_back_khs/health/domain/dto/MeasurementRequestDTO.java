@@ -16,8 +16,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MeasurementRequestDTO {
 
-    @NotNull(message = "회원ID(은)는 필수 입니다.")
-    private Long memberId;
+//    @NotNull(message = "회원ID(은)는 필수 입니다.")
+//    private Long memberId;
 
     @NotNull(message = "성별(은)는 필수 입니다.")
     private MeasurementStatus gender;
