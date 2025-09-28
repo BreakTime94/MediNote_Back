@@ -46,7 +46,7 @@ public class MemberMedicationService {
   }
 
   //특정 회원이 복용하고 있는 약 리스트 조회
-  @Transactional
+  @Transactional(readOnly = true)
   public List<MedicationResponseDTO> getMedicationByMember(Long memberId) {
     List<MemberMedication> list = memberMedicationRepository.findByMemberId(memberId);
 
@@ -84,7 +84,7 @@ public class MemberMedicationService {
 
 
   //특정 회원이 특정 약을 먹고 있는지 -> memberId + medicationId
-  @Transactional
+  @Transactional(readOnly = true)
   public MedicationResponseDTO getMedicationByMemberAndMedication(Long memberId, Long medicationId) {
     MemberMedication entity = memberMedicationRepository.findByMemberIdAndMedicationId(memberId, medicationId)
             .orElseThrow(() -> new IllegalArgumentException("해당 회원의 복용약 기록이 존재하지 않습니다."));
@@ -102,4 +102,11 @@ public class MemberMedicationService {
     return dto;
   }
 
-}
+  //약품 상세 정보 추가
+//  private void enrichMedicationInfo(MedicationResponseDTO dto) {
+//    medicationRepository.findById(dto.getMedicationId()).ifPresent(med -> {
+//      dto.set
+//    })
+  }
+
+
