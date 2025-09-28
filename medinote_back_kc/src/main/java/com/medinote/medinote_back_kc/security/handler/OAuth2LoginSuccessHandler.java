@@ -76,8 +76,6 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
       redisUtil.set(member.getId().toString(), refreshToken, jwtUtil.getExpirationDate(refreshToken).getTime() - System.currentTimeMillis());
 
-      SecurityContextHolder.getContext().setAuthentication(oauth2Token);
-
     } else {
       //프론트가 바뀌고, 들어오는 값을 통해서, SocialRegisterRequestDTO를 SocialToMemberRegisterDTO로 Mapping 시키는 작업 필요
     }
