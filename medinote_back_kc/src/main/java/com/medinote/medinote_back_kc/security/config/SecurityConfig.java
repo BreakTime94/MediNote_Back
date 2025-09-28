@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kc.security.config;
 
 import com.medinote.medinote_back_kc.security.filter.JWTAuthenticationFilter;
+import com.medinote.medinote_back_kc.security.handler.OAuth2LoginSuccessHandler;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetailsService;
 import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
@@ -34,6 +35,7 @@ public class SecurityConfig {
   private final RedisUtil redisUtil;
   private final TokenAuthService tokenAuthService;
   private final CORSConfig corsConfig;
+  private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
   @Bean
   public JWTAuthenticationFilter jwtAuthenticationFilter() {
@@ -60,9 +62,9 @@ public class SecurityConfig {
                 .requestMatchers("/member/update", "/member/delete", "/member/get", "/member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
                 .anyRequest().authenticated())
             //form 로그인 불가
-        //.formLogin(f -> f.disable())
+        .formLogin(f -> f.disable())
             //대신 oauth 로그인은 열어둠
-        .oauth2Login(o -> o.defaultSuccessUrl("/user", true))
+        .oauth2Login(o -> o.successHandler(oAuth2LoginSuccessHandler))
         .httpBasic(b -> b.disable());
 
     return http.build();
