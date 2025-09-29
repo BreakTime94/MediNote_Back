@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.member.domain.dto.social;
 
+import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
