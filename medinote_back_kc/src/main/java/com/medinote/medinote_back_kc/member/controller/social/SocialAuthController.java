@@ -4,6 +4,12 @@ import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.social.MemberSocial;
 import com.medinote.medinote_back_kc.member.service.social.MemberSocialService;
+import com.medinote.medinote_back_kc.security.service.TokenAuthService;
+import com.medinote.medinote_back_kc.security.util.CookieUtil;
+import com.medinote.medinote_back_kc.security.util.JWTUtil;
+import com.medinote.medinote_back_kc.security.util.RedisUtil;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,25 +23,21 @@ import java.util.Map;
 @RestController
 @RequestMapping("/social/auth") // JWTToken이 발급되는 로직이 필요한건 auth로 명명 (Member도 동일)
 @Log4j2
+@RequiredArgsConstructor
 public class SocialAuthController {
 
-  public MemberSocialService memberSocialService;
-
-  @PostMapping("/login")
-  public ResponseEntity<?> login (@RequestBody SocialRegisterRequestDTO dto) {
-
-    if(memberSocialService.isSocialMember(dto)) {// socialMember가 존재한다면 MemberDTO 찾아서 반환
-      MemberDTO memberDto = memberSocialService.getSocialMember(dto);
-      return ResponseEntity.ok(memberDto);
-    }
-
-    return ResponseEntity.status(HttpStatus.PRECONDITION_REQUIRED).body( // React에서 추가 정보 받는 컴포넌트를 꺼내는 기준
-            Map.of("message", "추가정보가 필요합니다.", "email", dto.getEmail(), "provider", dto.getProvider())
-    );
-  }
+  private final MemberSocialService memberSocialService;
+  private final CookieUtil cookieUtil;
+  private final RedisUtil redisUtil;
+  private final JWTUtil jwtUtil;
+  private final TokenAuthService tokenAuthService;
 
   @PostMapping("/register")
-  public ResponseEntity<?> register (@RequestBody SocialRegisterRequestDTO dto) {
-    return ResponseEntity.ok(memberSocialService.register(dto));
+  public ResponseEntity<?> register (@RequestBody SocialRegisterRequestDTO dto, HttpServletResponse response) {
+    log.info("소셜 회원가입 컨트롤러 진입");
+    MemberDTO memberDTO = memberSocialService.register(dto);
+    //TokenAuthService를 통해 토큰 발급, 쿠키 & 레디스 세팅
+    tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
+    return ResponseEntity.ok(memberDTO);
   }
 }

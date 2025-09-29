@@ -15,6 +15,8 @@ public class SocialRegisterRequestDTO {
   String providerUserId;
   String email;
   String profileImageUrl;
+  String profileMimeType;
   String nickname;
   String rawProfileJson;
+  String extraEmail;
 }

@@ -57,7 +57,7 @@ public class SecurityConfig {
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 권한별 접근 가능한 controller 분리
         .authorizeHttpRequests(a -> a
-                .requestMatchers("/member/auth/login", "/member/register", "/oauth2/**", "/login/oauth2/**").permitAll()
+                .requestMatchers("/member/auth/login", "/member/register", "/oauth2/**", "/login/oauth2/**", "/social/auth/register").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
                 .requestMatchers("/member/update", "/member/delete", "/member/get", "/member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
                 .anyRequest().authenticated())
