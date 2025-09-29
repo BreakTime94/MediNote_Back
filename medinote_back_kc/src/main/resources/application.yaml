@@ -30,3 +30,8 @@ spring:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.dialect.MariaDBDialect
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss   # 날짜 포맷
+    time-zone: Asia/Seoul             # 타임존
+    serialization:
+      write-dates-as-timestamps: false # 숫자 timestamp 대신 문자열로 출력

@@ -6,6 +6,7 @@ import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.domain.entity.social.Provider;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.member.service.social.MemberSocialService;
+import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
@@ -13,6 +14,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,13 +29,12 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
-  private final JWTUtil jwtUtil;
-  private final CookieUtil cookieUtil;
   private final MemberSocialService memberSocialService;
-  private final MemberRepository memberRepository;
-  private final RedisUtil redisUtil;
+  private final ObjectMapper objectMapper;
+  private final TokenAuthService tokenAuthService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request,
@@ -50,6 +51,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     OAuth2User oAuth2User = oauth2Token.getPrincipal();
     Provider provider = Provider.valueOf(oauth2Token.getAuthorizedClientRegistrationId().toUpperCase());
     Map<String, Object> attributes = oAuth2User.getAttributes(); // 내려주는 value 값이 단순 String만 있지 않음 그래서 value 값에 object 사용
+    Map<String, Object> result;
 
     //3. SocialRegisterRequestDTO에 Mapping
     SocialRegisterRequestDTO dto = SocialRegisterRequestDTO.builder()
@@ -57,29 +59,41 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             .providerUserId(oAuth2User.getName())
             .email((String)attributes.get("email"))
             .profileImageUrl((String)attributes.get("picture"))
+            .profileMimeType(memberSocialService.resolveMimeType((String)attributes.get("picture")))
             .nickname((String)attributes.get("name"))
-            .rawProfileJson(new ObjectMapper().writeValueAsString(attributes))
+            .rawProfileJson(objectMapper.writeValueAsString(attributes))
             .build();
 
     // 4. 기존회원이 맞는지 check
     if(memberSocialService.isSocialMember(dto)) {
-      // 4-1. 회원 검증
-      Member member = memberRepository.findByEmail(dto.getEmail()).orElseThrow(()-> new UsernameNotFoundException("존재하지 않는 이메일입니다."));
-      // 4-2. 토큰 발급
-      String accessToken = jwtUtil.createAccessToken(member.getId(), member.getRole());
-      String refreshToken = jwtUtil.createRefreshToken(member.getId(), member.getRole());
-      // 쿠키에 저장
-      ResponseCookie accessCookie = cookieUtil.createAccessCookie(accessToken);
-      ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(refreshToken);
-      response.addHeader("Set-Cookie", accessCookie.toString());
-      response.addHeader("Set-Cookie", refreshCookie.toString());
-
-      redisUtil.set(member.getId().toString(), refreshToken, jwtUtil.getExpirationDate(refreshToken).getTime() - System.currentTimeMillis());
+      log.info("기존에 존재하는 SocialMember");
+      // TokenAuthService에 전부 위임
+      tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
+      result = Map.of(
+              "status", "LOGIN_SUCCESS",
+              "email",dto.getEmail(),
+              "provider", provider.name()
+      );
 
     } else {
+      log.info("기존에 등록 안된 Social Member");
       //프론트가 바뀌고, 들어오는 값을 통해서, SocialRegisterRequestDTO를 SocialToMemberRegisterDTO로 Mapping 시키는 작업 필요
+      result = Map.of(
+              "status", "NEED_REGISTER",
+              "dto", dto
+      );
+      log.info(result);
     }
 
+    response.setContentType("text/html;charset=UTF-8");
+    String script = "<script>" +
+            "window.opener.postMessage(" +
+            objectMapper.writeValueAsString(result) +
+            ", '*');" +
+            "window.close();" +
+            "</script>";
+    log.info(script);
+    response.getWriter().write(script);
   }
 }
 
