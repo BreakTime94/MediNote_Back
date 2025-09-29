@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.health.service;
 
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
+import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import com.medinote.medinote_back_khs.health.domain.mapper.MeasurementMapper;
 import com.medinote.medinote_back_khs.health.domain.repository.MeasurementRepository;
@@ -17,39 +18,38 @@ public class MeasurementService {
   private final MeasurementRepository measurementRepository;  //db접근
   private final MeasurementMapper measurementMapper;  //dto <-> entity
 
+  // 등록 (create)
   @Transactional
-  public Long saveMeasurement(MeasurementRequestDTO dto) {
-    //dto -> entity
+  public MeasurementResponseDTO saveMeasurement(MeasurementRequestDTO dto) {
     Measurement entity = measurementMapper.toEntity(dto);
-    //entity -> db 저장(insert)
-    Measurement savedMeasurement = measurementRepository.save(entity);
-    return savedMeasurement.getId();
-
+    Measurement saved = measurementRepository.save(entity);
+    return measurementMapper.toResponseDTO(saved);
   }
 
-  //단일 조회(read)
+  // 단일 조회 (read)
   @Transactional(readOnly = true)
-  public MeasurementRequestDTO  findById(Long id) {
+  public MeasurementResponseDTO findById(Long id) {
     Measurement entity = measurementRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Id not found: " + id));
-    return measurementMapper.toDTO(entity); //entity -> dto 변환 후 반환
+    return measurementMapper.toResponseDTO(entity);
   }
 
-  //수정(update)
+  // 수정 (update)
   @Transactional
-  public Long update(Long id, MeasurementRequestDTO dto) {
-    Measurement entity = measurementRepository.findById(id) //기존id 불러옴
+  public MeasurementResponseDTO update(Long id, MeasurementRequestDTO dto) {
+    Measurement entity = measurementRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Id not found: " + id));
 
     measurementMapper.updateFromDto(dto, entity);
+    Measurement updated = measurementRepository.save(entity);
 
-    Measurement saveMeasurement = measurementRepository.save(entity);
-    return saveMeasurement.getId();
+    return measurementMapper.toResponseDTO(updated);
   }
 
-  //삭제(delete)
+  // 삭제 (delete)
+  @Transactional
   public void deleteById(Long id) {
-    if(!measurementRepository.existsById(id)) {
+    if (!measurementRepository.existsById(id)) {
       throw new IllegalArgumentException("Id not found: " + id);
     }
     measurementRepository.deleteById(id);
