@@ -10,28 +10,26 @@ import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.mapper.MemberSocialMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.member.repository.MemberSocialRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Optional;
 
 @Service
 @Log4j2
+@RequiredArgsConstructor
 public class MemberSocialServiceImpl implements MemberSocialService {
-  @Autowired
-  private MemberSocialRepository memberSocialRepository;
 
-  @Autowired
-  private MemberRepository memberRepository;
-
-  @Autowired
-  private MemberSocialMapper memberSocialMapper;
-
-  @Autowired
-  private MemberMapper memberMapper;
+  private final MemberSocialRepository memberSocialRepository;
+  private final MemberRepository memberRepository;
+  private final MemberSocialMapper memberSocialMapper;
+  private final MemberMapper memberMapper;
+  private final RestTemplate restTemplate;
 
   @Override
   @Transactional
@@ -80,4 +78,20 @@ public class MemberSocialServiceImpl implements MemberSocialService {
     MemberSocial social = memberSocialRepository.findByProviderAndProviderUserId(dto.getProvider(), dto.getProviderUserId()).orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 소셜 계정입니다."));
     return memberMapper.toMemberDTO(social.getMember());
   }
+
+  @Override
+  public String resolveMimeType(String profileImageUrl) {
+    try {
+      // HEAD 요청으로 헤더만 가져오기
+      HttpHeaders headers = restTemplate.headForHeaders(profileImageUrl);
+      MediaType contentType = headers.getContentType();
+
+      return contentType != null ? contentType.toString() : "image/jpeg";
+
+    } catch (Exception e) {
+      log.error("프로필 이미지 MIME 타입 확인 실패: {}", e.getMessage());
+      return "image/jpeg"; // fallback
+    }
+  }
+
 }

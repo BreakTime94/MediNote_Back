@@ -22,6 +22,8 @@ public interface MemberSocialService {
   //컨트롤러 단에서, isSocialMember로 분기 처리
   MemberDTO getSocialMember(SocialRegisterRequestDTO dto);
 
+  String resolveMimeType(String profileImageUrl);
+
 
 }
 
