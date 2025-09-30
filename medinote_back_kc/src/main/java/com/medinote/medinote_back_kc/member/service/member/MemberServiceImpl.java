@@ -26,7 +26,7 @@ public class MemberServiceImpl implements MemberService{
   @Override
   public void register(RegisterRequestDTO dto) {
 
-    if(repository.existsByEmail(dto.getEmail())) {
+    if(repository.existsByEmail(dto.getEmail()) || repository.existsByExtraEmail(dto.getExtraEmail())) {
       throw new DuplicateEmailException("이미 등록된 이메일입니다.");
     }
 
@@ -36,6 +36,16 @@ public class MemberServiceImpl implements MemberService{
 
     Member member = mapper.toRegister(dto, passwordEncoder);
     repository.save(member);
+  }
+
+  @Override
+  public boolean isEmailAvailable(String email) {
+    return !repository.existsByEmail(email) && !repository.existsByExtraEmail(email);
+  }
+
+  @Override
+  public boolean isNicknameAvailable(String nickname) {
+    return !repository.existsByNickname(nickname);
   }
 
   @Override
