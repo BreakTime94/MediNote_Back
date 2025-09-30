@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.health.domain.entity;
 
 import com.medinote.medinote_back_khs.common.entity.ModiEntity;
+import com.medinote.medinote_back_khs.health.domain.en.AllergyStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -25,6 +26,10 @@ public class Allergy extends ModiEntity {
 
   @Column(nullable = false)
   private String nameEn;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private AllergyStatus category;
 
   @Column(nullable = false)
   private String nameKo;
