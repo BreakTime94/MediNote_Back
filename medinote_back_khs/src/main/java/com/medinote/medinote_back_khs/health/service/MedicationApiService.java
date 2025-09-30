@@ -96,18 +96,22 @@ public class MedicationApiService {
 
   //리스트 조회
   @Transactional(readOnly = true)
-  public Page<MedicationResponseDTO> getMedicationList(Pageable pageable) throws JsonProcessingException{
+  public Page<MedicationResponseDTO> getMedicationList(Pageable pageable) {
     return medicationRepository.findAll(pageable).map(medicationMapper::toResponseDTO);
   }
 
   @Transactional(readOnly = true)
   public List<MedicationResponseDTO> searchMedication(String keyword) {
-    return medicationMapper.toResponseDTOList(medicationRepository.findByNameKoContaining(keyword));
+    return medicationMapper.toResponseDTOList(
+            medicationRepository.findByNameKoContainingIgnoreCase(keyword)
+    );
   }
 
   @Transactional(readOnly = true)
-  public Optional<MedicationResponseDTO> getMedicationById(Long id) {
-    return medicationRepository.findById(id).map(medicationMapper::toResponseDTO);
+  public MedicationResponseDTO getMedicationById(Long id) {
+    return medicationRepository.findById(id)
+            .map(medicationMapper::toResponseDTO)
+            .orElseThrow(() -> new IllegalArgumentException("해당 약품이 존재하지 않습니다."));
     // Medication → MedicationResponseDTO 변환
     // 불필요한 필드들(createdAt, internalNotes 등) 제거
   }

@@ -21,7 +21,6 @@ public class MemberMedication extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(nullable = false)
   private Long memberId;
 
   @Column(nullable = false)

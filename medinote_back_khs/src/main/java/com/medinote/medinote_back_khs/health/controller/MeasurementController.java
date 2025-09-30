@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_khs.health.controller;
 
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
+import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import com.medinote.medinote_back_khs.health.service.MeasurementService;
 import jakarta.validation.Valid;
@@ -17,27 +18,31 @@ public class MeasurementController {
   private final MeasurementService measurementService;
 
   @PostMapping ("/create") //create
-  public ResponseEntity<Long> createMeasurement(@RequestBody @Valid MeasurementRequestDTO dto) {
-    Long id = measurementService.saveMeasurement(dto);
-    return ResponseEntity.ok(id); //w저장된 pk 반환
+  public ResponseEntity<MeasurementResponseDTO> createMeasurement(@RequestBody @Valid MeasurementRequestDTO dto) {
+    MeasurementResponseDTO response = measurementService.saveMeasurement(dto);
+    return ResponseEntity.ok(response);
   }
 
-  //단일 조회(read)
+  // 단일 조회 (read)
   @GetMapping("/{id}")
-  public MeasurementRequestDTO getMeasurement(@PathVariable @Valid Long id) {
-    return measurementService.findById(id);
+  public ResponseEntity<MeasurementResponseDTO> getMeasurement(@PathVariable Long id) {
+    MeasurementResponseDTO response = measurementService.findById(id);
+    return ResponseEntity.ok(response);
   }
 
-  //수정(update)
+  // 수정 (update)
   @PutMapping("/{id}")
-  public Long updateMeasurement(@PathVariable Long id, @RequestBody @Valid MeasurementRequestDTO dto) {
-    return measurementService.update(id, dto);
+  public ResponseEntity<MeasurementResponseDTO> updateMeasurement(@PathVariable Long id,
+                                                                  @RequestBody @Valid MeasurementRequestDTO dto) {
+    MeasurementResponseDTO response = measurementService.update(id, dto);
+    return ResponseEntity.ok(response);
   }
 
-  //삭제(delete)
+  // 삭제 (delete)
   @DeleteMapping("/{id}")
-  public void deleteMeasurement(@PathVariable @Valid Long id) {
+  public ResponseEntity<String> deleteMeasurement(@PathVariable Long id) {
     measurementService.deleteById(id);
+    return ResponseEntity.ok("삭제 완료");
   }
 
 }
