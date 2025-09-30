@@ -1,7 +1,6 @@
 package com.medinote.medinote_back_kc.member.repository;
 
-import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.entity.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,4 +15,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
   @Query("select m from Member m where m.email = :email")
   Optional<Member> findByEmail(String email);
+
+  boolean existsByEmail(String email);
+  boolean existsByNickname(String nickname);
 }

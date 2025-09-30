@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kc.security.config;
 
 import com.medinote.medinote_back_kc.security.filter.JWTAuthenticationFilter;
+import com.medinote.medinote_back_kc.security.handler.OAuth2LoginSuccessHandler;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetailsService;
 import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
@@ -34,6 +35,7 @@ public class SecurityConfig {
   private final RedisUtil redisUtil;
   private final TokenAuthService tokenAuthService;
   private final CORSConfig corsConfig;
+  private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
 
   @Bean
   public JWTAuthenticationFilter jwtAuthenticationFilter() {
@@ -53,12 +55,16 @@ public class SecurityConfig {
         .csrf(c -> c.disable())
         .cors(c -> c.configurationSource(corsConfig.corsConfigurationSource()))
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // 권한별 접근 가능한 controller 분리
         .authorizeHttpRequests(a -> a
-                .requestMatchers("/member/auth/login", "/member/register").permitAll()
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/member/update", "/member/delete", "/member/get", "member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
+                .requestMatchers("/member/auth/login", "/member/register", "/oauth2/**", "/login/oauth2/**", "/social/auth/register").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
+                .requestMatchers("/member/update", "/member/delete", "/member/get", "/member/auth/logout").hasAnyRole("USER", "ADMIN", "PHARMACIST", "DOCTOR")
                 .anyRequest().authenticated())
+            //form 로그인 불가
         .formLogin(f -> f.disable())
+            //대신 oauth 로그인은 열어둠
+        .oauth2Login(o -> o.successHandler(oAuth2LoginSuccessHandler))
         .httpBasic(b -> b.disable());
 
     return http.build();

@@ -1,74 +1,132 @@
 package com.medinote.medinote_back_kys.board.service;
 
-import com.medinote.medinote_back_kys.board.domain.dto.BoardCreateRequestDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardListResponseDTO;
-import com.medinote.medinote_back_kys.board.domain.dto.BoardUpdateRequestDTO;
+
+import com.medinote.medinote_back_kys.board.domain.dto.*;
+import com.medinote.medinote_back_kys.board.domain.en.BoardCategory;
+import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import com.medinote.medinote_back_kys.board.mapper.BoardMapper;
 import com.medinote.medinote_back_kys.board.repository.BoardRepository;
-import com.medinote.medinote_back_kys.common.paging.Criteria;
+import com.medinote.medinote_back_kys.board.repository.BoardSpecs;
+import com.medinote.medinote_back_kys.common.paging.PageCriteria;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BoardService {
-    private final BoardRepository  boardRepository;
+
+    private final BoardRepository boardRepository;
     private final BoardMapper boardMapper;
 
+    /** 정렬 허용 화이트리스트 (클라이언트 sort 필드 → 엔티티 컬럼) */
+    private static final Map<String, String> SORT_WHITELIST = Map.of(
+            "id", "id",
+            "regDate", "regDate",
+            "title", "title"
+    );
+
+    // ========== 생성 ==========
     @Transactional
-    public Board createBoard(BoardCreateRequestDTO dto) {
-        // DTO → Entity 변환
+    public Long create(BoardCreateRequestDTO dto) {
         Board entity = boardMapper.toEntity(dto);
-
-        // 저장
-        return boardRepository.save(entity);
+        Board saved  = boardRepository.save(entity);
+        return saved.getId();
     }
 
+    // ========== 단일 조회 ==========
+    public BoardDetailResponseDTO getDetail(Long id) {
+        Board board = boardRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Board not found: " + id));
+        return boardMapper.toDetailResponse(board);
+    }
+
+    // ========== 부분 수정(Patch) ==========
     @Transactional
-    public Board updateBoard(BoardUpdateRequestDTO dto) {
-        // 1) 대상 엔티티 조회 (없으면 404/400 성격 예외)
-        Board entity = boardRepository.findById(dto.getId())
-                .orElseThrow(() -> new IllegalArgumentException("게시글이 존재하지 않습니다. id=" + dto.getId()));
+    public void update(BoardUpdateRequestDTO dto) {
+        Objects.requireNonNull(dto.id(), "id is required");
+        Board board = boardRepository.findById(dto.id())
+                .orElseThrow(() -> new EntityNotFoundException("Board not found: " + dto.id()));
 
-        // 2) 부분 업데이트 (null 필드는 무시)
-        //    BoardMapper#updateEntityFromDto 가
-        //    @BeanMapping(nullValuePropertyMappingStrategy = IGNORE) 로 설정되어 있어
-        //    dto에서 null이 아닌 값만 entity에 반영됩니다.
-        boardMapper.updateEntityFromDto(dto, entity);
-
-        return entity;
+        // MapStruct가 null은 무시하고 덮어씀(NullValuePropertyMappingStrategy.IGNORE)
+        boardMapper.updateEntityFromDto(dto, board);
+        // 영속 상태이므로 save 호출 없이도 flush 시 반영되지만, 명시적 save 허용
+        boardRepository.save(board);
     }
 
-    public BoardListResponseDTO listBoards(Criteria criteria) {
-        // 테스트에서 사용한 화이트리스트와 동일한 매핑
-        Map<String, String> whitelist = Map.of(
-                "id", "id",
-                "title", "title",
-                "regDate", "regDate",
-                "postStatus", "postStatus",
-                "qnaStatus", "qnaStatus"
+    // ========== 소프트 삭제 ==========
+    @Transactional
+    public void delete(BoardDeleteRequestDTO dto) {
+        Board board = boardRepository.findById(dto.id())
+                .orElseThrow(() -> new EntityNotFoundException("Board not found: " + dto.id()));
+
+        // mapper 의 default 메서드(도메인 메서드 호출) 사용
+        boardMapper.deleteEntityFromDto(dto, board);
+        boardRepository.save(board);
+    }
+
+    // ===== 카테고리별 목록 =====
+    public BoardListResponseDTO listNotice(BoardSearchCond cond, PageCriteria criteria) {
+        return listByCategoryAndBaseline(cond, criteria, BoardCategory.NOTICE);
+    }
+    public BoardListResponseDTO listFaq(BoardSearchCond cond, PageCriteria criteria) {
+        return listByCategoryAndBaseline(cond, criteria, BoardCategory.FAQ);
+    }
+    public BoardListResponseDTO listQna(BoardSearchCond cond, PageCriteria criteria) {
+        return listByCategoryAndBaseline(cond, criteria, BoardCategory.QNA);
+    }
+
+    // ===== 공통 구현 =====
+    private BoardListResponseDTO listByCategoryAndBaseline(BoardSearchCond cond,
+                                                           PageCriteria criteria,
+                                                           BoardCategory category) {
+        BoardSearchCond c = ensureCond(cond);
+
+        Specification<Board> spec = Specification.allOf(
+                BoardSpecs.isPublicTrue(),
+                BoardSpecs.statusIn(EnumSet.of(PostStatus.PUBLISHED)),
+                BoardSpecs.categoryEquals(category.id())
         );
 
-        Pageable pageable = criteria.toPageable(whitelist);
-        Page<Board> page = boardRepository.findAll(pageable);
+        spec = appendOptionalConditions(spec, c);
 
-        // 매퍼로 페이지 메타 + 아이템 매핑
-        return boardMapper.toListResponse(page, criteria);
+        var page = boardRepository.findAll(spec, criteria.toPageable(SORT_WHITELIST));
+        return boardMapper.toListResponse(page, criteria, c.keyword());
     }
 
-    /**
-     * 목록 조회(확장 버전): 호출 측에서 화이트리스트(클라이언트 필드 → 실제 프로퍼티) 지정 가능.
-     */
-    public BoardListResponseDTO listBoards(Criteria criteria, Map<String, String> whitelist) {
-        Pageable pageable = criteria.toPageable(whitelist);
-        Page<Board> page = boardRepository.findAll(pageable);
-        return boardMapper.toListResponse(page, criteria);
+    /** null 방지용: cond가 null이면 빈 record를 생성 */
+    private BoardSearchCond ensureCond(BoardSearchCond cond) {
+        return (cond != null)
+                ? cond
+                : new BoardSearchCond(null, null, null, null, null, null);
+    }
+
+    /** record accessor(필드명())로 접근해서 선택 조건을 합성 */
+    private Specification<Board> appendOptionalConditions(Specification<Board> base, BoardSearchCond c) {
+        Specification<Board> spec = base;
+
+        if (c.keyword() != null && !c.keyword().isBlank()) {
+            spec = spec.and(BoardSpecs.keywordLike(c.keyword()));
+        }
+        if (c.qnaStatus() != null) {
+            spec = spec.and(BoardSpecs.qnaStatusEquals(c.qnaStatus()));
+        }
+        if (c.from() != null || c.to() != null) {
+            spec = spec.and(BoardSpecs.regBetween(c.from(), c.to()));
+        }
+        if (c.writerId() != null) {
+            spec = spec.and(BoardSpecs.writerEquals(c.writerId()));
+        }
+        // categoryId()는 이 서비스 메서드에서 이미 category로 고정하므로 추가 합성은 불필요
+
+        return spec;
     }
 }

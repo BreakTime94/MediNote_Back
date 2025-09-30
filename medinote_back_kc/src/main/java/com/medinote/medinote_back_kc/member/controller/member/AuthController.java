@@ -1,12 +1,11 @@
-package com.medinote.medinote_back_kc.member.controller;
+package com.medinote.medinote_back_kc.member.controller.member;
 
-import com.medinote.medinote_back_kc.member.domain.dto.LoginRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
 
-import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
-import com.medinote.medinote_back_kc.member.service.AuthService;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
+import com.medinote.medinote_back_kc.member.service.member.AuthService;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
-import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.Duration;
 
 @RestController
 @RequiredArgsConstructor
@@ -65,4 +62,5 @@ public class AuthController {
 
     return ResponseEntity.ok("로그아웃 완료");
   }
+
 }

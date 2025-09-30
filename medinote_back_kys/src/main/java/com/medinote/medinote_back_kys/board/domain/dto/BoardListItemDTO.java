@@ -19,6 +19,6 @@ public class BoardListItemDTO {
     private Boolean requireAdminPost;
     private QnaStatus qnaStatus;
     private PostStatus postStatus;
-    private LocalDateTime regDate;   // BaseEntity 가정
-    private LocalDateTime modDate;   // BaseEntity 가정
+    private LocalDateTime regDate;
+    private LocalDateTime modDate;
 }

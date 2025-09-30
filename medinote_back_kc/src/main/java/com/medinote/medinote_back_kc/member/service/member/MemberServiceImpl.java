@@ -1,28 +1,39 @@
-package com.medinote.medinote_back_kc.member.service;
+package com.medinote.medinote_back_kc.member.service.member;
 
-import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.RegisterRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.UpdateRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.entity.Member;
+import com.medinote.medinote_back_kc.common.exception.DuplicateEmailException;
+import com.medinote.medinote_back_kc.common.exception.DuplicateNicknameException;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService{
-  @Autowired
-  private MemberRepository repository;
-  @Autowired
-  private MemberMapper mapper;
-  @Autowired
-  private PasswordEncoder passwordEncoder;
+
+  private final MemberRepository repository;
+  private final MemberMapper mapper;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   public void register(RegisterRequestDTO dto) {
+
+    if(repository.existsByEmail(dto.getEmail())) {
+      throw new DuplicateEmailException("이미 등록된 이메일입니다.");
+    }
+
+    if(repository.existsByNickname(dto.getNickname())) {
+      throw new DuplicateNicknameException("이미 등록된 닉네임입니다.");
+    }
+
     Member member = mapper.toRegister(dto, passwordEncoder);
     repository.save(member);
   }

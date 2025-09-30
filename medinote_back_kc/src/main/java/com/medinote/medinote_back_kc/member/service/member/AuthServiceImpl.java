@@ -1,11 +1,11 @@
-package com.medinote.medinote_back_kc.member.service;
+package com.medinote.medinote_back_kc.member.service.member;
 
-import com.medinote.medinote_back_kc.member.domain.dto.LoginRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.entity.Member;
+import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
-import com.medinote.medinote_back_kc.security.dto.AuthMemberDTO;
+import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
 import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
@@ -15,13 +15,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -30,10 +26,8 @@ public class AuthServiceImpl implements AuthService{
 
   private final MemberRepository repository;
   private final MemberMapper mapper;
-  private final JWTUtil jwtUtil;
-  private final CookieUtil cookieUtil;
-  private final RedisUtil redisUtil;
   private final PasswordEncoder encoder;
+  private final TokenAuthService tokenAuthService;
 
   @Override
   public MemberDTO login(LoginRequestDTO dto, HttpServletResponse response) {
@@ -48,24 +42,10 @@ public class AuthServiceImpl implements AuthService{
     //3. 계정 status 확인
     checkStatus(member);
 
-    //4. 쿠키에 token 부여
-    String accessToken = jwtUtil.createAccessToken(member.getId(), member.getRole());
-    String refreshToken = jwtUtil.createRefreshToken(member.getId(), member.getRole());
-    log.info("accessToken : {}",accessToken);
-    log.info("refreshToken : {}",refreshToken);
+    //4. TokenAuthService의 토큰/쿠키/레디스 발급 과정 포함
+    tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
 
-    //5. CookieUtil로 별도 cookie 생성 메서드 구현
-    ResponseCookie accessCookie = cookieUtil.createAccessCookie(accessToken);
-    ResponseCookie refreshCookie = cookieUtil.createRefreshCookie(refreshToken);
-
-    //6. response header에 쿠키 추가
-    response.addHeader("Set-Cookie", accessCookie.toString());
-    response.addHeader("Set-Cookie", refreshCookie.toString());
-    log.info("헤더의 쿠키 좀 볼까? : {}", response.getHeader("Set-Cookie"));
-
-    //7. redis에 refresh token 추가
-    redisUtil.set(member.getId().toString(), refreshToken, jwtUtil.getExpirationDate(refreshToken).getTime() - System.currentTimeMillis());
-    //8. MemberDTO 반환
+    //5. MemberDTO 반환
     return mapper.toMemberDTO(member);
   }
 
