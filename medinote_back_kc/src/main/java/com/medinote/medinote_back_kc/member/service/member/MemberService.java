@@ -13,4 +13,8 @@ public interface MemberService {
   void update(UpdateRequestDTO dto, Long id);
   // 로그인한 상태에서 삭제(softdelete)
   void delete(String email);
+
+  boolean isEmailAvailable(String email);
+
+  boolean isNicknameAvailable(String nickname);
 }
