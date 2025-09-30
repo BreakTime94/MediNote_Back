@@ -24,7 +24,6 @@ public class Allergy extends ModiEntity {
   @Column(nullable = false, unique = true)
   private String code;  //알레르기 코드 (필수, 유니크)
 
-  @Column(nullable = false)
   private String nameEn;
 
   @Enumerated(EnumType.STRING)

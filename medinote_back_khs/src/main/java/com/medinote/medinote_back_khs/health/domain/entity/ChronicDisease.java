@@ -26,7 +26,6 @@ public class ChronicDisease extends ModiEntity {
   @Column(nullable = false)
   private ChronicDiseaseStatus category;
 
-  @Column(nullable = false)
   private String nameEn;
 
   @Column(nullable = false)
