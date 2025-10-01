@@ -20,8 +20,8 @@ public interface ConditionMapper {
   //DTO -> MemberChronicDisease
   @Mapping(target = "id" , ignore = true)
   @Mapping(source = "memberId", target = "memberId")
-  @Mapping(source = "diseaseId", target = "diseaseId")
-  MemberChronicDisease toMemberChronicDisease(Long memberId, Long diseaseId);
+  @Mapping(source = "chronicDiseaseId", target = "chronicDiseaseId")
+  MemberChronicDisease toMemberChronicDisease(Long memberId, Long chronicDiseaseId);
 
 
   //조회결과(엔티티 리스트에서 추출한 이름들을 ResponseDTO로 변환)
