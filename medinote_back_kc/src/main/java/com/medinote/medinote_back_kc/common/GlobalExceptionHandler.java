@@ -1,8 +1,8 @@
 package com.medinote.medinote_back_kc.common;
 
+import com.medinote.medinote_back_kc.common.exception.CustomException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateEmailException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateNicknameException;
-import com.medinote.medinote_back_kc.common.exception.NotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,10 +10,8 @@ import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Log4j2
@@ -57,18 +55,19 @@ public class GlobalExceptionHandler {
             "messages", "회원가입 양식이 올바르지 않습니다."
     ));
   }
-  //4. NotFoundException? 얘는 무슨용도일까?
-  @ExceptionHandler(NotFoundException.class)
-  public ResponseEntity<?> handleNotFound(NotFoundException ex) {
-    log.error("NotFoundException {} {}", ex, ex.getMessage());
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+  //4. CustomException JWTToken 관련해서도 포함
+
+  @ExceptionHandler(CustomException.class)
+  public ResponseEntity<?> handleCustomException(CustomException ex) {
+    log.error("custom exception {} {}", ex, ex.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
             "status", "ERROR",
-            "code", "NOT_FOUND",
-            "messages", "사용자를 찾을 수 없습니다."
+            "code", "CUSTOM_EXCEPTION",
+            "message", ex.getMessage()
     ));
   }
 
-  //JWTToken 관련해서도 처리해야함.
+
 
   // 그 외 모든 에러
   @ExceptionHandler(Exception.class)
