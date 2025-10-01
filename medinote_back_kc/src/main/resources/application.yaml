@@ -20,6 +20,7 @@ spring:
       - optional:classpath:secret/redis.yml
       - optional:classpath:secret/api.yml
       - optional:classpath:secret/application-oauth.yml
+      - optional:classpath:secret/google-email.yml
   application:
     name: board
   jpa:
