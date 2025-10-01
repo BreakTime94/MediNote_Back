@@ -94,7 +94,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {//컨트롤�
           clearAuth(response);
         }
         break;
-      case MALFORMED, INVALID, UNKNOWN: // 4) 그냥 비정상인 경우
+      case MALFORMED, INVALID, UNSUPPORTED: // 4) 그냥 비정상인 경우
         log.info("그냥 너는 비정상이여");
         checkAndDeleteRedis(refreshToken);
         clearAuth(response);

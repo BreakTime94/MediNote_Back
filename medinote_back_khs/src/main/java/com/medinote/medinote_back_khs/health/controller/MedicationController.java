@@ -18,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Validated //입력값 검증
+@CrossOrigin("http://localhost:6006")
 public class MedicationController {
 
   private final MedicationApiService medicationApiService;
@@ -29,14 +30,22 @@ public class MedicationController {
     return ResponseEntity.ok("Medication data fetched and saved successfully.");
   }
 
-  //복용약 리스트 조회
-  @GetMapping("/list")
-  public ResponseEntity<Page<MedicationResponseDTO>> getMedicationList(Pageable pageable) throws  JsonProcessingException {
+  // 전체 약품 리스트 (페이징)
+  @GetMapping
+  public ResponseEntity<Page<MedicationResponseDTO>> getMedicationList(Pageable pageable) {
     return ResponseEntity.ok(medicationApiService.getMedicationList(pageable));
   }
 
+  // 키워드 검색
   @GetMapping("/search")
   public ResponseEntity<List<MedicationResponseDTO>> searchMedication(@RequestParam String keyword) {
+    log.info(keyword);
     return ResponseEntity.ok(medicationApiService.searchMedication(keyword));
+  }
+
+  // 단일 약품 조회
+  @GetMapping("/{id}")
+  public ResponseEntity<MedicationResponseDTO> getMedicationById(@PathVariable Long id) {
+    return ResponseEntity.ok(medicationApiService.getMedicationById(id));
   }
 }
