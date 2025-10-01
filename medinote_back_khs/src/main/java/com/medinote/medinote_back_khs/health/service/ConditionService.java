@@ -39,8 +39,8 @@ public class ConditionService {
     }
 
     if(requestDTO.isChronicDiseaseYn() && requestDTO.getChronicDiseaseIds() != null) {
-      requestDTO.getChronicDiseaseIds().forEach(diseaseId ->
-              memberCdRepository.save(conditionMapper.toMemberChronicDisease(memberId, diseaseId)));
+      requestDTO.getChronicDiseaseIds().forEach(chronicDiseaseId ->
+              memberCdRepository.save(conditionMapper.toMemberChronicDisease(memberId, chronicDiseaseId)));
     }
 
     return getCondition(memberId);

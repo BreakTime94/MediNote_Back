@@ -30,6 +30,25 @@ public class MemberController {
     ));
   }
 
+  @GetMapping("/check-email")
+  public ResponseEntity<?> checkEmail(@RequestParam String email) {
+    boolean available = service.isEmailAvailable(email);
+
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "EMAIL_CHECKED",
+            "available", available
+    ));
+  }
+
+  @GetMapping("/check-nickname")
+  public ResponseEntity<?> checkNickName(@RequestParam String nickname) {
+    boolean available = service.isNicknameAvailable(nickname);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "NICKNAME_CHECKED",
+            "available", available
+    ));
+  }
+
   @GetMapping("/get")
   public ResponseEntity<?> get(Authentication authentication) {
     CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
