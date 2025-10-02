@@ -18,7 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Validated //입력값 검증
-//@CrossOrigin("http://localhost:6006")
 public class MedicationController {
 
   private final MedicationApiService medicationApiService;

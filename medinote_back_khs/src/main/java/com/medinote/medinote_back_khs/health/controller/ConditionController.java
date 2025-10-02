@@ -1,11 +1,15 @@
 package com.medinote.medinote_back_khs.health.controller;
 
+import com.medinote.medinote_back_khs.health.domain.dto.ConditionItemDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionResponseDTO;
+import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.service.ConditionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/health/condition")
@@ -37,5 +41,27 @@ public class ConditionController {
     return ResponseEntity.noContent().build();
   }
 
+  //기저질환리스트
+  @GetMapping("/chronicDiseases")
+  public ResponseEntity<List<ConditionItemDTO>> getALLChronicDiseases() {
+    return ResponseEntity.ok(conditionService.getAllChronicDiseass());
+  }
 
+  //기저질환 키워드 검색
+  @GetMapping("/chronicDiseases/search")
+  public ResponseEntity<List<ConditionItemDTO>> searchByCondition(@RequestParam String keyword) {
+    return ResponseEntity.ok(conditionService.searchChronicDiseases(keyword));
+  }
+
+  //알러지 리스트
+  @GetMapping("/allergies")
+  public ResponseEntity<List<ConditionItemDTO>> getALLAllergies() {
+    return ResponseEntity.ok(conditionService.getAllAllergies());
+  }
+
+  //알러지 키워드
+  @GetMapping("/allergies/search")
+  public ResponseEntity<List<ConditionItemDTO>> searchAllergies(@RequestParam String keyword) {
+    return ResponseEntity.ok(conditionService.searchAllergies(keyword));
+  }
 }
