@@ -38,7 +38,6 @@ public class MedicationController {
   // 키워드 검색
   @GetMapping("/search")
   public ResponseEntity<List<MedicationResponseDTO>> searchMedication(@RequestParam String keyword) {
-    log.info(keyword);
     return ResponseEntity.ok(medicationApiService.searchMedication(keyword));
   }
 

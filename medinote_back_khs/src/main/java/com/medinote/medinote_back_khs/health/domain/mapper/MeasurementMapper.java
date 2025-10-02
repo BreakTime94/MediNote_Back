@@ -18,6 +18,8 @@ public interface MeasurementMapper {
   Measurement toEntity(MeasurementRequestDTO dto, Long memberId);
 
   // Entity -> ResponseDTO
+  // medications 필드는 Service에서 따로 세팅할 거니까 무시 처리
+  @Mapping(target = "medications", ignore = true)
   MeasurementResponseDTO toResponseDTO(Measurement entity);
 
   // RequestDTO -> 기존 Entity 업데이트
