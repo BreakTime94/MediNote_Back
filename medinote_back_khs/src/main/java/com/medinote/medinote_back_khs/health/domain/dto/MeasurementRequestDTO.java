@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 
 @Getter @Setter
 @NoArgsConstructor
@@ -36,11 +38,17 @@ public class MeasurementRequestDTO {
     @NotNull(message = "만성질환 여부는 필수입니다")
     private Boolean chronicDiseaseYn;
 
+    private List<Long> chronicDiseaseIds;
+
     @NotNull(message = "알레르기 여부는 필수입니다")
     private Boolean allergyYn;
 
+    private List<Long> allergyIds ;
+
     @NotNull(message = "복용약물 여부는 필수입니다")
     private Boolean medicationYn;
+
+    private List<Long> medications;
 
     @Positive(message = "신장은 양수여야 합니다")
     @Max(value = 300, message = "입력 가능한 최대 신장은 300cm 입니다")
