@@ -20,8 +20,9 @@ public class MeasurementService {
 
   // 등록 (create)
   @Transactional
-  public MeasurementResponseDTO saveMeasurement(MeasurementRequestDTO dto) {
-    Measurement entity = measurementMapper.toEntity(dto);
+  public MeasurementResponseDTO saveMeasurement(MeasurementRequestDTO dto, Long memberId) {
+
+    Measurement entity = measurementMapper.toEntity(dto, memberId);
     Measurement saved = measurementRepository.save(entity);
     return measurementMapper.toResponseDTO(saved);
   }
