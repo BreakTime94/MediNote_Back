@@ -14,5 +14,5 @@ public interface MemberChronicDiseaseRepository extends JpaRepository<MemberChro
   List<MemberChronicDisease> findByMemberId(Long memberId);
 
   // 특정 회원이 특정 기저질환을 가지고 있는지 확인
-  Optional<MemberChronicDisease> findByMemberIdAndDiseaseId(Long memberId, Long diseaseId);
+  Optional<MemberChronicDisease> findByMemberIdAndChronicDiseaseId(Long memberId, Long chronicDiseaseId);
 }
