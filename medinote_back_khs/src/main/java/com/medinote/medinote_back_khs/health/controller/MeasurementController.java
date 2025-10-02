@@ -17,9 +17,10 @@ public class MeasurementController {
 
   private final MeasurementService measurementService;
 
-  @PostMapping ("/create") //create
-  public ResponseEntity<MeasurementResponseDTO> createMeasurement(@RequestBody @Valid MeasurementRequestDTO dto) {
-    MeasurementResponseDTO response = measurementService.saveMeasurement(dto);
+  @PostMapping  //create
+  public ResponseEntity<MeasurementResponseDTO> createMeasurement(
+          @RequestBody @Valid MeasurementRequestDTO dto,  @RequestHeader("X-Member-Id") Long memberId) {
+    MeasurementResponseDTO response = measurementService.saveMeasurement(dto, memberId);
     return ResponseEntity.ok(response);
   }
 

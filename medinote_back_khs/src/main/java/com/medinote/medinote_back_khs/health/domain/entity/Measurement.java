@@ -53,7 +53,6 @@ public class Measurement extends BaseEntity {
   private Integer bloodPressureSystolic;  // 혈압(수축기 mmHg)
   private Integer bloodPressureDiastolic; // 혈압(이완기 mmHg)
   private Double bloodSugar;              // 혈당 (mg/dL)
-  private Integer heartRate;              // 심박수 (bpm)
   private Double sleepHours;              // 평균 수면시간 (시간)
 
   @Column(nullable = false)

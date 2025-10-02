@@ -29,7 +29,6 @@ public class MeasurementResponseDTO {
   private Integer bloodPressureSystolic;
   private Integer bloodPressureDiastolic;
   private Double bloodSugar;
-  private Integer heartRate;
   private Double sleepHours;
 
   private LocalDateTime measuredDate; // 측정일시
