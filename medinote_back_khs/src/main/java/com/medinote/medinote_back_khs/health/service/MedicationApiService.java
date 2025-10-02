@@ -103,7 +103,7 @@ public class MedicationApiService {
   @Transactional(readOnly = true)
   public List<MedicationResponseDTO> searchMedication(String keyword) {
     return medicationMapper.toResponseDTOList(
-            medicationRepository.findByNameKoContainingIgnoreCase(keyword)
+            medicationRepository.findByNameKoContaining(keyword)
     );
   }
 

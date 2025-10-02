@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter @Setter
 @NoArgsConstructor
@@ -23,6 +24,7 @@ public class MeasurementResponseDTO {
   private Boolean chronicDiseaseYn;
   private Boolean allergyYn;
   private Boolean medicationYn;
+  private List<MedicationResponseDTO> medications;
 
   private Double height;
   private Double weight;
