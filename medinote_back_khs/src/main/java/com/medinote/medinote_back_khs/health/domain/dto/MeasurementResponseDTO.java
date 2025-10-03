@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.dto;
 
+import com.medinote.medinote_back_khs.health.domain.en.MeasurementStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,23 +13,26 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class MeasurementResponseDTO {
 
-  private Long id;
-  private Long memberId;
-  private String gender;
-  private Boolean smoking;
-  private Boolean drinking;
+  private Long id;                // PK
+  private Long memberId;          // 회원 ID
+  private MeasurementStatus gender;
+  private boolean smoking;
+  private boolean drinking;
   private Integer drinkingPerWeek;
   private Integer drinkingPerOnce;
   private Boolean chronicDiseaseYn;
-  private String chronicDiseaseDetail;
   private Boolean allergyYn;
-  private String allergyDetail;
   private Boolean medicationYn;
-  private String medicationDetail;
+
   private Double height;
   private Double weight;
   private Integer bloodPressureSystolic;
   private Integer bloodPressureDiastolic;
-  private Integer bloodSugar;
-  private LocalDateTime measuredDate;
+  private Double bloodSugar;
+  private Integer heartRate;
+  private Double sleepHours;
+
+  private LocalDateTime measuredDate; // 측정일시
+  private LocalDateTime regDate;      // 등록일
+  private LocalDateTime modDate;      // 수정일
 }

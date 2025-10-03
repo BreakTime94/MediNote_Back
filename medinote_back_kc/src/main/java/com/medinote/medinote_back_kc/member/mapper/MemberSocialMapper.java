@@ -26,10 +26,8 @@ public interface MemberSocialMapper {
   @Mapping(target = "disconnectedAt", ignore = true)
   MemberSocial toMemberSocial(SocialRegisterRequestDTO dto, Member member);
 
-  //구글 OAuth2가 보내주는 정보에 추가로 사용자에게 입력을 받아서 Member로 가입시키는 mapper 역할
-  @Mapping(target = "extraEmail", ignore = true) // 프론트에서 추가 입력 받아야 함
+  //구글 OAuth2가 보내주는 정보에 추가로 사용자에게 입력을 받아서 Member로 가입시키는 mapper 역할 // 프론트에서 추가 입력 받아야 함
   @Mapping(target = "profileImagePath", source = "profileImageUrl")
-  @Mapping(target = "profileMimeType", ignore = true)
   @Mapping(target = "fromSocial", constant = "true")
   SocialToMemberRegisterDTO socialToMemberLink(SocialRegisterRequestDTO dto);
 

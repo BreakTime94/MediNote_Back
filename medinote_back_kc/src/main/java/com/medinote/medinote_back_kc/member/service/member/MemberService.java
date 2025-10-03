@@ -13,4 +13,13 @@ public interface MemberService {
   void update(UpdateRequestDTO dto, Long id);
   // 로그인한 상태에서 삭제(softdelete)
   void delete(String email);
+  //이메일 중복검사
+  boolean isEmailAvailable(String email);
+  //닉네임 중복검사
+  boolean isNicknameAvailable(String nickname);
+  // Redis 및 회원가입하려는 이메일에 인증코드 발송
+  void sendVerificationCode(String email);
+
+  //Redis와 이메일 받은 인증코드 일치여부 확인 응답
+  boolean verifyCode(String email, String code);
 }

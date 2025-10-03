@@ -18,60 +18,40 @@ public class MeasurementService {
   private final MeasurementRepository measurementRepository;  //db접근
   private final MeasurementMapper measurementMapper;  //dto <-> entity
 
+  // 등록 (create)
   @Transactional
-  public Long saveMeasurement(Long memberId, MeasurementRequestDTO dto) {
-    //dto -> entity
+  public MeasurementResponseDTO saveMeasurement(MeasurementRequestDTO dto) {
     Measurement entity = measurementMapper.toEntity(dto);
-    //entity -> db 저장(insert)
-    entity.setMemberId(memberId); // 헤더에서 받은 memberId 세팅
     Measurement saved = measurementRepository.save(entity);
-    return saved.getId();
-
+    return measurementMapper.toResponseDTO(saved);
   }
 
-  //단일 조회(read)
+  // 단일 조회 (read)
   @Transactional(readOnly = true)
-  public MeasurementResponseDTO findById(Long memberId, Long id) {
+  public MeasurementResponseDTO findById(Long id) {
     Measurement entity = measurementRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Id not found: " + id));
-    if (!entity.getMemberId().equals(memberId)) {
-      throw new SecurityException("본인 데이터만 조회할 수 있습니다.");
-    }
-
-    return measurementMapper.toResponseDTO(entity); //entity -> dto 변환 후 반환
+    return measurementMapper.toResponseDTO(entity);
   }
 
-  //수정(update)
+  // 수정 (update)
   @Transactional
-  public Long update(Long memberId, Long id, MeasurementRequestDTO dto) {
-    Measurement entity = measurementRepository.findById(id) //기존id 불러옴
+  public MeasurementResponseDTO update(Long id, MeasurementRequestDTO dto) {
+    Measurement entity = measurementRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Id not found: " + id));
 
-    if (!entity.getMemberId().equals(memberId)) {
-      throw new SecurityException("본인 데이터만 수정할 수 있습니다.");
-    }
+    measurementMapper.updateFromDto(dto, entity);
+    Measurement updated = measurementRepository.save(entity);
 
-    // 필요한 필드만 업데이트
-    entity.setHeight(dto.getHeight());
-    entity.setWeight(dto.getWeight());
-    entity.setBloodPressureSystolic(dto.getBloodPressureSystolic());
-    entity.setBloodPressureDiastolic(dto.getBloodPressureDiastolic());
-    entity.setBloodSugar(dto.getBloodSugar());
-    entity.setHeartRate(dto.getHeartRate());
-    entity.setSleepHours(dto.getSleepHours());
-
-    return entity.getId();
+    return measurementMapper.toResponseDTO(updated);
   }
 
-  //삭제(delete)
-  public void deleteById(Long memberId,Long id) {
-    Measurement entity = measurementRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Not found: " + id));
-
-    if (!entity.getMemberId().equals(memberId)) {
-      throw new SecurityException("본인 데이터만 삭제할 수 있습니다.");
+  // 삭제 (delete)
+  @Transactional
+  public void deleteById(Long id) {
+    if (!measurementRepository.existsById(id)) {
+      throw new IllegalArgumentException("Id not found: " + id);
     }
-
-    measurementRepository.delete(entity);
+    measurementRepository.deleteById(id);
   }
 }

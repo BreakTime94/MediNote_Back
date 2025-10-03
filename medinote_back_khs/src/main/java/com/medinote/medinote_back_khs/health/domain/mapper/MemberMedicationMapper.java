@@ -16,22 +16,23 @@ public interface MemberMedicationMapper {
   //requestdto -> entity
   MemberMedication toEntity(MedicationRequestDTO dto);
 
-  //entity -> requestdto
+  // 단일 Entity -> DTO
+  @Mapping(source = "id", target = "id")
+  @Mapping(source = "memberId", target = "memberId")
+  @Mapping(source = "medicationId", target = "medicationId")
+  @Mapping(source = "startDate", target = "startDate")
+  @Mapping(source = "endDate", target = "endDate")
   MedicationResponseDTO toResponseDTO(MemberMedication entity);
 
   //list<entity> -> list<dto>
   List<MedicationResponseDTO> toResponseDTO(List<MemberMedication> listEntity);
 
-  //mm = MemberMedication
-
-  //복용 기록
+  // MemberMedication + Medication -> ResponseDTO
   @Mapping(source = "memberMedication.id", target = "id")
   @Mapping(source = "memberMedication.memberId", target = "memberId")
-  @Mapping(source = "memberMedication.medicationId", target = "medicationId")
-  @Mapping(source = "memberMedication.dosage", target = "dosage")
   @Mapping(source = "memberMedication.startDate", target = "startDate")
   @Mapping(source = "memberMedication.endDate", target = "endDate")
-  @Mapping(source = "memberMedication.isCurrent", target = "isCurrent")
+  @Mapping(source = "medication.id", target = "medicationId")
   @Mapping(source = "medication.drugCode", target = "drugCode")
   @Mapping(source = "medication.nameKo", target = "nameKo")
   @Mapping(source = "medication.company", target = "company")
