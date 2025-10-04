@@ -1,6 +1,7 @@
 package com.medinote.medinote_back_kc.member.controller.member;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.service.member.MemberService;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -32,7 +34,11 @@ public class MemberController {
   //이메일 중복 체크
   @GetMapping("/check/email")
   public ResponseEntity<?> checkEmail(@RequestParam String email) {
-    boolean available = service.isEmailAvailable(email);
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+    Long currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+
+    boolean available = service.isEmailAvailable(email, currentMemberId);
 
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "EMAIL_CHECKED",
@@ -42,7 +48,11 @@ public class MemberController {
   //닉네임 중복 체크
   @GetMapping("/check/nickname")
   public ResponseEntity<?> checkNickName(@RequestParam String nickname) {
-    boolean available = service.isNicknameAvailable(nickname);
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+    Long currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+
+    boolean available = service.isNicknameAvailable(nickname, currentMemberId);
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "NICKNAME_CHECKED",
             "available", available
@@ -78,6 +88,19 @@ public class MemberController {
     CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
     return ResponseEntity.ok(service.get(user.getEmail()));
+  }
+
+  //MyPage 부분수정
+  @PatchMapping("/modify")
+  public ResponseEntity<?> modify(@Valid @RequestBody UpdateRequestDTO dto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+    Long currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+    service.update(dto, currentMemberId);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status" , "UPDATE_SUCCESS",
+            "message", "정보수정이 완료되었습니다."
+    ));
   }
 
 }
