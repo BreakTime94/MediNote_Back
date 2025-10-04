@@ -57,6 +57,9 @@ public class Member {
   @Column
   private LocalDateTime deletedAt;
 
+  @Column(nullable = false)
+  private boolean extraEmailVerified;
+
   // 🔑 소셜 로그인 계정들
   @OneToMany(mappedBy = "member", fetch = FetchType.LAZY)
   @Builder.Default
