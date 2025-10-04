@@ -14,9 +14,9 @@ public interface MemberService {
   // 로그인한 상태에서 삭제(softdelete)
   void delete(String email);
   //이메일 중복검사
-  boolean isEmailAvailable(String email);
+  boolean isEmailAvailable(String email, Long currentMemberId);
   //닉네임 중복검사
-  boolean isNicknameAvailable(String nickname);
+  boolean isNicknameAvailable(String nickname, Long currentMemberId);
   // Redis 및 회원가입하려는 이메일에 인증코드 발송
   void sendVerificationCode(String email);
 
