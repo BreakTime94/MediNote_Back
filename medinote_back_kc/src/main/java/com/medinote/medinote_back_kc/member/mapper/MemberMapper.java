@@ -2,6 +2,7 @@ package com.medinote.medinote_back_kc.member.mapper;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialToMemberRegisterDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import org.mapstruct.Context;
