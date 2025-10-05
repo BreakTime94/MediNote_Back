@@ -11,11 +11,14 @@ import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.member.service.mail.MailService;
+import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.AuthenticatedPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,13 +52,32 @@ public class MemberServiceImpl implements MemberService{
   }
   // 기존 테이블에 이메일 등록되었는지 확인
   @Override
-  public boolean isEmailAvailable(String email) {
-    return !repository.existsByEmail(email) && !repository.existsByExtraEmail(email);
+  public boolean isEmailAvailable(String email, Long currentMemberId) {
+
+    if(currentMemberId == null) { //로그인 된 상태가 아님 -> 회원가입 중
+      return !repository.existsByEmail(email) && !repository.existsByExtraEmail(email);
+    }
+    // 로그인 된 상태 -> update 중
+    if(!repository.existsByEmail(email)) { //내가 기입한 email이 로그인용 이메일에 등록되지 않은 경우
+      Member member = repository.findById(currentMemberId).orElseThrow(() -> new UsernameNotFoundException("JWT TOKEN이 손상되었습니다."));
+      //다른 사람의 extraEmail로 등록되지 않거나 또는 내 자신의 extraEmail인 경우는 허용
+      if(!repository.existsByExtraEmail(email) || member.getExtraEmail().equals(email)) {
+        return true;
+      }
+      //그게 아닌 경우는 false
+      return false;
+    }
+    //이미 로그인용 email에 등록된 경우 그냥 false
+    return false;
   }
   // 기존 테이블에 닉네임 등록되었는지 확인
   @Override
-  public boolean isNicknameAvailable(String nickname) {
-    return !repository.existsByNickname(nickname);
+  public boolean isNicknameAvailable(String nickname, Long currentMemberId) {
+    if(currentMemberId == null) {
+      return !repository.existsByNickname(nickname);
+    }
+    Member member = repository.findById(currentMemberId).orElseThrow(() -> new UsernameNotFoundException("JWT TOKEN이 손상되었습니다."));
+    return !repository.existsByNickname(nickname) || member.getNickname().equals(nickname);
   }
   //이메일 인증 코드 발송
   @Override
@@ -79,7 +101,6 @@ public class MemberServiceImpl implements MemberService{
     if(!savedCode.equals(code)) {
       throw new CustomException(ErrorCode.EMAIL_INVALID);
     }
-
     return true;
   }
 
