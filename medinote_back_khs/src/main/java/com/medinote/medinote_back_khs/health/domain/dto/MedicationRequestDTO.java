@@ -1,6 +1,8 @@
 package com.medinote.medinote_back_khs.health.domain.dto;
 
 
+import jakarta.validation.constraints.Future;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,7 +20,11 @@ public class MedicationRequestDTO {
   private Long medicationId;  //약품id
 
   private String dosage;
+
+  @FutureOrPresent(message = "복용 시작일은 오늘 이후여야 합니다.")
   private LocalDate startDate;  //복용 시작일
+
+  @Future(message = "복용 종료일은 미래여야 합니다.")
   private LocalDate endDate;  //복용 종료일
   private Boolean isCurrent;
 }
