@@ -1,6 +1,9 @@
 package com.medinote.medinote_back_khs.health.domain.mapper;
 
+import com.medinote.medinote_back_khs.health.domain.dto.ConditionItemDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionResponseDTO;
+import com.medinote.medinote_back_khs.health.domain.entity.Allergy;
+import com.medinote.medinote_back_khs.health.domain.entity.ChronicDisease;
 import com.medinote.medinote_back_khs.health.domain.entity.MemberAllergy;
 import com.medinote.medinote_back_khs.health.domain.entity.MemberChronicDisease;
 import org.mapstruct.Mapper;
@@ -22,6 +25,16 @@ public interface ConditionMapper {
   @Mapping(source = "memberId", target = "memberId")
   @Mapping(source = "chronicDiseaseId", target = "chronicDiseaseId")
   MemberChronicDisease toMemberChronicDisease(Long memberId, Long chronicDiseaseId);
+
+  //chronicDisease -> dto
+  @Mapping(source = "id", target = "id")
+  @Mapping(source = "nameKo", target = "nameKo")
+  ConditionItemDTO toChronicDiseaseDTO(ChronicDisease entity);
+
+  // Allergy → DTO
+  @Mapping(source = "id", target = "id")
+  @Mapping(source = "nameKo", target = "nameKo")
+  ConditionItemDTO toAllergyDTO(Allergy entity);
 
 
   //조회결과(엔티티 리스트에서 추출한 이름들을 ResponseDTO로 변환)

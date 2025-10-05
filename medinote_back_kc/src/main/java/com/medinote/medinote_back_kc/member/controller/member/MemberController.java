@@ -4,10 +4,13 @@ import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.service.member.MemberService;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
+import com.medinote.medinote_back_kc.security.util.CookieUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,6 +25,7 @@ import java.util.Map;
 public class MemberController {
 
   private final MemberService service;
+  private final CookieUtil cookieUtil;
 
   @PostMapping("/register")
   public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDTO dto) {
@@ -33,13 +37,14 @@ public class MemberController {
   }
   //이메일 중복 체크
   @GetMapping("/check/email")
-  public ResponseEntity<?> checkEmail(@RequestParam String email) {
+  public ResponseEntity<?> checkEmail(@RequestParam String email) { // 로그인이 안되어 있어도 authentication이 null은 아니다.
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
-    Long currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+    Long currentMemberId = null;
+    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails principal) {
+    currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+    }
 
     boolean available = service.isEmailAvailable(email, currentMemberId);
-
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "EMAIL_CHECKED",
             "available", available
@@ -49,8 +54,10 @@ public class MemberController {
   @GetMapping("/check/nickname")
   public ResponseEntity<?> checkNickName(@RequestParam String nickname) {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
-    Long currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+    Long currentMemberId = null;
+    if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails principal) {
+      currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
+    }
 
     boolean available = service.isNicknameAvailable(nickname, currentMemberId);
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
@@ -93,6 +100,7 @@ public class MemberController {
   //MyPage 부분수정
   @PatchMapping("/modify")
   public ResponseEntity<?> modify(@Valid @RequestBody UpdateRequestDTO dto) {
+    log.info(dto.isExtraEmailVerified());
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
     Long currentMemberId = principal.getId(); // 현재 로그인한 사용자의 PK
@@ -100,6 +108,21 @@ public class MemberController {
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status" , "UPDATE_SUCCESS",
             "message", "정보수정이 완료되었습니다."
+    ));
+  }
+
+  @DeleteMapping("/remove")
+  public ResponseEntity<?> withdraw(@RequestBody Map<String, String> data, HttpServletResponse response) {
+    String email = data.get("email");
+    service.delete(email);
+    ResponseCookie accessCookie = cookieUtil.deleteAccessCookie();
+    ResponseCookie refreshCookie = cookieUtil.deleteAccessCookie();
+    response.addHeader("Set-Cookie", accessCookie.toString());
+    response.addHeader("Set-Cookie", refreshCookie.toString());
+
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status" , "DELETE_SUCCESS",
+            "message", "삭제가 완료되었습니다."
     ));
   }
 

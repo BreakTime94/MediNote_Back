@@ -25,7 +25,7 @@ public class GateWayController {
   @RequestMapping("/**")
   public ResponseEntity<String> proxy(HttpServletRequest request) throws IOException {
     //1. token 관련 유효성 검증은 컨트롤러에 들어오기 직전에 Filter로 처리가 된다.
-
+    log.info("모든 요청은 GateWayController를 탄답니다?");
     //2. 쿠키파싱 -> accessToken 추출 -> memberId 추출
     String accessToken = cookieUtil.getCookieValue(request,"ACCESS_COOKIE");
     Long memberId = null;

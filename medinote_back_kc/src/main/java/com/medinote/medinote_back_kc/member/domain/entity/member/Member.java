@@ -70,6 +70,7 @@ public class Member {
     this.nickname = dto.getNickname();
     this.profileImagePath = dto.getProfileImagePath();
     this.profileMimeType = dto.getProfileMimeType();
+    this.extraEmailVerified = dto.isExtraEmailVerified();
   }
 
 }

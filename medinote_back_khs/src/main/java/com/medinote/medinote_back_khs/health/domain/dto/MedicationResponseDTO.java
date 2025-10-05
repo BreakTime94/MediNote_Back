@@ -12,17 +12,9 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class MedicationResponseDTO {
 
-  private Long id;
-  private Long memberId;
-  private Long medicationId;
-
-  private String drugCode;  //약품코드
-  private String nameKo;  //약품명(한글)
-  private String company; //제조회사
-  private String effect;  //효능
-
-  private String dosage;
-  private LocalDate startDate;
-  private LocalDate endDate;
-  private Boolean isCurrent;
+  private Long id;          // 약품 PK
+  private String drugCode;  // 약품 코드
+  private String nameKo;    // 약품명 (한글)
+  private String company;   // 제조회사
+  private String effect;    // 효능
 }

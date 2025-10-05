@@ -9,11 +9,10 @@ import java.util.Optional;
 
 @Repository
 public interface MedicationRepository extends JpaRepository<Medication, Long> {
-
   boolean existsByDrugCode(String drugCode);
 
-  //약이름 검색
-  List<Medication> findByNameKoContainingIgnoreCase(String keyword);
+  // 약이름 검색 (대소문자 구분 안 함)
+  List<Medication> findByNameKoContaining(String keyword);
 
   //약품 단일 조회(복용약 등록 시 medicationId 확인)
 //  Optional<Medication> findById(Long id);
