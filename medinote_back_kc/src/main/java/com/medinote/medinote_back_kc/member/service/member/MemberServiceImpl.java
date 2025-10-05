@@ -109,9 +109,10 @@ public class MemberServiceImpl implements MemberService{
     return mapper.toMemberDTO(repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("email을 확인하여 주시기 바랍니다.")));
   }
 
+  @Transactional
   @Override
   public void update(UpdateRequestDTO dto, Long id) {
-    Member member = (repository.findById(id).orElseThrow(()-> new UsernameNotFoundException("email을 확인하여 주시기 바랍니다.")));
+    Member member = (repository.findById(id).orElseThrow(()-> new UsernameNotFoundException("이미 삭제되었거나 잘못된 멤버입니다.")));
     member.changeMyPage(dto);
     repository.save(member);
   }
@@ -119,6 +120,8 @@ public class MemberServiceImpl implements MemberService{
   @Override
   @Transactional
   public void delete(String email) {
+    Member member = repository.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("이미 삭제되었거나 잘못된 멤버입니다."));
+    redisUtil.delete("id" + member.getId().toString());
     repository.softDelete(email);
   }
 }

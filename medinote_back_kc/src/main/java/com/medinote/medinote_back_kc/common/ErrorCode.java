@@ -17,7 +17,11 @@ public enum ErrorCode {
 
   // ==== 공통 ====
   UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증이 필요합니다."),
-  FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다.");
+  FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
+
+  // ==== 회원관리 ====
+  MEMBER_DISABLED(HttpStatus.LOCKED, "잠긴 회원입니다. 관리자에게 문의하세요."),
+  MEMBER_DELETED(HttpStatus.FORBIDDEN, "삭제된 회원입니다.");
 
   private final HttpStatus status;
   private final String message;
