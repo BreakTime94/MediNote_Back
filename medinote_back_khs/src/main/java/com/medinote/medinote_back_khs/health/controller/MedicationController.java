@@ -32,18 +32,21 @@ public class MedicationController {
   // 전체 약품 리스트 (페이징)
   @GetMapping
   public ResponseEntity<Page<MedicationResponseDTO>> getMedicationList(Pageable pageable) {
-    return ResponseEntity.ok(medicationApiService.getMedicationList(pageable));
+    Page<MedicationResponseDTO> page = medicationApiService.getMedicationList(pageable);
+    return ResponseEntity.ok(page);
   }
 
   // 키워드 검색
   @GetMapping("/search")
   public ResponseEntity<List<MedicationResponseDTO>> searchMedication(@RequestParam String keyword) {
-    return ResponseEntity.ok(medicationApiService.searchMedication(keyword));
+    List<MedicationResponseDTO> results = medicationApiService.searchMedication(keyword); // ✅ 메서드명 통일
+    return ResponseEntity.ok(results);
   }
 
   // 단일 약품 조회
   @GetMapping("/{id}")
   public ResponseEntity<MedicationResponseDTO> getMedicationById(@PathVariable Long id) {
-    return ResponseEntity.ok(medicationApiService.getMedicationById(id));
+    MedicationResponseDTO dto = medicationApiService.getMedicationById(id);
+    return ResponseEntity.ok(dto);
   }
 }

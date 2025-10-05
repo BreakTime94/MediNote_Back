@@ -36,4 +36,5 @@ public class MeasurementResponseDTO {
   private LocalDateTime measuredDate; // 측정일시
   private LocalDateTime regDate;      // 등록일
   private LocalDateTime modDate;      // 수정일
+
 }

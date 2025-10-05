@@ -100,18 +100,19 @@ public class MedicationApiService {
     return medicationRepository.findAll(pageable).map(medicationMapper::toResponseDTO);
   }
 
+  //약 이름 키워드 조회
   @Transactional(readOnly = true)
   public List<MedicationResponseDTO> searchMedication(String keyword) {
-    return medicationMapper.toResponseDTOList(
-            medicationRepository.findByNameKoContaining(keyword)
-    );
+    List<Medication> list = medicationRepository.findByNameKoContaining(keyword);
+    return medicationMapper.toResponseDTOList(list);
   }
 
+  //특정약 상세 조회
   @Transactional(readOnly = true)
   public MedicationResponseDTO getMedicationById(Long id) {
-    return medicationRepository.findById(id)
-            .map(medicationMapper::toResponseDTO)
+    Medication medication = medicationRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("해당 약품이 존재하지 않습니다."));
+    return medicationMapper.toResponseDTO(medication);
     // Medication → MedicationResponseDTO 변환
     // 불필요한 필드들(createdAt, internalNotes 등) 제거
   }
