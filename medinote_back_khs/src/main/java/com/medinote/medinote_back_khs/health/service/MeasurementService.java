@@ -3,10 +3,12 @@ package com.medinote.medinote_back_khs.health.service;
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
+import com.medinote.medinote_back_khs.health.domain.dto.MemberMedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import com.medinote.medinote_back_khs.health.domain.entity.Medication;
 import com.medinote.medinote_back_khs.health.domain.entity.MemberMedication;
 import com.medinote.medinote_back_khs.health.domain.mapper.MeasurementMapper;
+import com.medinote.medinote_back_khs.health.domain.mapper.MedicationMapper;
 import com.medinote.medinote_back_khs.health.domain.mapper.MemberMedicationMapper;
 import com.medinote.medinote_back_khs.health.domain.repository.MeasurementRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MedicationRepository;
@@ -28,6 +30,7 @@ public class MeasurementService {
   private final MemberMedicationRepository memberMedicationRepository;
   private final MedicationRepository medicationRepository;
   private final MemberMedicationMapper memberMedicationMapper;
+  private final MedicationMapper medicationMapper;
 
 
   // 등록 (create)
@@ -38,13 +41,14 @@ public class MeasurementService {
 
     MeasurementResponseDTO response = measurementMapper.toResponseDTO(saved);
 
-    // ✅ 회원 복용약 조회 후 세팅
+    // 복용약 조회 후 세팅
     List<MemberMedication> meds = memberMedicationRepository.findByMemberId(memberId);
     List<MedicationResponseDTO> medDtos = meds.stream()
             .map(mm -> {
               Medication med = medicationRepository.findById(mm.getMedicationId())
                       .orElseThrow(() -> new IllegalArgumentException("해당 약 존재하지 않음"));
-              return memberMedicationMapper.toResponseDTO(mm, med);
+              //한 개만 넘긴다
+              return medicationMapper.toResponseDTO(med);
             })
             .toList();
 

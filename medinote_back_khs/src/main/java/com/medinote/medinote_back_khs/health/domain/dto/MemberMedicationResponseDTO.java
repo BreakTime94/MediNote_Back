@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -27,4 +28,7 @@ public class MemberMedicationResponseDTO {
   private String nameKo;
   private String company;
   private String effect;
+
+  // ✅ 회원 복용약 정보 포함
+//  private List<MemberMedicationResponseDTO> medications;
 }

@@ -25,6 +25,7 @@ public interface MemberMapper {
   @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
   @Mapping(target = "fromSocial", ignore = true) // fromSocial false/true 기본값 false
   @Mapping(target = "socialAccounts", ignore = true)
+  @Mapping(target = "extraEmailVerified", ignore = true)
   Member toRegister(RegisterRequestDTO dto, @Context PasswordEncoder passwordEncoder);
 
   //id(pk), password, status, deleted_at 을 제외한 dto 구성
@@ -38,6 +39,7 @@ public interface MemberMapper {
   @Mapping(target = "regDate", ignore = true) // table 기본값 current timestamp
   @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
   @Mapping(target = "socialAccounts", ignore = true)
+  @Mapping(target = "extraEmailVerified", ignore = true)
   Member socialToMemberRegister(SocialToMemberRegisterDTO dto);
 
 }
