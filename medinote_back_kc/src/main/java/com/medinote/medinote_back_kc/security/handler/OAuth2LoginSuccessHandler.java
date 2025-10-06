@@ -55,7 +55,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     //1. OAuth2AuthenticationToken 보유 여부 확인, 이게 없다면 구글 OAuth2 쪽에서 인증 문제가 생긴 것
 
     if(!(authentication instanceof OAuth2AuthenticationToken oauth2Token)) {
-      throw new IllegalStateException("구글 측의 토큰 발급 과정에 이상이 있습니다. 재시도를 통해 확인하여주시기 바랍니다.");
+      throw new CustomException(ErrorCode.SOICAL_TOKEN_ERROR);
     }
 
     //2. 로그인 & 회원등록에 필요한 정보 OAuth2Token을 통해 security context에 등록된 인증정보 가져옴
@@ -75,13 +75,22 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             .rawProfileJson(objectMapper.writeValueAsString(attributes))
             .build();
 
-
     // 4. 기존 소셜회원이 맞는지 check
     if(memberSocialService.isSocialMember(dto)) {
 
       Member member = memberRepository.findByEmail(dto.getEmail()).orElseThrow(()-> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
       // authService에 존재하는 Status 체크하는 메서드 public으로 변경
-      authService.checkStatus(member); //status만 check해서 넘기면 됨. 내부는 CustomException 로직 존재
+
+      try{
+        authService.checkStatus(member); //status만 check해서 넘기면 됨. 내부는 CustomException 로직 존재
+      } catch (CustomException e){
+        sendPostMessage(response, Map.of(
+                "status", e.getErrorCode().getStatus(),
+                "code", e.getErrorCode().name(),
+                "message", e.getMessage()
+        ));
+        return;
+      }
 
       log.info("기존에 존재하는 SocialMember");
       // TokenAuthService에 전부 위임
@@ -98,7 +107,17 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         //table에 main email이나 extraEmail로 되어 있는 경우는 소셜 연동을 시켜버리고 로그인 성공
         Member member = optionalMember.get();
         //status 검사 하고
-        authService.checkStatus(member);
+        try{
+          authService.checkStatus(member);
+        } catch(CustomException e){
+          sendPostMessage(response, Map.of(
+                  "status", e.getErrorCode().getStatus(),
+                  "code", e.getErrorCode().name(),
+                  "message", e.getMessage()
+          ));
+          return;
+        }
+
         //dto + id를 socialmember table에 insert만 하면 됨!
         memberSocialService.linkSocialAccount(member, dto);
 
@@ -119,15 +138,17 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         log.info(result);
       }
     }
+    sendPostMessage(response, result);
+  }
 
+  private void sendPostMessage(HttpServletResponse response, Map<String, Object> payload) throws IOException {
     response.setContentType("text/html;charset=UTF-8");
     String script = "<script>" +
             "window.opener.postMessage(" +
-            objectMapper.writeValueAsString(result) +
+            objectMapper.writeValueAsString(payload) +
             ", '*');" +
             "window.close();" +
             "</script>";
-    log.info(script);
     response.getWriter().write(script);
   }
 }
