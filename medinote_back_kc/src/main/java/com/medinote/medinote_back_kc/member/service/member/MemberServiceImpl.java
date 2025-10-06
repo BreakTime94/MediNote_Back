@@ -59,16 +59,16 @@ public class MemberServiceImpl implements MemberService{
     }
     // 로그인 된 상태 -> update 중
     if(!repository.existsByEmail(email)) { //내가 기입한 email이 로그인용 이메일에 등록되지 않은 경우
-      Member member = repository.findById(currentMemberId).orElseThrow(() -> new UsernameNotFoundException("JWT TOKEN이 손상되었습니다."));
+      Member member = repository.findById(currentMemberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
       //다른 사람의 extraEmail로 등록되지 않거나 또는 내 자신의 extraEmail인 경우는 허용
       if(!repository.existsByExtraEmail(email) || member.getExtraEmail().equals(email)) {
         return true;
       }
       //그게 아닌 경우는 false
-      return false;
+      throw new CustomException(ErrorCode.EXTRA_EMAIL_DUPLICATED);
     }
     //이미 로그인용 email에 등록된 경우 그냥 false
-    return false;
+    throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
   }
   // 기존 테이블에 닉네임 등록되었는지 확인
   @Override
