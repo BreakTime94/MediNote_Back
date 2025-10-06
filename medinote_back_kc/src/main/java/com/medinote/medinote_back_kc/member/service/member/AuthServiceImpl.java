@@ -1,8 +1,11 @@
 package com.medinote.medinote_back_kc.member.service.member;
 
+import com.medinote.medinote_back_kc.common.ErrorCode;
+import com.medinote.medinote_back_kc.common.exception.CustomException;
 import com.medinote.medinote_back_kc.member.domain.dto.member.LoginRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Status;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.security.service.TokenAuthService;
@@ -33,10 +36,10 @@ public class AuthServiceImpl implements AuthService{
   public MemberDTO login(LoginRequestDTO dto, HttpServletResponse response) {
 
     // 1. member Email을 확인하여 없는 경우 예외를 던짐
-    Member member = repository.findByEmail(dto.getEmail()).orElseThrow(() -> new UsernameNotFoundException("올바른 email이 아닙니다."));
+    Member member = repository.findByEmail(dto.getEmail()).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
     //2. password 확인
     if(!encoder.matches(dto.getPassword(), member.getPassword())) {
-      throw new BadCredentialsException("비밀번호가 일치하지 않습니다") {
+      throw new CustomException(ErrorCode.MEMBER_PASSWORD_INVALID) {
       };
     }
     //3. 계정 status 확인
@@ -50,12 +53,12 @@ public class AuthServiceImpl implements AuthService{
   }
 
 
-  private void checkStatus(Member member) {
-    if(member.getStatus().equals("DISABLED")) {
-      throw new AuthorizationDeniedException("현재 계정은 잠긴 상태입니다. 관리자에게 문의하세요.");
+  public void checkStatus(Member member) {
+    if(member.getStatus().equals(Status.DISABLED)) {
+      throw new CustomException(ErrorCode.MEMBER_DISABLED);
     }
-    if(member.getStatus().equals("DELETED")) {
-      throw new AuthorizationDeniedException("삭제된 계정입니다.");
+    if(member.getStatus().equals(Status.DELETED)) {
+      throw new CustomException(ErrorCode.MEMBER_DELETED);
     }
   }
 }

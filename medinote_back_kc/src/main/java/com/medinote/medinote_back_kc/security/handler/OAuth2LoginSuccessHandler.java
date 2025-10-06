@@ -1,10 +1,17 @@
 package com.medinote.medinote_back_kc.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.medinote.medinote_back_kc.common.ErrorCode;
+import com.medinote.medinote_back_kc.common.exception.CustomException;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Status;
 import com.medinote.medinote_back_kc.member.domain.entity.social.Provider;
+import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
+import com.medinote.medinote_back_kc.member.mapper.MemberSocialMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
+import com.medinote.medinote_back_kc.member.service.member.AuthServiceImpl;
+import com.medinote.medinote_back_kc.member.service.member.MemberService;
 import com.medinote.medinote_back_kc.member.service.social.MemberSocialService;
 import com.medinote.medinote_back_kc.security.service.TokenAuthService;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
@@ -25,7 +32,9 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -35,6 +44,8 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
   private final MemberSocialService memberSocialService;
   private final ObjectMapper objectMapper;
   private final TokenAuthService tokenAuthService;
+  private final MemberRepository memberRepository;
+  private final AuthServiceImpl authService;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request,
@@ -51,7 +62,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     OAuth2User oAuth2User = oauth2Token.getPrincipal();
     Provider provider = Provider.valueOf(oauth2Token.getAuthorizedClientRegistrationId().toUpperCase());
     Map<String, Object> attributes = oAuth2User.getAttributes(); // 내려주는 value 값이 단순 String만 있지 않음 그래서 value 값에 object 사용
-    Map<String, Object> result;
+    Map<String, Object> result = new HashMap<>();
 
     //3. SocialRegisterRequestDTO에 Mapping
     SocialRegisterRequestDTO dto = SocialRegisterRequestDTO.builder()
@@ -64,25 +75,49 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             .rawProfileJson(objectMapper.writeValueAsString(attributes))
             .build();
 
-    // 4. 기존회원이 맞는지 check
+
+    // 4. 기존 소셜회원이 맞는지 check
     if(memberSocialService.isSocialMember(dto)) {
+
+      Member member = memberRepository.findByEmail(dto.getEmail()).orElseThrow(()-> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+      // authService에 존재하는 Status 체크하는 메서드 public으로 변경
+      authService.checkStatus(member); //status만 check해서 넘기면 됨. 내부는 CustomException 로직 존재
+
       log.info("기존에 존재하는 SocialMember");
       // TokenAuthService에 전부 위임
       tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
       result = Map.of(
               "status", "LOGIN_SUCCESS",
-              "email",dto.getEmail(),
+              "email", dto.getEmail(),
               "provider", provider.name()
       );
 
-    } else {
-      log.info("기존에 등록 안된 Social Member");
-      //프론트가 바뀌고, 들어오는 값을 통해서, SocialRegisterRequestDTO를 SocialToMemberRegisterDTO로 Mapping 시키는 작업 필요
-      result = Map.of(
-              "status", "NEED_REGISTER",
-              "dto", dto
-      );
-      log.info(result);
+    } else { // 소셜 테이블에 없는 경우는 2가지 경우가 있다. member table에 email/extraEmail이 존재하는가? 아닌가?
+      Optional<Member> optionalMember = memberRepository.findByEmailOrExtraEmail(dto.getEmail(), dto.getEmail());
+      if(optionalMember.isPresent()) {
+        //table에 main email이나 extraEmail로 되어 있는 경우는 소셜 연동을 시켜버리고 로그인 성공
+        Member member = optionalMember.get();
+        //status 검사 하고
+        authService.checkStatus(member);
+        //dto + id를 socialmember table에 insert만 하면 됨!
+        memberSocialService.linkSocialAccount(member, dto);
+
+        tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
+        result = Map.of(
+                "status", "LOGIN_SUCCESS",
+                "email", dto.getEmail(),
+                "provider", provider.name()
+        );
+
+      } else { // 둘다 없는 경우는 신규 가입?
+        log.info("기존에 등록 안된 Social Member");
+        //프론트가 바뀌고, 들어오는 값을 통해서, SocialRegisterRequestDTO를 SocialToMemberRegisterDTO로 Mapping 시키는 작업 필요
+        result = Map.of(
+                "status", "NEED_REGISTER",
+                "dto", dto
+        );
+        log.info(result);
+      }
     }
 
     response.setContentType("text/html;charset=UTF-8");
@@ -96,4 +131,3 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     response.getWriter().write(script);
   }
 }
-

@@ -43,12 +43,6 @@ public class SecurityConfig {
   }
 
   @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-
-  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     log.info("security 필터 체인 들어왔다 이 자식아");
     http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
@@ -57,15 +51,19 @@ public class SecurityConfig {
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 권한별 접근 가능한 controller 분리
         .authorizeHttpRequests(a -> a
-                .requestMatchers("/member/auth/login", "/member/register", "/oauth2/**", "/login/oauth2/**", "/social/auth/register"
+                .requestMatchers("/member/auth/login", "/member/register", "/social/auth/register"
                 , "/member/check/email", "/member/check/nickname", "/member/email/verify", "/member/email/send").permitAll()
+                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
                 .requestMatchers("/boards/read/**", "/boards/notice/list", "/boards/faq/list", "/boards/qna/list").permitAll()
                 .anyRequest().authenticated())
             //form 로그인 불가
         .formLogin(f -> f.disable())
             //대신 oauth 로그인은 열어둠
-        .oauth2Login(o -> o.successHandler(oAuth2LoginSuccessHandler))
+        .oauth2Login(o -> o
+                .authorizationEndpoint(auth -> auth.baseUri("/oauth2/authorization"))
+                .redirectionEndpoint(red -> red.baseUri("/login/oauth2/code/*"))
+                .successHandler(oAuth2LoginSuccessHandler))
         .httpBasic(b -> b.disable());
 
     return http.build();
