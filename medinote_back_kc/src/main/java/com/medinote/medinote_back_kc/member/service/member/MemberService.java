@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.member.service.member;
 
+import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
@@ -22,4 +23,11 @@ public interface MemberService {
 
   //Redis와 이메일 받은 인증코드 일치여부 확인 응답
   boolean verifyCode(String email, String code);
+
+  //비밀번호 변경(MyPage)
+  void changePassword(ChangePasswordRequestDTO dto, Long currentMemberId);
+  //비밀번호 찾기 -> 임시비밀번호를 email로 보내주는거까지?
+  void findPassword(String email);
+
+  boolean checkPassword(String rawPassword,String encodedPassword);
 }

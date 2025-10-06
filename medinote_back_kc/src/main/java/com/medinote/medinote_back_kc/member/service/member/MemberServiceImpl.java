@@ -4,6 +4,7 @@ import com.medinote.medinote_back_kc.common.ErrorCode;
 import com.medinote.medinote_back_kc.common.exception.CustomException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateEmailException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateNicknameException;
+import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
@@ -123,5 +124,25 @@ public class MemberServiceImpl implements MemberService{
     Member member = repository.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("이미 삭제되었거나 잘못된 멤버입니다."));
     redisUtil.delete("id" + member.getId().toString());
     repository.softDelete(email);
+  }
+
+  @Override
+  @Transactional
+  public void changePassword(ChangePasswordRequestDTO dto, Long currentMemberId) {
+    Member member = repository.findById(currentMemberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+    // password 유효성 검사나 사전에 맞는지 확인하는 로직은 아래 checkPassword에서 진행
+    member.changePassword(dto.getNewPassword());
+
+    repository.save(member);
+  }
+
+  @Override
+  public void findPassword(String email) {
+
+  }
+
+  @Override
+  public boolean checkPassword(String rawPassWord, String encodedPassWord) { //raw -> 사용자가 입력한 값, encoded-> db에 저장된 값.
+    return passwordEncoder.matches(rawPassWord, encodedPassWord);
   }
 }

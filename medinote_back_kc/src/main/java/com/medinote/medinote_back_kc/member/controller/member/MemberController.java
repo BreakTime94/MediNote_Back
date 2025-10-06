@@ -116,7 +116,7 @@ public class MemberController {
     String email = data.get("email");
     service.delete(email);
     ResponseCookie accessCookie = cookieUtil.deleteAccessCookie();
-    ResponseCookie refreshCookie = cookieUtil.deleteAccessCookie();
+    ResponseCookie refreshCookie = cookieUtil.deleteRefreshCookie();
     response.addHeader("Set-Cookie", accessCookie.toString());
     response.addHeader("Set-Cookie", refreshCookie.toString());
 
