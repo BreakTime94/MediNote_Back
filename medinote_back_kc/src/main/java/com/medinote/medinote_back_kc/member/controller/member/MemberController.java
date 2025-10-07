@@ -1,7 +1,10 @@
 package com.medinote.medinote_back_kc.member.controller.member;
 
+import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.CheckPasswordRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.service.member.MemberService;
 import com.medinote.medinote_back_kc.security.service.CustomUserDetails;
 import com.medinote.medinote_back_kc.security.util.CookieUtil;
@@ -123,6 +126,33 @@ public class MemberController {
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status" , "DELETE_SUCCESS",
             "message", "삭제가 완료되었습니다."
+    ));
+  }
+
+  @PostMapping("/check/password")
+  public ResponseEntity<?> checkPassword(@RequestBody CheckPasswordRequestDTO dto) {
+
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+    Long currentMemberId = principal.getId();
+
+     boolean available = service.checkPassword(dto.getPassword(), currentMemberId);
+     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+             "status", "PASSWORD_CHECKED",
+             "available", available
+     ));
+  }
+
+  @PatchMapping("/change/password")
+  public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequestDTO dto) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
+    Long currentMemberId = principal.getId();
+
+    service.changePassword(dto, currentMemberId);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "PASSWORD_CHANGED",
+            "message", "비밀번호가 성공적으로 변경되었습니다. 다시 로그인하여주시기 바랍니다."
     ));
   }
 

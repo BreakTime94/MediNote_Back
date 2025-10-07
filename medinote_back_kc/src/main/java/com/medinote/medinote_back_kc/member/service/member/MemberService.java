@@ -29,5 +29,5 @@ public interface MemberService {
   //비밀번호 찾기 -> 임시비밀번호를 email로 보내주는거까지?
   void findPassword(String email);
 
-  boolean checkPassword(String rawPassword,String encodedPassword);
+  boolean checkPassword(String rawPassword, Long currentId);
 }
