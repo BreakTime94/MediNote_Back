@@ -131,7 +131,7 @@ public class MemberServiceImpl implements MemberService{
   public void changePassword(ChangePasswordRequestDTO dto, Long currentMemberId) {
     Member member = repository.findById(currentMemberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
     // password 유효성 검사나 사전에 맞는지 확인하는 로직은 아래 checkPassword에서 진행
-    member.changePassword(dto.getNewPassword());
+    member.changePassword(passwordEncoder.encode(dto.getPassword()));
 
     repository.save(member);
   }
@@ -142,7 +142,8 @@ public class MemberServiceImpl implements MemberService{
   }
 
   @Override
-  public boolean checkPassword(String rawPassWord, String encodedPassWord) { //raw -> 사용자가 입력한 값, encoded-> db에 저장된 값.
-    return passwordEncoder.matches(rawPassWord, encodedPassWord);
+  public boolean checkPassword(String rawPassWord, Long currentId) {//raw -> 사용자가 입력한 값, encoded-> db에 저장된 값.
+    Member member = repository.findById(currentId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND) );
+    return passwordEncoder.matches(rawPassWord, member.getPassword());
   }
 }

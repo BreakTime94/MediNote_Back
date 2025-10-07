@@ -16,5 +16,5 @@ public class ChangePasswordRequestDTO {
           regexp = "^(?=.*[0-9])(?=.*[a-zA-Z])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$",
           message = "비밀번호는 8~16자, 영문/숫자/특수문자 각각 1개 이상 포함해야 합니다."
   )
-  private String newPassword;
+  private String password;
 }
