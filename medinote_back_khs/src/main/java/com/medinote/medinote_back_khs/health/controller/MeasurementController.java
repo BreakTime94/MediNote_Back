@@ -2,7 +2,6 @@ package com.medinote.medinote_back_khs.health.controller;
 
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
-import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import com.medinote.medinote_back_khs.health.service.MeasurementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,17 +32,19 @@ public class MeasurementController {
 
   // 수정 (update)
   @PutMapping("/{id}")
-  public ResponseEntity<MeasurementResponseDTO> updateMeasurement(@PathVariable Long id,
-                                                                  @RequestBody @Valid MeasurementRequestDTO dto) {
-    MeasurementResponseDTO response = measurementService.update(id, dto);
+  public ResponseEntity<MeasurementResponseDTO> addNewVersion(
+          @RequestHeader("X-Member-Id") Long memberId,
+          @RequestBody MeasurementRequestDTO dto) {
+
+    MeasurementResponseDTO response = measurementService.addNewVersion(memberId, dto);
     return ResponseEntity.ok(response);
   }
 
   // 삭제 (delete)
   @DeleteMapping("/{id}")
-  public ResponseEntity<String> deleteMeasurement(@PathVariable Long id) {
-    measurementService.deleteById(id);
-    return ResponseEntity.ok("삭제 완료");
+  public ResponseEntity<Void> deactivateMeasurement(@PathVariable Long id) {
+    measurementService.deactivateMeasurement(id);
+    return ResponseEntity.noContent().build(); // 204 반환
   }
 
 }

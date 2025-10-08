@@ -14,9 +14,12 @@ public class UpdateRequestDTO {
   @NotBlank(message = "닉네임은 필수입니다.")
   @Pattern(
           regexp = "^[가-힣a-zA-Z0-9]{2,16}$",
-          message = "닉네임은 한글, 영문, 숫자만 사용하여 2글자에서 16자까지 가능합니다."
-  )
+          message = "닉네임은 한글, 영문, 숫자만 사용하여 2글자에서 16자까지 가능합니다.")
   private String nickname;
+
   private String profileImagePath;
+
   private String profileMimeType;
+
+  private boolean extraEmailVerified;
 }

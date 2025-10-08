@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.member.domain.entity.member;
 
+import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.social.MemberSocial;
 import jakarta.persistence.*;
@@ -65,11 +66,16 @@ public class Member {
   @Builder.Default
   private List<MemberSocial> socialAccounts = new ArrayList<>();
 
+  public void changePassword(String password) {
+    this.password = password;
+  }
+
   public void changeMyPage(UpdateRequestDTO dto) { //프론트에서 변경 없는 값은 기존 값이 등록되게 설정
     this.extraEmail = dto.getExtraEmail();
     this.nickname = dto.getNickname();
     this.profileImagePath = dto.getProfileImagePath();
     this.profileMimeType = dto.getProfileMimeType();
+    this.extraEmailVerified = dto.isExtraEmailVerified();
   }
 
 }

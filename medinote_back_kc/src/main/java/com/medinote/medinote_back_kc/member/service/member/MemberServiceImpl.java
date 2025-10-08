@@ -4,6 +4,7 @@ import com.medinote.medinote_back_kc.common.ErrorCode;
 import com.medinote.medinote_back_kc.common.exception.CustomException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateEmailException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateNicknameException;
+import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
@@ -59,16 +60,16 @@ public class MemberServiceImpl implements MemberService{
     }
     // 로그인 된 상태 -> update 중
     if(!repository.existsByEmail(email)) { //내가 기입한 email이 로그인용 이메일에 등록되지 않은 경우
-      Member member = repository.findById(currentMemberId).orElseThrow(() -> new UsernameNotFoundException("JWT TOKEN이 손상되었습니다."));
+      Member member = repository.findById(currentMemberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
       //다른 사람의 extraEmail로 등록되지 않거나 또는 내 자신의 extraEmail인 경우는 허용
       if(!repository.existsByExtraEmail(email) || member.getExtraEmail().equals(email)) {
         return true;
       }
       //그게 아닌 경우는 false
-      return false;
+      throw new CustomException(ErrorCode.EXTRA_EMAIL_DUPLICATED);
     }
     //이미 로그인용 email에 등록된 경우 그냥 false
-    return false;
+    throw new CustomException(ErrorCode.EMAIL_DUPLICATED);
   }
   // 기존 테이블에 닉네임 등록되었는지 확인
   @Override
@@ -109,9 +110,10 @@ public class MemberServiceImpl implements MemberService{
     return mapper.toMemberDTO(repository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("email을 확인하여 주시기 바랍니다.")));
   }
 
+  @Transactional
   @Override
   public void update(UpdateRequestDTO dto, Long id) {
-    Member member = (repository.findById(id).orElseThrow(()-> new UsernameNotFoundException("email을 확인하여 주시기 바랍니다.")));
+    Member member = (repository.findById(id).orElseThrow(()-> new UsernameNotFoundException("이미 삭제되었거나 잘못된 멤버입니다.")));
     member.changeMyPage(dto);
     repository.save(member);
   }
@@ -119,6 +121,29 @@ public class MemberServiceImpl implements MemberService{
   @Override
   @Transactional
   public void delete(String email) {
+    Member member = repository.findByEmail(email).orElseThrow(()->new UsernameNotFoundException("이미 삭제되었거나 잘못된 멤버입니다."));
+    redisUtil.delete("id" + member.getId().toString());
     repository.softDelete(email);
+  }
+
+  @Override
+  @Transactional
+  public void changePassword(ChangePasswordRequestDTO dto, Long currentMemberId) {
+    Member member = repository.findById(currentMemberId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+    // password 유효성 검사나 사전에 맞는지 확인하는 로직은 아래 checkPassword에서 진행
+    member.changePassword(passwordEncoder.encode(dto.getPassword()));
+
+    repository.save(member);
+  }
+
+  @Override
+  public void findPassword(String email) {
+
+  }
+
+  @Override
+  public boolean checkPassword(String rawPassWord, Long currentId) {//raw -> 사용자가 입력한 값, encoded-> db에 저장된 값.
+    Member member = repository.findById(currentId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND) );
+    return passwordEncoder.matches(rawPassWord, member.getPassword());
   }
 }

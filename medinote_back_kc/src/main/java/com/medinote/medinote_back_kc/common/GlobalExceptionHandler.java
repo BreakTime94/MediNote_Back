@@ -60,14 +60,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(CustomException.class)
   public ResponseEntity<?> handleCustomException(CustomException ex) {
     log.error("custom exception {} {}", ex, ex.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-            "status", "ERROR",
-            "code", "CUSTOM_EXCEPTION",
-            "message", ex.getMessage()
+    ErrorCode errorCode = ex.getErrorCode();
+    return ResponseEntity.status(errorCode.getStatus()).body(Map.of(
+            "status", errorCode.getStatus(),
+            "code", errorCode.name(),
+            "message", errorCode.getMessage()
     ));
   }
-
-
 
   // 그 외 모든 에러
   @ExceptionHandler(Exception.class)

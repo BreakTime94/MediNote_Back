@@ -94,4 +94,21 @@ public class MemberSocialServiceImpl implements MemberSocialService {
     }
   }
 
+  @Override
+  public void linkSocialAccount(Member member, SocialRegisterRequestDTO dto) {
+    if (memberSocialRepository.existsByMemberAndProvider(member, dto.getProvider())) {
+      log.info("이미 해당 소셜 계정이 연동되어 있습니다. member={}, provider={}", member.getEmail(), dto.getProvider());
+      return;
+    }
+
+    MemberSocial social = MemberSocial.builder()
+            .member(member)
+            .provider(dto.getProvider())
+            .providerUserId(dto.getProviderUserId())
+            .email(dto.getEmail())
+            .rawProfileJson(dto.getRawProfileJson())
+            .build();
+
+    memberSocialRepository.save(social);
+  }
 }

@@ -3,16 +3,18 @@ package com.medinote.medinote_back_khs.health.service;
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
-import com.medinote.medinote_back_khs.health.domain.dto.MemberMedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import com.medinote.medinote_back_khs.health.domain.entity.Medication;
 import com.medinote.medinote_back_khs.health.domain.entity.MemberMedication;
+import com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus;
 import com.medinote.medinote_back_khs.health.domain.mapper.MeasurementMapper;
 import com.medinote.medinote_back_khs.health.domain.mapper.MedicationMapper;
 import com.medinote.medinote_back_khs.health.domain.mapper.MemberMedicationMapper;
 import com.medinote.medinote_back_khs.health.domain.repository.MeasurementRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MedicationRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MemberMedicationRepository;
+
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,17 +44,27 @@ public class MeasurementService {
     MeasurementResponseDTO response = measurementMapper.toResponseDTO(saved);
 
     // 복용약 조회 후 세팅
-    List<MemberMedication> meds = memberMedicationRepository.findByMemberId(memberId);
-    List<MedicationResponseDTO> medDtos = meds.stream()
-            .map(mm -> {
-              Medication med = medicationRepository.findById(mm.getMedicationId())
-                      .orElseThrow(() -> new IllegalArgumentException("해당 약 존재하지 않음"));
-              //한 개만 넘긴다
-              return medicationMapper.toResponseDTO(med);
-            })
-            .toList();
-
-    response.setMedications(medDtos);
+//    List<MemberMedication> meds = memberMedicationRepository.findByMemberId(memberId);
+//    List<MedicationResponseDTO> medDtos = meds.stream()
+//            .map(mm -> {
+//              Medication med = medicationRepository.findById(mm.getMedicationId())
+//                      .orElseThrow(() -> new IllegalArgumentException("해당 약 존재하지 않음"));
+//              //한 개만 넘긴다
+//              return medicationMapper.toResponseDTO(med);
+//            })
+//            .toList();
+//
+//    response.setMedications(medDtos);
+//
+//    return response;
+    if (dto.getMedicationIds() != null && !dto.getMedicationIds().isEmpty()) {
+      List<String> medicationNames = dto.getMedicationIds().stream()
+              .map(id -> medicationRepository.findById(id)
+                      .map(Medication::getNameKo)
+                      .orElse("약품명 없음"))
+              .toList();
+      response.setMedicationNames(medicationNames);
+    }
 
     return response;
   }
@@ -67,22 +79,17 @@ public class MeasurementService {
 
   // 수정 (update)
   @Transactional
-  public MeasurementResponseDTO update(Long id, MeasurementRequestDTO dto) {
-    Measurement entity = measurementRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Id not found: " + id));
-
-    measurementMapper.updateFromDto(dto, entity);
-    Measurement updated = measurementRepository.save(entity);
-
-    return measurementMapper.toResponseDTO(updated);
+  public MeasurementResponseDTO addNewVersion(Long memberId, MeasurementRequestDTO dto) {
+    // 새 이력 저장 (saveMeasurement 로직 재활용)
+    return saveMeasurement(dto, memberId);
   }
 
   // 삭제 (delete)
   @Transactional
-  public void deleteById(Long id) {
-    if (!measurementRepository.existsById(id)) {
-      throw new IllegalArgumentException("Id not found: " + id);
-    }
-    measurementRepository.deleteById(id);
+  public void deactivateMeasurement(Long id) {
+    Measurement entity = measurementRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("삭제할 데이터가 없습니다."));
+    entity.setStatus(MeasurementStatus.INACTIVE);
+    measurementRepository.save(entity);
   }
 }
