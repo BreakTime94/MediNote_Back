@@ -15,6 +15,7 @@ public interface MeasurementMapper {
   @Mapping(target = "id", ignore = true)  // PK는 자동 생성
   @Mapping(target = "measuredDate", expression = "java(java.time.LocalDateTime.now())") // 측정일시 자동 세팅
   @Mapping(target = "memberId", source = "memberId") // 헤더 값 → Entity
+  @Mapping(target = "status", expression = "java(com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus.ACTIVE)") // 기본 ACTIVE
   Measurement toEntity(MeasurementRequestDTO dto, Long memberId);
 
   // Entity -> ResponseDTO

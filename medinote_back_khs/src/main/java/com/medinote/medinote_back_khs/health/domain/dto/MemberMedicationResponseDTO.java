@@ -28,6 +28,7 @@ public class MemberMedicationResponseDTO {
   private String nameKo;
   private String company;
   private String effect;
+  private String nameKoCompany;
 
   // ✅ 회원 복용약 정보 포함
 //  private List<MemberMedicationResponseDTO> medications;
