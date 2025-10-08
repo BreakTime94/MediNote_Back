@@ -18,4 +18,5 @@ public class MedicationResponseDTO {
   private String nameKo;    // 약품명 (한글)
   private String company;   // 제조회사
   private String effect;    // 효능
+  private String nameKoCompany;
 }
