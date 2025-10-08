@@ -39,7 +39,7 @@ public class MedicationController {
   // 키워드 검색
   @GetMapping("/search")
   public ResponseEntity<List<MedicationResponseDTO>> searchMedication(@RequestParam String keyword) {
-    List<MedicationResponseDTO> results = medicationApiService.searchMedication(keyword); // ✅ 메서드명 통일
+    List<MedicationResponseDTO> results = medicationApiService.searchMedication(keyword); //메서드명 통일
     return ResponseEntity.ok(results);
   }
 

@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MedicationResponseDTO {
+  //조회용 데이터 전용
 
   private Long id;          // 약품 PK
   private String drugCode;  // 약품 코드
