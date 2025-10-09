@@ -74,10 +74,17 @@ public class MemberController {
   public ResponseEntity<?> verifyEmail(@RequestBody Map<String, String> data) {
     String email = data.get("email"); // 가입시에는 email, find에서는 extraEmail 값이 날라온다.
     String type = data.get("type"); // 이메일 인증 코드를 요구하는 서비스 종류 (find, signUp 등등)
-    if(type.equals("find")) {
-      service.sendVerificationCodeForFindEmail(email);
-    } else {
-      service.sendVerificationCode(email);
+
+    switch(type){
+      case "find":
+        service.sendVerificationCodeForFindEmail(email);
+        break;
+      case "signUp", "extraEmailVerify":
+        service.sendVerificationCode(email);
+        break;
+      case "reset":
+        service.sendVerificationCodeForResetPassword(email);
+        break;
     }
 
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
@@ -100,6 +107,9 @@ public class MemberController {
         break;
       case "signUp", "extraEmailVerify":
         verified = service.verifyCode(email, code);
+        break;
+      case "reset":
+        verified = service.verifyResetPassword(email, code);
         break;
     }
 
@@ -182,6 +192,15 @@ public class MemberController {
             "status", "EMAIL_FOUND",
             "message", "이메일을 찾았습니다.",
             "email", originalEmail
+    ));
+  }
+
+  @PostMapping("/reset/password")
+  public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> data) {
+    service.resetPassword(data.get("email"));
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "RESET_PASSWORD",
+            "message", "임시 비밀번호를 발급하였습니다."
     ));
   }
 
