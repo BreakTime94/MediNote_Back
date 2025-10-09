@@ -2,7 +2,7 @@ package com.medinote.medinote_back_khs.health.domain.entity;
 
 
 import com.medinote.medinote_back_khs.common.entity.ModiEntity;
-import com.medinote.medinote_back_khs.health.domain.en.ChronicDiseaseStatus;
+import com.medinote.medinote_back_khs.health.domain.enums.ChronicDiseaseStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
