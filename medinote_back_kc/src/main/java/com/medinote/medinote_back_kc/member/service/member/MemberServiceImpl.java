@@ -24,6 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -92,15 +93,28 @@ public class MemberServiceImpl implements MemberService{
     String text = "인증 코드 : " + code + "\n 5분 이내로 인증하여 주시기 바랍니다.";
     mailService.sendEmail(email, subject, text);
   }
-  // 인증번호 검증
+  // 인증번호 검증(회원가입용)
   @Override
   public boolean verifyCode(String email, String code) {
     String savedCode = redisUtil.get("email:verify:" + email);
     if(savedCode == null) {
-      throw new CustomException(ErrorCode.EMAIL_EXPIRED);
+      throw new CustomException(ErrorCode.CODE_EXPIRED);
     }
     if(!savedCode.equals(code)) {
-      throw new CustomException(ErrorCode.EMAIL_INVALID);
+      throw new CustomException(ErrorCode.CODE_INVALID);
+    }
+    return true;
+  }
+
+  // 인증번호 검증
+  @Override
+  public boolean verifyFindEmailCode(String email, String code) {
+    String savedCode = redisUtil.get("email:find:" + email);
+    if(savedCode == null) {
+      throw new CustomException(ErrorCode.CODE_EXPIRED);
+    }
+    if(!savedCode.equals(code)) {
+      throw new CustomException(ErrorCode.CODE_INVALID);
     }
     return true;
   }
@@ -137,13 +151,68 @@ public class MemberServiceImpl implements MemberService{
   }
 
   @Override
-  public void findPassword(String email) {
-
-  }
-
-  @Override
   public boolean checkPassword(String rawPassWord, Long currentId) {//raw -> 사용자가 입력한 값, encoded-> db에 저장된 값.
     Member member = repository.findById(currentId).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND) );
     return passwordEncoder.matches(rawPassWord, member.getPassword());
+  }
+
+  @Override
+  public void sendVerificationCodeForFindEmail(String extraEmail) {
+    Optional<Member> optionalMember = repository.findByExtraEmail(extraEmail);
+
+    if(optionalMember.isEmpty() || !optionalMember.get().isExtraEmailVerified()) {
+      return;
+    }
+
+    if(redisUtil.get("email:find:" + extraEmail) != null) { // 기존 발급된 코드가 있는데 또 누른 경우 기존 code 삭제
+      redisUtil.delete("email:find:" + extraEmail);
+    }
+    String code = String.format("%06d", new Random().nextInt(999999));
+    redisUtil.set("email:find:" + extraEmail, code, 300000L);
+    String subject = "Medinote 아이디를 찾기 위한 인증코드 6자리를 보내드립니다. 인증코드 작성란에 6자리를 입력하여 주세요.";
+    String text = "인증 코드 : " + code + "\n 5분 이내로 인증하여 주시기 바랍니다.";
+    mailService.sendEmail(extraEmail, subject, text);
+  }
+
+  @Override
+  public String findEmailByExtraEmail(String extraEmail) {
+    Member member = repository.findByExtraEmail(extraEmail).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+    return member.getEmail();
+  }
+
+  @Override
+  public void sendVerificationCodeForResetPassword(String email) {
+    Optional<Member> optionalMember = repository.findByEmail(email);
+    //회원이 존재하지 않거나, social member이면 묻지도 따지지도 않고 return
+    if(optionalMember.isEmpty() || optionalMember.get().isFromSocial()) {
+      return;
+    }
+
+    String key = "email:reset:" + email;
+
+    if(redisUtil.get(key) != null) {
+      redisUtil.delete(key);
+    }
+    //
+    String code = String.format("%06d", new Random().nextInt(999999));
+    redisUtil.set("email:reset:" + email, code, 300000L);
+    String subject = "Medinote 회원 비밀번호 재설증을 위한 인증코드를 송부드립니다. 인증코드 작성란에 6자리를 입력하여 주세요.";
+    String text = "인증 코드 : " + code + "\n 5분 이내로 인증하여 주시기 바랍니다.";
+    mailService.sendEmail(email, subject, text);
+  }
+
+  @Override
+  public boolean verifyResetPassword(String email, String code) {
+    String savedCode = redisUtil.get("email:reset:" + email);
+    if(savedCode == null) {
+      throw new CustomException(ErrorCode.CODE_EXPIRED);
+    }
+    if(!savedCode.equals(code)) {
+      throw new CustomException(ErrorCode.CODE_INVALID);
+    }
+
+
+
+    return true;
   }
 }
