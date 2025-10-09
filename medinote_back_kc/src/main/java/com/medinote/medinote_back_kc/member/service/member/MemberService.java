@@ -26,8 +26,21 @@ public interface MemberService {
 
   //비밀번호 변경(MyPage)
   void changePassword(ChangePasswordRequestDTO dto, Long currentMemberId);
-  //비밀번호 찾기 -> 임시비밀번호를 email로 보내주는거까지?
-  void findPassword(String email);
 
+  //비밀번호 db에 저장도니 값이랑 같은지 확인하는 메서드
   boolean checkPassword(String rawPassword, Long currentId);
+  //기존에 등록된 이메일이 있을 경우에만 인증코드 보내줌
+  void sendVerificationCodeForFindEmail(String extraEmail);
+
+  //extraEmail로 원래 email 찾아주기
+  String findEmailByExtraEmail(String extraEmail);
+  // 이메일 찾기용 별도 인증 확인 메서드 구현
+  boolean verifyFindEmailCode(String email, String code);
+
+  //비밀번호 임시 비밀번호로 변경하기 위한 본인인증
+  void sendVerificationCodeForResetPassword(String email);
+
+  //비밀번호 코드 verify 단계
+  boolean verifyResetPassword(String email, String code);
+
 }

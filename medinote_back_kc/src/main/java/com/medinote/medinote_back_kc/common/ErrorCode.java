@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 @Getter
 public enum ErrorCode {
   // ==== 이메일 인증 관련 ====
-  EMAIL_EXPIRED(HttpStatus.BAD_REQUEST, "인증 코드가 만료되었습니다. 다시 요청해주세요."),
-  EMAIL_INVALID(HttpStatus.BAD_REQUEST, "인증 코드가 올바르지 않습니다."),
+  CODE_EXPIRED(HttpStatus.BAD_REQUEST, "인증 코드가 만료되었습니다. 다시 요청해주세요."),
+  CODE_INVALID(HttpStatus.BAD_REQUEST, "인증 코드가 올바르지 않습니다."),
   EMAIL_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
   EXTRA_EMAIL_DUPLICATED(HttpStatus.CONFLICT, "이미 사용 중인 추가 이메일입니다."),
 
@@ -26,6 +26,7 @@ public enum ErrorCode {
   MEMBER_PASSWORD_INVALID(HttpStatus.UNAUTHORIZED, "비밀번호가 일치하지 않습니다."),
   MEMBER_DISABLED(HttpStatus.LOCKED, "잠긴 회원입니다. 관리자에게 문의하세요."),
   MEMBER_DELETED(HttpStatus.FORBIDDEN, "삭제된 회원입니다."),
+  MEMBER_EXTRAEMAIL_UNVERFIED(HttpStatus.FORBIDDEN, "추가 이메일을 인증하지 않았습니다."),
   // ==== 소셜관련 ====
   SOICAL_TOKEN_ERROR(HttpStatus.BAD_REQUEST, "소셜 로그인 인증 과정에 문제가 있습니다.");
 
