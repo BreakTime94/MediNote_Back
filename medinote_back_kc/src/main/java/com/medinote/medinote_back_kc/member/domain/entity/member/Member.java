@@ -48,8 +48,7 @@ public class Member {
   private Status status = Status.ACTIVE;
 
   @Column(nullable = false)
-  @Builder.Default
-  private boolean fromSocial = false;
+  private boolean fromSocial;
 
   @Column
   @Builder.Default

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -103,6 +104,7 @@ public class MemberServiceImpl implements MemberService{
     if(!savedCode.equals(code)) {
       throw new CustomException(ErrorCode.CODE_INVALID);
     }
+    redisUtil.delete("email:verify:" + email);
     return true;
   }
 
@@ -116,6 +118,7 @@ public class MemberServiceImpl implements MemberService{
     if(!savedCode.equals(code)) {
       throw new CustomException(ErrorCode.CODE_INVALID);
     }
+    redisUtil.delete("email:find:" + email);
     return true;
   }
 
@@ -183,8 +186,10 @@ public class MemberServiceImpl implements MemberService{
   @Override
   public void sendVerificationCodeForResetPassword(String email) {
     Optional<Member> optionalMember = repository.findByEmail(email);
+
     //회원이 존재하지 않거나, social member이면 묻지도 따지지도 않고 return
     if(optionalMember.isEmpty() || optionalMember.get().isFromSocial()) {
+      log.info("회원이 아니거나, 소셜 멤버는 비밀번호를 바꾸실 수 없습니다.");
       return;
     }
 
@@ -210,9 +215,23 @@ public class MemberServiceImpl implements MemberService{
     if(!savedCode.equals(code)) {
       throw new CustomException(ErrorCode.CODE_INVALID);
     }
-
-
+    redisUtil.delete("email:reset:" + email);
 
     return true;
+  }
+
+  @Override
+  @Transactional
+  public void resetPassword(String email) {
+    Member member = repository.findByEmail(email).orElseThrow(() -> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+
+    // 임시 비밀번호 발급
+    String tempPassword = UUID.randomUUID().toString().replace("-", "").substring(0, 10);
+    String encodedTempPassword = passwordEncoder.encode(tempPassword);
+    member.changePassword(encodedTempPassword);
+
+    String subject = "Medinote 임시 비밀번호를 발급";
+    String text = "임시 비밀번호 : " + tempPassword + " 입니다. 로그인 후에 마이페이지에서 비밀번호를 수정하여 주시기 바랍니다.";
+    mailService.sendEmail(email, subject, text);
   }
 }
