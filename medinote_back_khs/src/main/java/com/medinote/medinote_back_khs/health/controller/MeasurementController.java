@@ -57,4 +57,12 @@ public class MeasurementController {
     return ResponseEntity.ok(list);
   }
 
+  @GetMapping("/chart")
+  public ResponseEntity<List<MeasurementResponseDTO>> getChartData(
+          @RequestHeader("X-Member-Id") Long memberId) {
+    List<MeasurementResponseDTO> list = measurementService.getMeasurementList(memberId);
+    return ResponseEntity.ok(list);
+  }
+
+
 }
