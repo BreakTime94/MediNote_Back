@@ -207,4 +207,29 @@ public class MeasurementService {
     return filtered;
 
   }
+
+  //index 의 카드형 ui 생성 메서드
+  @Transactional(readOnly = true)
+  public MeasurementResponseDTO getLatestSummary(Long memberId) {
+    // 회원의 최근 측정 데이터 1건만 가져오기
+    Measurement latest = measurementRepository
+            .findTopByMemberIdOrderByMeasuredDateDesc(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("최근 측정 데이터가 없습니다."));
+
+    // DTO 변환
+    MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
+
+    // 건강상태 평가
+    MeasurementResponseDTO evaluated = evaluateHealthStatus(response);
+
+    // 요약 문장 생성
+    StringBuilder summary = new StringBuilder();
+    summary.append("BMI: ").append(evaluated.getBmiStatus() != null ? evaluated.getBmiStatus() : "정보 없음")
+            .append(" / 혈압: ").append(evaluated.getBloodPressureStatus() != null ? evaluated.getBloodPressureStatus() : "정보 없음")
+            .append(" / 혈당: ").append(evaluated.getBloodSugarStatus() != null ? evaluated.getBloodSugarStatus() : "정보 없음")
+            .append(" / 수면: ").append(evaluated.getSleepStatus() != null ? evaluated.getSleepStatus() : "정보 없음");
+
+    evaluated.setSummary(summary.toString());
+    return evaluated;
+}
 }

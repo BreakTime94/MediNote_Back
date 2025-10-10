@@ -66,5 +66,11 @@ public class MeasurementController {
     return ResponseEntity.ok(list);
   }
 
+  @GetMapping("/summary")
+  public ResponseEntity<MeasurementResponseDTO> getLatestSummary(
+          @RequestHeader("X-Member-Id") Long memberId) {
+    MeasurementResponseDTO summary = measurementService.getLatestSummary(memberId);
+    return ResponseEntity.ok(summary);
 
+  }
 }
