@@ -125,7 +125,11 @@ public class MemberController {
   public ResponseEntity<?> get(Authentication authentication) {
     CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
-    return ResponseEntity.ok(service.get(user.getEmail()));
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "MEMBER_INFO_GOT",
+              "message", "로그인을 성공하여, 회원 정보를 가져옵니다.",
+            "member", service.get(user.getEmail())
+    ));
   }
 
   //MyPage 부분수정

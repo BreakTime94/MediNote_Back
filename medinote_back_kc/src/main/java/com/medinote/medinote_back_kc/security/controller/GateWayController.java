@@ -51,7 +51,7 @@ public class GateWayController {
 
     if(path.startsWith("/health")){
       targetBase = "http://localhost:8081/api";
-    } else if(path.startsWith("/member")){
+    } else if(path.startsWith("/member") || path.startsWith("/social")){
       targetBase = "http://localhost:8083/api";
     } else {
       targetBase = "http://localhost:8082/api";
