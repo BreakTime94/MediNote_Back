@@ -58,6 +58,7 @@ dependencies {
     //test 관련
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:mariadb'
     runtimeOnly 'com.h2database:h2' // 테스트용 인메모리 DB
@@ -68,6 +69,11 @@ dependencies {
 
     //log4j2
     implementation 'org.springframework.boot:spring-boot-starter-log4j2:3.5.3'
+
+    //rss 수집
+    implementation "com.rometools:rome:2.1.0"
+    implementation "com.rometools:rome-modules:2.1.0"
+
 }
 
 tasks.named('test') {
