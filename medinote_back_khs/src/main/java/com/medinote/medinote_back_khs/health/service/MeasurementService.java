@@ -2,10 +2,8 @@ package com.medinote.medinote_back_khs.health.service;
 
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
-import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
 import com.medinote.medinote_back_khs.health.domain.entity.Medication;
-import com.medinote.medinote_back_khs.health.domain.entity.MemberMedication;
 import com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus;
 import com.medinote.medinote_back_khs.health.domain.mapper.MeasurementMapper;
 import com.medinote.medinote_back_khs.health.domain.mapper.MedicationMapper;
@@ -13,8 +11,6 @@ import com.medinote.medinote_back_khs.health.domain.mapper.MemberMedicationMappe
 import com.medinote.medinote_back_khs.health.domain.repository.MeasurementRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MedicationRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MemberMedicationRepository;
-
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -91,5 +87,13 @@ public class MeasurementService {
             .orElseThrow(() -> new IllegalArgumentException("삭제할 데이터가 없습니다."));
     entity.setStatus(MeasurementStatus.INACTIVE);
     measurementRepository.save(entity);
+  }
+
+  @Transactional(readOnly = true)
+  public List<MeasurementResponseDTO> getMeasurementList(Long memberId) {
+    List<Measurement> list = measurementRepository.findByMemberIdOrderByMeasuredDateDesc(memberId);
+    return list.stream()
+            .map(measurementMapper::toResponseDTO)
+            .toList();
   }
 }

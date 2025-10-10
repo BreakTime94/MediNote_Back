@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController //json으로 요청/응답 처리
 @RequestMapping("/health/measurement")
 @RequiredArgsConstructor
@@ -45,6 +47,14 @@ public class MeasurementController {
   public ResponseEntity<Void> deactivateMeasurement(@PathVariable Long id) {
     measurementService.deactivateMeasurement(id);
     return ResponseEntity.noContent().build(); // 204 반환
+  }
+
+  //회원의 모든 리스트 조회
+  @GetMapping("/list")
+  public ResponseEntity<List<MeasurementResponseDTO>> getMeasurementList(
+          @RequestHeader("X-Member-Id") Long memberId) {
+    List<MeasurementResponseDTO> list = measurementService.getMeasurementList(memberId);
+    return ResponseEntity.ok(list);
   }
 
 }

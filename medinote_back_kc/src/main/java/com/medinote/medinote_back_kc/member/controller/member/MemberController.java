@@ -71,8 +71,22 @@ public class MemberController {
 
   //이메일 인증 코드 송부
   @PostMapping("/email/send")
-  public ResponseEntity<?> verifyEmail(@RequestParam String email) {
-    service.sendVerificationCode(email);
+  public ResponseEntity<?> verifyEmail(@RequestBody Map<String, String> data) {
+    String email = data.get("email"); // 가입시에는 email, find에서는 extraEmail 값이 날라온다.
+    String type = data.get("type"); // 이메일 인증 코드를 요구하는 서비스 종류 (find, signUp 등등)
+
+    switch(type){
+      case "find":
+        service.sendVerificationCodeForFindEmail(email);
+        break;
+      case "signUp", "extraEmailVerify":
+        service.sendVerificationCode(email);
+        break;
+      case "reset":
+        service.sendVerificationCodeForResetPassword(email);
+        break;
+    }
+
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "EMAIL_SENT",
             "message", "인증번호를 발송드렸습니다.",
@@ -84,11 +98,25 @@ public class MemberController {
   public ResponseEntity<?> verifyCode(@RequestBody Map<String, String> data) {
     String email = data.get("email");
     String code = data.get("code");
+    String type = data.get("type");
+    boolean verified = false;
+
+    switch(type){
+      case "find":
+        verified = service.verifyFindEmailCode(email, code);
+        break;
+      case "signUp", "extraEmailVerify":
+        verified = service.verifyCode(email, code);
+        break;
+      case "reset":
+        verified = service.verifyResetPassword(email, code);
+        break;
+    }
 
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status" , "VERIFICATION_SUCCESS",
             "message", "이메일 인증이 완료되었습니다.",
-            "available", service.verifyCode(email, code)
+            "available", verified
     ));
   }
 
@@ -153,6 +181,26 @@ public class MemberController {
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "PASSWORD_CHANGED",
             "message", "비밀번호가 성공적으로 변경되었습니다. 다시 로그인하여주시기 바랍니다."
+    ));
+  }
+
+  @PostMapping("/find/email")
+  public ResponseEntity<?> findEmail(@RequestBody Map<String, String> data) {
+    String extraEmail = data.get("extraEmail");
+    String originalEmail = service.findEmailByExtraEmail(extraEmail);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "EMAIL_FOUND",
+            "message", "이메일을 찾았습니다.",
+            "email", originalEmail
+    ));
+  }
+
+  @PostMapping("/reset/password")
+  public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> data) {
+    service.resetPassword(data.get("email"));
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "RESET_PASSWORD",
+            "message", "임시 비밀번호를 발급하였습니다."
     ));
   }
 
