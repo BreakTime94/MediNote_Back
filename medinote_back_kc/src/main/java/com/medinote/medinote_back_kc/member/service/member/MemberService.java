@@ -43,4 +43,5 @@ public interface MemberService {
   //비밀번호 코드 verify 단계
   boolean verifyResetPassword(String email, String code);
 
+  void resetPassword(String email);
 }
