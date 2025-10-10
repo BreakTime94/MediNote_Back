@@ -181,6 +181,12 @@ public class MeasurementService {
       case "month":
         startDate = now.minusMonths(1);
         break;
+      case "quarter":
+        startDate = now.minusMonths(3);
+        break;
+      case "half":
+        startDate = now.minusMonths(6);
+        break;
       case "year":
         startDate = now.minusYears(1);
         break;
