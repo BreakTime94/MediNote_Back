@@ -1,0 +1,32 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: DEBUG
+
+spring:
+  config:
+    import:
+      - optional:classpath:secret/db.yml
+      - optional:classpath:secret/jwt.yml
+      - optional:classpath:secret/redis.yml
+      - optional:classpath:secret/api.yml
+      - optional:classpath:secret/application-oauth.yml
+  application:
+    name: board
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MariaDBDialect

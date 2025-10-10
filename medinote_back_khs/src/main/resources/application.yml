@@ -1,0 +1,28 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  config:
+    import:
+      - optional:classpath:secret/db.yml
+      - optional:classpath:secret/jwt.yml
+      - optional:classpath:secret/redis.yml
+      - optional:classpath:secret/api.yml
+  application:
+    name: medinote
+  jpa:
+    hibernate:
+      ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.MariaDBDialect

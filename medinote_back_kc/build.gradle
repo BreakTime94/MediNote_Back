@@ -18,6 +18,9 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+    }
 }
 
 repositories {
@@ -25,18 +28,61 @@ repositories {
 }
 
 dependencies {
+    //기본 jpa
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    //mapStruct 관련
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    //oauth2 인증 관련?
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    //starter-web
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+    //롬복
+    //compileOnly 'org.projectlombok:lombok'
+    implementation 'org.projectlombok:lombok'
+    testImplementation 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    //devtool
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    //mariadb client
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+    //test 관련
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //security 관련
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // jwt token 관련 의존성 추가
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+
+    //소셜 로그인 관련 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client' //구글 소셜 로그인을 위한 의존성
+    
+
+    //log4j2
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2:3.5.3'
+
+    //mapper interface를 통해 DTO <-> Entity 자동변환
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+
+    //redis 관련
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 }
 
 tasks.named('test') {
