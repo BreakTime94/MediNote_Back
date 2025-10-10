@@ -38,7 +38,8 @@ public class AuthController {
     log.info(respDto);
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "LOGIN_SUCCESS",
-            "message", "로그인이 성공하였습니다."
+            "message", "로그인이 성공하였습니다.",
+            "member", respDto
     ));
   }
 
