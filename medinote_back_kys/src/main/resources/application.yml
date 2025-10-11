@@ -23,3 +23,12 @@ spring:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.dialect.MariaDBDialect
+  task:
+    scheduling:
+      pool:
+        size: 2
+      thread-name-prefix: news-scheduler-
+news:
+  scheduler:
+    enabled: true
+
