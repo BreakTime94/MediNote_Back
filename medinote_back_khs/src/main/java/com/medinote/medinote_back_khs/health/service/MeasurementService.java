@@ -11,14 +11,19 @@ import com.medinote.medinote_back_khs.health.domain.mapper.MemberMedicationMappe
 import com.medinote.medinote_back_khs.health.domain.repository.MeasurementRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MedicationRepository;
 import com.medinote.medinote_back_khs.health.domain.repository.MemberMedicationRepository;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Getter @Setter
 public class MeasurementService {
   //DTO 받아서 Entity로 변환 -> DB 저장
   //DTO → Entity로 변환(MapStruct) → repository.save(entity) 호출.
@@ -62,6 +67,9 @@ public class MeasurementService {
       response.setMedicationNames(medicationNames);
     }
 
+    //건강상태평가
+    response = evaluateHealthStatus(response);
+
     return response;
   }
 
@@ -96,4 +104,132 @@ public class MeasurementService {
             .map(measurementMapper::toResponseDTO)
             .toList();
   }
+
+  //==================================== 개인건강정보리스트관련 로직===========================================
+  private MeasurementResponseDTO evaluateHealthStatus(MeasurementResponseDTO response) {
+
+    //bmi
+    if (response.getBmi() != null) {
+      double bmi = response.getBmi();
+      String bmiStatus;
+      if (bmi < 18.5) bmiStatus = "저체중";
+      else if (bmi < 23) bmiStatus = "정상";
+      else if (bmi < 25) bmiStatus = "과체중";
+      else bmiStatus = "비만";
+
+      response.setBmiStatus(bmiStatus);
+    }
+
+    //혈압
+    if(response.getBloodPressureSystolic() != null && response.getBloodPressureDiastolic() != null) {
+      int sys = response.getBloodPressureSystolic();
+      int dia = response.getBloodPressureDiastolic();
+      String bpStatus;
+      if(sys < 90 || dia < 60) bpStatus = "저혈압";
+      else if(sys <= 120 && dia <= 80) bpStatus = "정상";
+      else if(sys <= 139 && dia <= 89) bpStatus = "주의";
+      else bpStatus = "고혈압";
+      response.setBloodPressureStatus(bpStatus);
+    }
+
+    //혈당
+    if(response.getBloodSugar() != null) {
+      double sugar = response.getBloodSugar();
+      String sugarStatus;
+      if(sugar < 70) sugarStatus = "저혈당";
+      else if(sugar <= 99) sugarStatus= "정상";
+      else if(sugar <= 125) sugarStatus= "공복혈당장애";
+      else sugarStatus = "당뇨 의심";
+      response.setBloodSugarStatus(sugarStatus);
+    }
+
+    //수면ㄴ 상태
+    if(response.getSleepHours() != null) {
+      double hours = response.getSleepHours();
+      String sleepStatus;
+      if(hours < 5) sleepStatus = "수면 부족";
+      else if(hours <= 8) sleepStatus = "적정 수면";
+      else sleepStatus = "수면 과다";
+      response.setSleepStatus(sleepStatus);
+    }
+
+    //졷합
+    response.setSummary(String.format(
+            "BMI : %s / 혈압 : %s / 혈당: %s / 수면: %s",
+            response.getBmiStatus() != null ? response.getStatus() : "-",
+            response.getBloodPressureStatus() != null ? response.getBloodPressureStatus() : "-",
+            response.getBloodSugarStatus() != null ? response.getBloodSugarStatus() : "-",
+            response.getSleepStatus() != null ? response.getSleepStatus() : "-"
+    ));
+    return response;
+  }
+
+  //기간별 차트 데이터 조회
+  @Transactional(readOnly = true)
+  public List<MeasurementResponseDTO> getChartData(Long memberId, String period) {
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime startDate;
+
+    if(period == null || period.isBlank()) {
+      period = "week";
+    }
+
+    switch (period.toLowerCase()) {
+      case "week":
+        startDate = now.minusWeeks(1);
+        break;
+      case "month":
+        startDate = now.minusMonths(1);
+        break;
+      case "quarter":
+        startDate = now.minusMonths(3);
+        break;
+      case "half":
+        startDate = now.minusMonths(6);
+        break;
+      case "year":
+        startDate = now.minusYears(1);
+        break;
+      default:
+        startDate = now.minusWeeks(1);
+    }
+
+    //회원의 측정 데이터 중 measuredDate가 기간 내인 것만 필터링
+    List<Measurement> list = measurementRepository.findByMemberIdOrderByMeasuredDateDesc(memberId);
+
+    List<MeasurementResponseDTO> filtered = list.stream()
+            .filter(m -> m.getMeasuredDate() != null && m.getMeasuredDate().isAfter(startDate))
+            .map(measurementMapper::toResponseDTO)
+            .map(this::evaluateHealthStatus)
+            .sorted((a, b) -> a.getMeasuredDate().compareTo(b.getMeasuredDate())) // 날짜 오름차순 정렬
+            .collect(Collectors.toList());
+
+    return filtered;
+
+  }
+
+  //index 의 카드형 ui 생성 메서드
+  @Transactional(readOnly = true)
+  public MeasurementResponseDTO getLatestSummary(Long memberId) {
+    // 회원의 최근 측정 데이터 1건만 가져오기
+    Measurement latest = measurementRepository
+            .findTopByMemberIdOrderByMeasuredDateDesc(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("최근 측정 데이터가 없습니다."));
+
+    // DTO 변환
+    MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
+
+    // 건강상태 평가
+    MeasurementResponseDTO evaluated = evaluateHealthStatus(response);
+
+    // 요약 문장 생성
+    StringBuilder summary = new StringBuilder();
+    summary.append("BMI: ").append(evaluated.getBmiStatus() != null ? evaluated.getBmiStatus() : "정보 없음")
+            .append(" / 혈압: ").append(evaluated.getBloodPressureStatus() != null ? evaluated.getBloodPressureStatus() : "정보 없음")
+            .append(" / 혈당: ").append(evaluated.getBloodSugarStatus() != null ? evaluated.getBloodSugarStatus() : "정보 없음")
+            .append(" / 수면: ").append(evaluated.getSleepStatus() != null ? evaluated.getSleepStatus() : "정보 없음");
+
+    evaluated.setSummary(summary.toString());
+    return evaluated;
+}
 }

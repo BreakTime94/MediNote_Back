@@ -48,4 +48,11 @@ public class MeasurementResponseDTO {
   private LocalDateTime regDate;      // 등록일
   private LocalDateTime modDate;      // 수정일
 
+  private Double bmi;
+  private String bmiStatus;
+  private String bloodPressureStatus;
+  private String bloodSugarStatus;
+  private String sleepStatus;
+  private String summary;
+
 }
