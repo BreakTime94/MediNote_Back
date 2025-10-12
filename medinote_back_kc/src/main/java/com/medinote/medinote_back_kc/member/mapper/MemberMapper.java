@@ -13,7 +13,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Mapper(componentModel = "spring")
 public interface MemberMapper {
-  MemberMapper INSTANCE = Mappers.getMapper(MemberMapper.class);
 
   //1. 일반 회원가입
   @Mapping(target = "id", ignore = true)
@@ -26,6 +25,7 @@ public interface MemberMapper {
   @Mapping(target = "deletedAt", ignore = true) // 별도 삭제했을 때 처리
   @Mapping(target = "fromSocial", ignore = true) // fromSocial false/true 기본값 false
   @Mapping(target = "socialAccounts", ignore = true)
+  @Mapping(target = "memberTerms", ignore = true)
   @Mapping(target = "extraEmailVerified", ignore = true)
   Member toRegister(RegisterRequestDTO dto, @Context PasswordEncoder passwordEncoder);
 

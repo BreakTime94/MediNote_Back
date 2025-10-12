@@ -55,7 +55,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     //1. OAuth2AuthenticationToken 보유 여부 확인, 이게 없다면 구글 OAuth2 쪽에서 인증 문제가 생긴 것
 
     if(!(authentication instanceof OAuth2AuthenticationToken oauth2Token)) {
-      throw new CustomException(ErrorCode.SOICAL_TOKEN_ERROR);
+      throw new CustomException(ErrorCode.SOCIAL_TOKEN_ERROR);
     }
 
     //2. 로그인 & 회원등록에 필요한 정보 OAuth2Token을 통해 security context에 등록된 인증정보 가져옴
