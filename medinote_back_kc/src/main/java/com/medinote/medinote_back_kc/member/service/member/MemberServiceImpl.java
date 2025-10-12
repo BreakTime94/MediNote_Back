@@ -8,9 +8,15 @@ import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequ
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.terms.MemberTermsRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.terms.MemberTerms;
+import com.medinote.medinote_back_kc.member.domain.entity.terms.Terms;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
+import com.medinote.medinote_back_kc.member.mapper.MemberTermsMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
+import com.medinote.medinote_back_kc.member.repository.MemberTermsRepository;
+import com.medinote.medinote_back_kc.member.repository.TermsRepository;
 import com.medinote.medinote_back_kc.member.service.mail.MailService;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.transaction.Transactional;
@@ -28,9 +34,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 public class MemberServiceImpl implements MemberService{
-
+  //db 저장용 repository
   private final MemberRepository repository;
+  private final TermsRepository termsRepository;
+  private final MemberTermsRepository memberTermsRepository;
+
   private final MemberMapper mapper;
+  private final MemberTermsMapper memberTermsMapper;
+
   private final PasswordEncoder passwordEncoder;
   private final MailService mailService;
   private final RedisUtil redisUtil;
@@ -45,9 +56,22 @@ public class MemberServiceImpl implements MemberService{
     if(repository.existsByNickname(dto.getNickname())) {
       throw new DuplicateNicknameException("이미 등록된 닉네임입니다.");
     }
-
+    //회원 정보 Entity에 저장 -> db 저장
     Member member = mapper.toRegister(dto, passwordEncoder);
     repository.save(member);
+    //약관 동의 처리
+    if (dto.getAgreements() != null && !dto.getAgreements().isEmpty()) {
+
+      for (MemberTermsRegisterRequestDTO agreeDto : dto.getAgreements()) {
+
+        Terms terms = termsRepository.findById(agreeDto.getTermsId())
+                .orElseThrow(() -> new CustomException(ErrorCode.TERMS_NOT_FOUND));
+
+        MemberTerms memberTerms = memberTermsMapper.toMemberTerms(agreeDto, member, terms);
+
+        memberTermsRepository.save(memberTerms);
+      }
+    }
   }
   // 기존 테이블에 이메일 등록되었는지 확인
   @Override
