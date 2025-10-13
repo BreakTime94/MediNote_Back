@@ -43,13 +43,19 @@ public class MemberSocial {
 
   @Column
   @Builder.Default
-  private LocalDateTime connectedAt = LocalDateTime.now();
+  private LocalDateTime connectedAt = null;
 
   private LocalDateTime disconnectedAt;
 
   @Column(nullable = false)
   private String rawProfileJson; // 소셜 API 응답 원본 JSON
 
+  @PrePersist
+  protected void onCreate() {
+    if (connectedAt == null) {
+      connectedAt = LocalDateTime.now();
+    }
+  }
 
 }
 
