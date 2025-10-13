@@ -18,7 +18,7 @@ public class BoardController {
     private final BoardService boardService;
 
     // ===== 생성 =====
-    @PostMapping
+    @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public IdResponse create(@Valid @RequestBody BoardCreateRequestDTO dto) {
         Long id = boardService.create(dto);
@@ -26,13 +26,13 @@ public class BoardController {
     }
 
     // ===== 단일 조회 =====
-    @GetMapping("/{id}")
+    @GetMapping("/read/{id}")
     public BoardDetailResponseDTO get(@PathVariable @NotNull Long id) {
         return boardService.getDetail(id);
     }
 
     // ===== 부분 수정(Patch) =====
-    @PatchMapping("/{id}")
+    @PatchMapping("/update/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void update(@PathVariable Long id, @Valid @RequestBody BoardUpdateRequestDTO dto) {
         // path id와 body id가 다르면 방어
@@ -44,7 +44,7 @@ public class BoardController {
 
     // ===== 소프트 삭제 =====
     // reason/requesterId를 바디로 받아 path id로 DTO 생성
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id, @Valid @RequestBody BoardDeleteBody body) {
         BoardDeleteRequestDTO dto = new BoardDeleteRequestDTO(id, body.requesterId(), body.reason());
