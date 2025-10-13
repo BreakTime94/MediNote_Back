@@ -10,10 +10,8 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface MemberSocialMapper {
-  MemberSocialMapper INSTANCE = Mappers.getMapper(MemberSocialMapper.class);
 
   //1. Member Entity를 통한 회원가입 이후, MemberSocial 필요정보 table 맵핑
-
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "member", source = "member")
   @Mapping(target = "provider", source = "dto.provider")

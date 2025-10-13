@@ -10,6 +10,7 @@ import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
 import com.medinote.medinote_back_kc.member.mapper.MemberSocialMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
 import com.medinote.medinote_back_kc.member.repository.MemberSocialRepository;
+import com.medinote.medinote_back_kc.member.service.Terms.MemberTermsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpHeaders;
@@ -27,6 +28,7 @@ public class MemberSocialServiceImpl implements MemberSocialService {
 
   private final MemberSocialRepository memberSocialRepository;
   private final MemberRepository memberRepository;
+  private final MemberTermsService memberTermsService;
   private final MemberSocialMapper memberSocialMapper;
   private final MemberMapper memberMapper;
   private final RestTemplate restTemplate;
@@ -41,17 +43,20 @@ public class MemberSocialServiceImpl implements MemberSocialService {
 
     //2. Member 등록용 dto로 MemberEntity 등록 & savedMember 반환
     Member member = memberMapper.socialToMemberRegister(socialToMemberRegisterDTO);
+    //영속성 부여
+    memberRepository.save(member);
 
-    Member savedMember = memberRepository.save(member);
+    //3. 약관동의 table에 등록
+    memberTermsService.agreeWithTerms(socialToMemberRegisterDTO.getAgreements(), member);
 
-    //3. member를 담아서 MemberSocial Entity로 변환
-    MemberSocial memberSocial = memberSocialMapper.toMemberSocial(dto, savedMember);
+    //4. member를 담아서 MemberSocial Entity로 변환
+    MemberSocial memberSocial = memberSocialMapper.toMemberSocial(dto, member);
 
-    //4. MemberSocial Entity 테이블에 저장
+    //5. MemberSocial Entity 테이블에 저장
     memberSocialRepository.save(memberSocial);
 
-    //5. 등록절차는 끝이나, MemberResponseDTO를 반환해야함 (Social은 최초로그인 절차가 끝나면 바로 로그인이 되니까)
-    return memberMapper.toMemberDTO(savedMember);
+    //6. 등록절차는 끝이나, MemberResponseDTO를 반환해야함 (Social은 최초로그인 절차가 끝나면 바로 로그인이 되니까)
+    return memberMapper.toMemberDTO(member);
   }
 
   @Override

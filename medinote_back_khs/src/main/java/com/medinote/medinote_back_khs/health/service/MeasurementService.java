@@ -14,6 +14,7 @@ import com.medinote.medinote_back_khs.health.domain.repository.MemberMedicationR
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Getter @Setter
+@Slf4j
 public class MeasurementService {
   //DTO 받아서 Entity로 변환 -> DB 저장
   //DTO → Entity로 변환(MapStruct) → repository.save(entity) 호출.
@@ -219,15 +221,18 @@ public class MeasurementService {
     // DTO 변환
     MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
 
-    // 건강상태 평가
+    // 건강상태 평가 (BMI, 혈당, 수면)
     MeasurementResponseDTO evaluated = evaluateHealthStatus(response);
 
-    // 요약 문장 생성
+    // 요약 문장 생성 (혈압 → 제외, 수면 강조)
     StringBuilder summary = new StringBuilder();
-    summary.append("BMI: ").append(evaluated.getBmiStatus() != null ? evaluated.getBmiStatus() : "정보 없음")
-            .append(" / 혈압: ").append(evaluated.getBloodPressureStatus() != null ? evaluated.getBloodPressureStatus() : "정보 없음")
-            .append(" / 혈당: ").append(evaluated.getBloodSugarStatus() != null ? evaluated.getBloodSugarStatus() : "정보 없음")
-            .append(" / 수면: ").append(evaluated.getSleepStatus() != null ? evaluated.getSleepStatus() : "정보 없음");
+
+    summary.append("BMI: ")
+            .append(evaluated.getBmiStatus() != null ? evaluated.getBmiStatus() : "정보 없음")
+            .append(" / 혈당: ")
+            .append(evaluated.getBloodSugarStatus() != null ? evaluated.getBloodSugarStatus() : "정보 없음")
+            .append(" / 수면: ")
+            .append(evaluated.getSleepStatus() != null ? evaluated.getSleepStatus() : "정보 없음");
 
     evaluated.setSummary(summary.toString());
     return evaluated;

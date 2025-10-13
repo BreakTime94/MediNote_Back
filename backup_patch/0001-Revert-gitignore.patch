@@ -1,0 +1,38 @@
+From b4f665236760e896cec9afef4a88f7f5c5adccce Mon Sep 17 00:00:00 2001
+From: kys <tiger2ys98@gmail.com>
+Date: Fri, 10 Oct 2025 11:18:03 +0900
+Subject: [PATCH] =?UTF-8?q?Revert=20"gitignore=20=EB=AC=B8=EC=A0=9C=20?=
+ =?UTF-8?q?=ED=95=B4=EA=B2=B0"?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This reverts commit b2047897090f3fa815eb0ad906b0eb0e5f055be3.
+---
+ .gitignore | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index 6078fe5..1dfa167 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -16,9 +16,6 @@ out/
+ .gradle/
+ build/
+ 
+-#secret 폴더
+-secret/
+-
+ # 서비스별 빌드 디렉토리 (루트에서 무시)
+ member-auth-service/build/
+ health-insurance-chat-service/build/
+@@ -29,4 +26,4 @@ content-admin-service/build/
+ *.class
+ 
+ # Node (혹시 백엔드에 섞이면)
+-node_modules/
+\ No newline at end of file
++node_modules/
+-- 
+2.49.0.windows.1
+

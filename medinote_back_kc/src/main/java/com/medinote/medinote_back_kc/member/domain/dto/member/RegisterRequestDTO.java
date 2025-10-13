@@ -1,9 +1,12 @@
 package com.medinote.medinote_back_kc.member.domain.dto.member;
 
+import com.medinote.medinote_back_kc.member.domain.dto.terms.MemberTermsRegisterRequestDTO;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
+
+import java.util.List;
 
 @Getter
 public class RegisterRequestDTO {
@@ -28,4 +31,6 @@ public class RegisterRequestDTO {
           message = "닉네임은 한글, 영문, 숫자만 사용하여 2글자에서 16자까지 가능합니다."
   )
   private String nickname;
+
+  private List<MemberTermsRegisterRequestDTO> agreements;
 }

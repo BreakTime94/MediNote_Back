@@ -8,18 +8,21 @@ import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequ
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.terms.MemberTermsRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
+import com.medinote.medinote_back_kc.member.domain.entity.terms.MemberTerms;
+import com.medinote.medinote_back_kc.member.domain.entity.terms.Terms;
 import com.medinote.medinote_back_kc.member.mapper.MemberMapper;
+import com.medinote.medinote_back_kc.member.mapper.MemberTermsMapper;
 import com.medinote.medinote_back_kc.member.repository.MemberRepository;
+import com.medinote.medinote_back_kc.member.repository.MemberTermsRepository;
+import com.medinote.medinote_back_kc.member.repository.TermsRepository;
+import com.medinote.medinote_back_kc.member.service.Terms.MemberTermsService;
 import com.medinote.medinote_back_kc.member.service.mail.MailService;
-import com.medinote.medinote_back_kc.security.util.JWTUtil;
 import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.AuthenticatedPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,14 +35,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 public class MemberServiceImpl implements MemberService{
-
+  //db 저장용 repository
   private final MemberRepository repository;
+
   private final MemberMapper mapper;
+
   private final PasswordEncoder passwordEncoder;
+  private final MemberTermsService memberTermsService;
   private final MailService mailService;
   private final RedisUtil redisUtil;
 
   @Override
+  @Transactional
   public void register(RegisterRequestDTO dto) {
 
     if(repository.existsByEmail(dto.getEmail()) || repository.existsByExtraEmail(dto.getExtraEmail())) {
@@ -49,9 +56,12 @@ public class MemberServiceImpl implements MemberService{
     if(repository.existsByNickname(dto.getNickname())) {
       throw new DuplicateNicknameException("이미 등록된 닉네임입니다.");
     }
-
+    //회원 정보 Entity에 저장 -> db 저장
     Member member = mapper.toRegister(dto, passwordEncoder);
     repository.save(member);
+    log.info(dto.getAgreements());
+    //약관 동의 처리
+    memberTermsService.agreeWithTerms(dto.getAgreements(), member);
   }
   // 기존 테이블에 이메일 등록되었는지 확인
   @Override
