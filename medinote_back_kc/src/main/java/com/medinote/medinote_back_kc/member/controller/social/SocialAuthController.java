@@ -40,6 +40,7 @@ public class SocialAuthController {
     tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
     return ResponseEntity.status(HttpStatus.OK).body(Map.of(
             "status", "SOCIAL_REGISTER_SUCCESS",
+            "provider", dto.getProvider(),
             "member", memberDTO
     ));
   }
