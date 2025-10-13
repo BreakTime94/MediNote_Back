@@ -53,7 +53,7 @@ public class Member {
 
   @Column
   @Builder.Default
-  private LocalDateTime regDate = LocalDateTime.now();
+  private LocalDateTime regDate = null;
 
   @Column
   private LocalDateTime deletedAt;
@@ -81,6 +81,13 @@ public class Member {
     this.profileImagePath = dto.getProfileImagePath();
     this.profileMimeType = dto.getProfileMimeType();
     this.extraEmailVerified = dto.isExtraEmailVerified();
+  }
+
+  @PrePersist
+  protected void onCreate() {
+    if (regDate == null) {
+      regDate = LocalDateTime.now();
+    }
   }
 
 }
