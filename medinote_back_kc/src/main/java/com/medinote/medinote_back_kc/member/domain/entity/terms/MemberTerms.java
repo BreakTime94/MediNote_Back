@@ -33,5 +33,13 @@ public class MemberTerms {
 
   // 동의 일시
   @Column
-  private LocalDateTime agreedAt;
+  @Builder.Default
+  private LocalDateTime agreedAt = LocalDateTime.now();
+
+  @PrePersist
+  protected void onCreate() {
+    if (agreedAt == null) {
+      agreedAt = LocalDateTime.now();
+    }
+  }
 }
