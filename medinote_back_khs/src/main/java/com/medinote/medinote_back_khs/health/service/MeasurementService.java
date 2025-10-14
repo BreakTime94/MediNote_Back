@@ -111,8 +111,13 @@ public class MeasurementService {
   private MeasurementResponseDTO evaluateHealthStatus(MeasurementResponseDTO response) {
 
     //bmi
-    if (response.getBmi() != null) {
-      double bmi = response.getBmi();
+    if (response.getHeight() != null && response.getWeight() != null) {
+      double heightM = response.getHeight() / 100.0;
+      double bmi = response.getWeight() / (heightM * heightM);
+      bmi = Math.round(bmi * 10) / 10.0; // 소수점 1자리 반올림
+
+      response.setBmi(bmi); // ✅ 프론트에서 숫자 표시 가능하도록 세팅
+
       String bmiStatus;
       if (bmi < 18.5) bmiStatus = "저체중";
       else if (bmi < 23) bmiStatus = "정상";
