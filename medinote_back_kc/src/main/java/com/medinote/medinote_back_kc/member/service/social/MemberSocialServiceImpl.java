@@ -40,12 +40,12 @@ public class MemberSocialServiceImpl implements MemberSocialService {
 
     //1. 프론트에서 넘겨준 RequestDTO를 Member 등록용 dto로 변환, 이 단계에서 프론트는 추가 정보를 받는 컴포넌트로 변경된다.
     SocialToMemberRegisterDTO socialToMemberRegisterDTO = memberSocialMapper.socialToMemberLink(dto);
-
+    log.info("terms 정보 가져와라 {}", dto.getAgreements());
     //2. Member 등록용 dto로 MemberEntity 등록 & savedMember 반환
     Member member = memberMapper.socialToMemberRegister(socialToMemberRegisterDTO);
     //영속성 부여
     memberRepository.save(member);
-
+    log.info("terms 정보 가져와라 {}", socialToMemberRegisterDTO.getAgreements());
     //3. 약관동의 table에 등록
     memberTermsService.agreeWithTerms(socialToMemberRegisterDTO.getAgreements(), member);
 
