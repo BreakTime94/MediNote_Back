@@ -55,4 +55,6 @@ public class MeasurementResponseDTO {
   private String sleepStatus;
   private String summary;
 
+  private Integer healthScore;
+
 }

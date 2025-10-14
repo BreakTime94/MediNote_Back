@@ -110,13 +110,13 @@ public class MeasurementService {
   //==================================== 개인건강정보리스트관련 로직===========================================
   private MeasurementResponseDTO evaluateHealthStatus(MeasurementResponseDTO response) {
 
-    //bmi
+    // BMI
     if (response.getHeight() != null && response.getWeight() != null) {
       double heightM = response.getHeight() / 100.0;
       double bmi = response.getWeight() / (heightM * heightM);
-      bmi = Math.round(bmi * 10) / 10.0; // 소수점 1자리 반올림
+      bmi = Math.round(bmi * 10) / 10.0;
 
-      response.setBmi(bmi); // ✅ 프론트에서 숫자 표시 가능하도록 세팅
+      response.setBmi(bmi);
 
       String bmiStatus;
       if (bmi < 18.5) bmiStatus = "저체중";
@@ -127,47 +127,78 @@ public class MeasurementService {
       response.setBmiStatus(bmiStatus);
     }
 
-    //혈압
-    if(response.getBloodPressureSystolic() != null && response.getBloodPressureDiastolic() != null) {
+    // 혈압
+    if (response.getBloodPressureSystolic() != null && response.getBloodPressureDiastolic() != null) {
       int sys = response.getBloodPressureSystolic();
       int dia = response.getBloodPressureDiastolic();
       String bpStatus;
-      if(sys < 90 || dia < 60) bpStatus = "저혈압";
-      else if(sys <= 120 && dia <= 80) bpStatus = "정상";
-      else if(sys <= 139 && dia <= 89) bpStatus = "주의";
+      if (sys < 90 || dia < 60) bpStatus = "저혈압";
+      else if (sys <= 120 && dia <= 80) bpStatus = "정상";
+      else if (sys <= 139 && dia <= 89) bpStatus = "주의";
       else bpStatus = "고혈압";
       response.setBloodPressureStatus(bpStatus);
     }
 
-    //혈당
-    if(response.getBloodSugar() != null) {
+    // 혈당
+    if (response.getBloodSugar() != null) {
       double sugar = response.getBloodSugar();
       String sugarStatus;
-      if(sugar < 70) sugarStatus = "저혈당";
-      else if(sugar <= 99) sugarStatus= "정상";
-      else if(sugar <= 125) sugarStatus= "공복혈당장애";
+      if (sugar < 70) sugarStatus = "저혈당";
+      else if (sugar <= 99) sugarStatus = "정상";
+      else if (sugar <= 125) sugarStatus = "공복혈당장애";
       else sugarStatus = "당뇨 의심";
       response.setBloodSugarStatus(sugarStatus);
     }
 
-    //수면ㄴ 상태
-    if(response.getSleepHours() != null) {
+    // 수면
+    if (response.getSleepHours() != null) {
       double hours = response.getSleepHours();
       String sleepStatus;
-      if(hours < 5) sleepStatus = "수면 부족";
-      else if(hours <= 8) sleepStatus = "적정 수면";
+      if (hours < 5) sleepStatus = "수면 부족";
+      else if (hours <= 8) sleepStatus = "적정 수면";
       else sleepStatus = "수면 과다";
       response.setSleepStatus(sleepStatus);
     }
 
-    //졷합
+    // ✅ Health Score 계산
+    int score = 100;
+
+    switch (response.getBmiStatus()) {
+      case "정상" -> score -= 0;
+      case "저체중", "과체중" -> score -= 10;
+      case "비만" -> score -= 20;
+    }
+
+    switch (response.getBloodSugarStatus()) {
+      case "정상" -> score -= 0;
+      case "저혈당", "공복혈당장애" -> score -= 10;
+      case "당뇨 의심" -> score -= 20;
+    }
+
+    switch (response.getSleepStatus()) {
+      case "적정 수면" -> score -= 0;
+      case "수면 부족" -> score -= 10;
+      case "수면 과다" -> score -= 5;
+    }
+
+    if (response.isSmoking()) score -= 10;
+    if (response.isDrinking() && response.getDrinkingPerWeek() != null && response.getDrinkingPerWeek() > 3)
+      score -= 5;
+
+    if (score < 0) score = 0;
+
+    response.setHealthScore(score);
+
+    // ✅ summary 문장 보완 (기존 getStatus → getBmiStatus)
     response.setSummary(String.format(
-            "BMI : %s / 혈압 : %s / 혈당: %s / 수면: %s",
-            response.getBmiStatus() != null ? response.getStatus() : "-",
+            "BMI: %s / 혈압: %s / 혈당: %s / 수면: %s / 점수: %d점",
+            response.getBmiStatus() != null ? response.getBmiStatus() : "-",
             response.getBloodPressureStatus() != null ? response.getBloodPressureStatus() : "-",
             response.getBloodSugarStatus() != null ? response.getBloodSugarStatus() : "-",
-            response.getSleepStatus() != null ? response.getSleepStatus() : "-"
+            response.getSleepStatus() != null ? response.getSleepStatus() : "-",
+            response.getHealthScore() != null ? response.getHealthScore() : 0
     ));
+
     return response;
   }
 
@@ -214,6 +245,7 @@ public class MeasurementService {
     return filtered;
 
   }
+
 
   //index 의 카드형 ui 생성 메서드
   @Transactional(readOnly = true)
