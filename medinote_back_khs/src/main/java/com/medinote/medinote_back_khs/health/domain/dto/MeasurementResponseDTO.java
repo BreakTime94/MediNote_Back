@@ -27,12 +27,12 @@ public class MeasurementResponseDTO {
   private Boolean allergyYn;
   private Boolean medicationYn;
 
-  // ✅ 이름 기반 리스트 (조회 시 표시용)
+  //  이름 기반 리스트 (조회 시 표시용)
   private List<String> chronicDiseaseNames;  // 기저질환 이름 리스트
   private List<String> allergyNames;         // 알러지 이름 리스트
   private List<String> medicationNames;      // 복용약 이름 리스트 (검색용 선택 결과)
 
-  // ✅ 상세 약정보 (필요 시만 사용)
+  //  상세 약정보 (필요 시만 사용)
   private List<MedicationResponseDTO> medications;
 
   private MeasurementStatus status;
@@ -56,5 +56,13 @@ public class MeasurementResponseDTO {
   private String summary;
 
   private Integer healthScore;
+
+  // 주간 트렌드용 필드 추가 (여기부터)
+  private Double weightChange;          // 체중 변화량 (kg)
+  private String weightTrend;           // "up", "down", "stable"
+  private Double bloodSugarChange;      // 혈당 변화량
+  private String bloodSugarTrend;       // "up", "down", "stable"
+  private Double sleepHoursChange;      // 수면 변화량 (시간)
+  private String sleepTrend;            // "up", "down", "stable"
 
 }

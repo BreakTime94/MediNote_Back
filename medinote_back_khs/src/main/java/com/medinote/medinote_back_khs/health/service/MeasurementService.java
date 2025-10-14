@@ -250,20 +250,66 @@ public class MeasurementService {
   //index 의 카드형 ui 생성 메서드
   @Transactional(readOnly = true)
   public MeasurementResponseDTO getLatestSummary(Long memberId) {
-    // 회원의 최근 측정 데이터 1건만 가져오기
+    // 최근 측정 데이터 1건
     Measurement latest = measurementRepository
             .findTopByMemberIdOrderByMeasuredDateDesc(memberId)
             .orElseThrow(() -> new IllegalArgumentException("최근 측정 데이터가 없습니다."));
 
-    // DTO 변환
-    MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
+    // 이전 데이터 조회 (현재보다 이전의 가장 가까운 데이터) - 같은날x
+    Measurement previousData = measurementRepository
+            .findTopByMemberIdAndMeasuredDateBeforeOrderByMeasuredDateDesc(
+                    memberId,
+                    latest.getMeasuredDate()
+            )
+            .orElse(null);
 
-    // 건강상태 평가 (BMI, 혈당, 수면)
+    // DTO 변환 & 건강상태 평가
+    MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
     MeasurementResponseDTO evaluated = evaluateHealthStatus(response);
 
-    // 요약 문장 생성 (혈압 → 제외, 수면 강조)
-    StringBuilder summary = new StringBuilder();
+    // 변화량 계산
+    if (previousData != null) {
+      // 체중 변화
+      if (latest.getWeight() != null && previousData.getWeight() != null) {
+        double weightDiff = latest.getWeight() - previousData.getWeight();
+        evaluated.setWeightChange(Math.round(weightDiff * 10) / 10.0);
+        evaluated.setWeightTrend(getTrend(weightDiff, 0.5));
+      } else {
+        evaluated.setWeightChange(null);
+        evaluated.setWeightTrend("stable");
+      }
 
+      // 혈당 변화
+      if (latest.getBloodSugar() != null && previousData.getBloodSugar() != null) {
+        double bloodSugarDiff = latest.getBloodSugar() - previousData.getBloodSugar();
+        evaluated.setBloodSugarChange(Math.round(bloodSugarDiff * 10) / 10.0);
+        evaluated.setBloodSugarTrend(getTrend(bloodSugarDiff, 5.0));
+      } else {
+        evaluated.setBloodSugarChange(null);
+        evaluated.setBloodSugarTrend("stable");
+      }
+
+      // 수면 변화
+      if (latest.getSleepHours() != null && previousData.getSleepHours() != null) {
+        double sleepDiff = latest.getSleepHours() - previousData.getSleepHours();
+        evaluated.setSleepHoursChange(Math.round(sleepDiff * 10) / 10.0);
+        evaluated.setSleepTrend(getTrend(sleepDiff, 0.5));
+      } else {
+        evaluated.setSleepHoursChange(null);
+        evaluated.setSleepTrend("stable");
+      }
+    } else {
+      // 이전 데이터 없으면 null로 설정
+      evaluated.setWeightChange(null);
+      evaluated.setWeightTrend("stable");
+      evaluated.setBloodSugarChange(null);
+      evaluated.setBloodSugarTrend("stable");
+      evaluated.setSleepHoursChange(null);
+      evaluated.setSleepTrend("stable");
+    }
+
+    // 요약 문장 생성
+    StringBuilder summary = new StringBuilder();
     summary.append("BMI: ")
             .append(evaluated.getBmiStatus() != null ? evaluated.getBmiStatus() : "정보 없음")
             .append(" / 혈당: ")
@@ -273,5 +319,11 @@ public class MeasurementService {
 
     evaluated.setSummary(summary.toString());
     return evaluated;
-}
+  }
+
+  // 트렌드 판단 헬퍼 메서드 (Service 클래스 안에 추가)
+  private String getTrend(double diff, double threshold) {
+    if (Math.abs(diff) < threshold) return "stable";
+    return diff > 0 ? "up" : "down";
+  }
 }
