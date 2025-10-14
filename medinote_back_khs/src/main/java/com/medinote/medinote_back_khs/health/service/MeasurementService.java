@@ -110,9 +110,14 @@ public class MeasurementService {
   //==================================== 개인건강정보리스트관련 로직===========================================
   private MeasurementResponseDTO evaluateHealthStatus(MeasurementResponseDTO response) {
 
-    //bmi
-    if (response.getBmi() != null) {
-      double bmi = response.getBmi();
+    // BMI
+    if (response.getHeight() != null && response.getWeight() != null) {
+      double heightM = response.getHeight() / 100.0;
+      double bmi = response.getWeight() / (heightM * heightM);
+      bmi = Math.round(bmi * 10) / 10.0;
+
+      response.setBmi(bmi);
+
       String bmiStatus;
       if (bmi < 18.5) bmiStatus = "저체중";
       else if (bmi < 23) bmiStatus = "정상";
@@ -122,47 +127,78 @@ public class MeasurementService {
       response.setBmiStatus(bmiStatus);
     }
 
-    //혈압
-    if(response.getBloodPressureSystolic() != null && response.getBloodPressureDiastolic() != null) {
+    // 혈압
+    if (response.getBloodPressureSystolic() != null && response.getBloodPressureDiastolic() != null) {
       int sys = response.getBloodPressureSystolic();
       int dia = response.getBloodPressureDiastolic();
       String bpStatus;
-      if(sys < 90 || dia < 60) bpStatus = "저혈압";
-      else if(sys <= 120 && dia <= 80) bpStatus = "정상";
-      else if(sys <= 139 && dia <= 89) bpStatus = "주의";
+      if (sys < 90 || dia < 60) bpStatus = "저혈압";
+      else if (sys <= 120 && dia <= 80) bpStatus = "정상";
+      else if (sys <= 139 && dia <= 89) bpStatus = "주의";
       else bpStatus = "고혈압";
       response.setBloodPressureStatus(bpStatus);
     }
 
-    //혈당
-    if(response.getBloodSugar() != null) {
+    // 혈당
+    if (response.getBloodSugar() != null) {
       double sugar = response.getBloodSugar();
       String sugarStatus;
-      if(sugar < 70) sugarStatus = "저혈당";
-      else if(sugar <= 99) sugarStatus= "정상";
-      else if(sugar <= 125) sugarStatus= "공복혈당장애";
+      if (sugar < 70) sugarStatus = "저혈당";
+      else if (sugar <= 99) sugarStatus = "정상";
+      else if (sugar <= 125) sugarStatus = "공복혈당장애";
       else sugarStatus = "당뇨 의심";
       response.setBloodSugarStatus(sugarStatus);
     }
 
-    //수면ㄴ 상태
-    if(response.getSleepHours() != null) {
+    // 수면
+    if (response.getSleepHours() != null) {
       double hours = response.getSleepHours();
       String sleepStatus;
-      if(hours < 5) sleepStatus = "수면 부족";
-      else if(hours <= 8) sleepStatus = "적정 수면";
+      if (hours < 5) sleepStatus = "수면 부족";
+      else if (hours <= 8) sleepStatus = "적정 수면";
       else sleepStatus = "수면 과다";
       response.setSleepStatus(sleepStatus);
     }
 
-    //졷합
+    // ✅ Health Score 계산
+    int score = 100;
+
+    switch (response.getBmiStatus()) {
+      case "정상" -> score -= 0;
+      case "저체중", "과체중" -> score -= 10;
+      case "비만" -> score -= 20;
+    }
+
+    switch (response.getBloodSugarStatus()) {
+      case "정상" -> score -= 0;
+      case "저혈당", "공복혈당장애" -> score -= 10;
+      case "당뇨 의심" -> score -= 20;
+    }
+
+    switch (response.getSleepStatus()) {
+      case "적정 수면" -> score -= 0;
+      case "수면 부족" -> score -= 10;
+      case "수면 과다" -> score -= 5;
+    }
+
+    if (response.isSmoking()) score -= 10;
+    if (response.isDrinking() && response.getDrinkingPerWeek() != null && response.getDrinkingPerWeek() > 3)
+      score -= 5;
+
+    if (score < 0) score = 0;
+
+    response.setHealthScore(score);
+
+    // ✅ summary 문장 보완 (기존 getStatus → getBmiStatus)
     response.setSummary(String.format(
-            "BMI : %s / 혈압 : %s / 혈당: %s / 수면: %s",
-            response.getBmiStatus() != null ? response.getStatus() : "-",
+            "BMI: %s / 혈압: %s / 혈당: %s / 수면: %s / 점수: %d점",
+            response.getBmiStatus() != null ? response.getBmiStatus() : "-",
             response.getBloodPressureStatus() != null ? response.getBloodPressureStatus() : "-",
             response.getBloodSugarStatus() != null ? response.getBloodSugarStatus() : "-",
-            response.getSleepStatus() != null ? response.getSleepStatus() : "-"
+            response.getSleepStatus() != null ? response.getSleepStatus() : "-",
+            response.getHealthScore() != null ? response.getHealthScore() : 0
     ));
+
     return response;
   }
 
@@ -210,23 +246,70 @@ public class MeasurementService {
 
   }
 
+
   //index 의 카드형 ui 생성 메서드
   @Transactional(readOnly = true)
   public MeasurementResponseDTO getLatestSummary(Long memberId) {
-    // 회원의 최근 측정 데이터 1건만 가져오기
+    // 최근 측정 데이터 1건
     Measurement latest = measurementRepository
             .findTopByMemberIdOrderByMeasuredDateDesc(memberId)
             .orElseThrow(() -> new IllegalArgumentException("최근 측정 데이터가 없습니다."));
 
-    // DTO 변환
-    MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
+    // 이전 데이터 조회 (현재보다 이전의 가장 가까운 데이터) - 같은날x
+    Measurement previousData = measurementRepository
+            .findTopByMemberIdAndMeasuredDateBeforeOrderByMeasuredDateDesc(
+                    memberId,
+                    latest.getMeasuredDate()
+            )
+            .orElse(null);
 
-    // 건강상태 평가 (BMI, 혈당, 수면)
+    // DTO 변환 & 건강상태 평가
+    MeasurementResponseDTO response = measurementMapper.toResponseDTO(latest);
     MeasurementResponseDTO evaluated = evaluateHealthStatus(response);
 
-    // 요약 문장 생성 (혈압 → 제외, 수면 강조)
-    StringBuilder summary = new StringBuilder();
+    // 변화량 계산
+    if (previousData != null) {
+      // 체중 변화
+      if (latest.getWeight() != null && previousData.getWeight() != null) {
+        double weightDiff = latest.getWeight() - previousData.getWeight();
+        evaluated.setWeightChange(Math.round(weightDiff * 10) / 10.0);
+        evaluated.setWeightTrend(getTrend(weightDiff, 0.5));
+      } else {
+        evaluated.setWeightChange(null);
+        evaluated.setWeightTrend("stable");
+      }
 
+      // 혈당 변화
+      if (latest.getBloodSugar() != null && previousData.getBloodSugar() != null) {
+        double bloodSugarDiff = latest.getBloodSugar() - previousData.getBloodSugar();
+        evaluated.setBloodSugarChange(Math.round(bloodSugarDiff * 10) / 10.0);
+        evaluated.setBloodSugarTrend(getTrend(bloodSugarDiff, 5.0));
+      } else {
+        evaluated.setBloodSugarChange(null);
+        evaluated.setBloodSugarTrend("stable");
+      }
+
+      // 수면 변화
+      if (latest.getSleepHours() != null && previousData.getSleepHours() != null) {
+        double sleepDiff = latest.getSleepHours() - previousData.getSleepHours();
+        evaluated.setSleepHoursChange(Math.round(sleepDiff * 10) / 10.0);
+        evaluated.setSleepTrend(getTrend(sleepDiff, 0.5));
+      } else {
+        evaluated.setSleepHoursChange(null);
+        evaluated.setSleepTrend("stable");
+      }
+    } else {
+      // 이전 데이터 없으면 null로 설정
+      evaluated.setWeightChange(null);
+      evaluated.setWeightTrend("stable");
+      evaluated.setBloodSugarChange(null);
+      evaluated.setBloodSugarTrend("stable");
+      evaluated.setSleepHoursChange(null);
+      evaluated.setSleepTrend("stable");
+    }
+
+    // 요약 문장 생성
+    StringBuilder summary = new StringBuilder();
     summary.append("BMI: ")
             .append(evaluated.getBmiStatus() != null ? evaluated.getBmiStatus() : "정보 없음")
             .append(" / 혈당: ")
@@ -236,5 +319,11 @@ public class MeasurementService {
 
     evaluated.setSummary(summary.toString());
     return evaluated;
-}
+  }
+
+  // 트렌드 판단 헬퍼 메서드 (Service 클래스 안에 추가)
+  private String getTrend(double diff, double threshold) {
+    if (Math.abs(diff) < threshold) return "stable";
+    return diff > 0 ? "up" : "down";
+  }
 }

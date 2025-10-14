@@ -3,6 +3,7 @@ package com.medinote.medinote_back_kc.security.handler;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medinote.medinote_back_kc.common.ErrorCode;
 import com.medinote.medinote_back_kc.common.exception.CustomException;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Status;
@@ -46,6 +47,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
   private final TokenAuthService tokenAuthService;
   private final MemberRepository memberRepository;
   private final AuthServiceImpl authService;
+  private final MemberMapper memberMapper;
 
   @Override
   public void onAuthenticationSuccess(HttpServletRequest request,
@@ -95,10 +97,12 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
       log.info("기존에 존재하는 SocialMember");
       // TokenAuthService에 전부 위임
       tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
+
+      MemberDTO memberDTO = memberMapper.toMemberDTO(member);
       result = Map.of(
               "status", "LOGIN_SUCCESS",
-              "email", dto.getEmail(),
-              "provider", provider.name()
+              "provider", provider.name(),
+              "member", memberDTO
       );
 
     } else { // 소셜 테이블에 없는 경우는 2가지 경우가 있다. member table에 email/extraEmail이 존재하는가? 아닌가?
@@ -120,12 +124,13 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         //dto + id를 socialmember table에 insert만 하면 됨!
         memberSocialService.linkSocialAccount(member, dto);
-
         tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
+
+        MemberDTO memberDTO = memberMapper.toMemberDTO(member);
         result = Map.of(
                 "status", "LOGIN_SUCCESS",
-                "email", dto.getEmail(),
-                "provider", provider.name()
+                "provider", provider.name(),
+                "member", memberDTO
         );
 
       } else { // 둘다 없는 경우는 신규 가입?
