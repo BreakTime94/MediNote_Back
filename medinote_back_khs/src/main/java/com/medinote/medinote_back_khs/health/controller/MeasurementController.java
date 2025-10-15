@@ -5,6 +5,7 @@ import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.service.MeasurementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.List;
 @RestController //json으로 요청/응답 처리
 @RequestMapping("/health/measurement")
 @RequiredArgsConstructor
+@Slf4j
 public class MeasurementController {
   //HTTP 요청(JSON) → DTO로 변환해서 Service에 전달.
 
@@ -33,13 +35,31 @@ public class MeasurementController {
   }
 
   // 수정 (update)
-  @PutMapping("/{id}")
+  @PutMapping("/update")
   public ResponseEntity<MeasurementResponseDTO> addNewVersion(
           @RequestHeader("X-Member-Id") Long memberId,
           @RequestBody MeasurementRequestDTO dto) {
 
-    MeasurementResponseDTO response = measurementService.addNewVersion(memberId, dto);
-    return ResponseEntity.ok(response);
+    log.info("=== /update 요청 들어옴 ===");
+    log.info("memberId: {}", memberId);
+    log.info("gender: {}", dto.getGender());
+    log.info("chronicDiseaseYn: {}", dto.getChronicDiseaseYn());
+    log.info("chronicDiseaseIds: {}", dto.getChronicDiseaseIds());
+    log.info("allergyYn: {}", dto.getAllergyYn());
+    log.info("allergyIds: {}", dto.getAllergyIds());
+    log.info("medicationYn: {}", dto.getMedicationYn());
+    log.info("medicationIds: {}", dto.getMedicationIds());
+
+    try {
+      log.info(">>> Service 호출 전");
+      MeasurementResponseDTO response = measurementService.addNewVersion(memberId, dto);
+      log.info(">>> Service 호출 후");
+      log.info("=== 저장 성공! ===");
+      return ResponseEntity.ok(response);
+    } catch (Exception e) {
+      log.error("=== 에러 발생! ===", e);
+      throw e;
+    }
   }
 
   // 삭제 (delete)
@@ -72,5 +92,14 @@ public class MeasurementController {
     MeasurementResponseDTO summary = measurementService.getLatestSummary(memberId);
     return ResponseEntity.ok(summary);
 
+  }
+
+  // 최신 측정 데이터 1개 조회 (수정 페이지용)
+  @GetMapping("/latest")
+  public ResponseEntity<MeasurementResponseDTO> getLatestMeasurement(
+          @RequestHeader("X-Member-Id") Long memberId) {
+    log.info("=== 최신 측정 데이터 조회: memberId={} ===", memberId);
+    MeasurementResponseDTO latest = measurementService.getLatestMeasurement(memberId);
+    return ResponseEntity.ok(latest);
   }
 }

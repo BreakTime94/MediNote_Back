@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
                 .requestMatchers("/boards/read/**", "/boards/notice/list", "/boards/faq/list", "/boards/qna/list").permitAll()
+                .requestMatchers("/api/admin/member/list").hasRole("ADMIN")
                 .anyRequest().authenticated())
             //form 로그인 불가
         .formLogin(f -> f.disable())
