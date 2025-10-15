@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_kc.member.mapper;
 
+import com.medinote.medinote_back_kc.member.domain.dto.social.MemberSocialDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialToMemberRegisterDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
@@ -29,5 +30,10 @@ public interface MemberSocialMapper {
   @Mapping(target = "fromSocial", constant = "true")
   @Mapping(source = "agreements", target = "agreements")
   SocialToMemberRegisterDTO socialToMemberLink(SocialRegisterRequestDTO dto);
+
+  @Mapping(target = "provider", source = "provider")
+  @Mapping(target = "connectedAt", source = "connectedAt")
+  @Mapping(target = "disconnectedAt", source = "disconnectedAt")
+  MemberSocialDTO  toMemberSocialDTO(MemberSocial social);
 
 }

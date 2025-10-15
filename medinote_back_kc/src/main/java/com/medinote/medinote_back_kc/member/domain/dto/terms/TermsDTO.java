@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class TermsDTO {
   private Long id;
   private String policyCode;
+  private String version;
   private String title;
   private String content;
   private LocalDateTime effectiveFrom;
