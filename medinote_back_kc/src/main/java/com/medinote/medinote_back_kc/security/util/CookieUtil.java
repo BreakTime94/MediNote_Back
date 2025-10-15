@@ -1,5 +1,7 @@
 package com.medinote.medinote_back_kc.security.util;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -67,5 +69,17 @@ public class CookieUtil {
             .path("/")
             .maxAge(0)
             .build();
+  }
+
+  //Cookie 파싱 (Token 꺼냄)
+  public String getCookieValue(HttpServletRequest request, String cookieName) {
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if (cookieName.equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
+    return null;
   }
 }

@@ -1,6 +1,6 @@
 package com.medinote.medinote_back_kc.member.domain.dto.member;
 
-import com.medinote.medinote_back_kc.member.domain.entity.Role;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -20,5 +20,6 @@ public class MemberDTO {
   private String profileImagePath;
   private String profileMimeType;
   private boolean fromSocial;
+  private boolean extraEmailVerified;
   private LocalDateTime regDate;
 }

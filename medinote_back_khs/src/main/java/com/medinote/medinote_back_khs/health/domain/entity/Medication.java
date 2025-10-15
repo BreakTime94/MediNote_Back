@@ -48,6 +48,10 @@ public class Medication extends ModiEntity {
   @Column(columnDefinition = "TEXT")
   private String storage;      // depositMethodQesitm
 
+
+  @Column(columnDefinition = "TEXT")
+  private String nameKoCompany; //약품명(회사명) - 새컬럼 추가
+
   private String openDate;
   private String updateDate;
   private String image;

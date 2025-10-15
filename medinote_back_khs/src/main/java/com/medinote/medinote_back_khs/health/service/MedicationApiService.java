@@ -4,21 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.medinote.medinote_back_khs.health.domain.dto.MedicationApiDTO;
-import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Medication;
 import com.medinote.medinote_back_khs.health.domain.mapper.MedicationMapper;
 import com.medinote.medinote_back_khs.health.domain.repository.MedicationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -95,20 +88,27 @@ public class MedicationApiService {
   //==================복용약 리스트 관련===============================================
 
   //리스트 조회
-  @Transactional(readOnly = true)
-  public Page<MedicationResponseDTO> getMedicationList(Pageable pageable) throws JsonProcessingException{
-    return medicationRepository.findAll(pageable).map(medicationMapper::toResponseDTO);
-  }
-
-  @Transactional(readOnly = true)
-  public List<MedicationResponseDTO> searchMedication(String keyword) {
-    return medicationMapper.toResponseDTOList(medicationRepository.findByNameKoContaining(keyword));
-  }
-
-  @Transactional(readOnly = true)
-  public Optional<MedicationResponseDTO> getMedicationById(Long id) {
-    return medicationRepository.findById(id).map(medicationMapper::toResponseDTO);
-    // Medication → MedicationResponseDTO 변환
-    // 불필요한 필드들(createdAt, internalNotes 등) 제거
-  }
+//  @Transactional(readOnly = true)
+//  public List<MedicationResponseDTO> getAllMedications() {
+//    return medicationRepository.findAll().stream()
+//            .map(medicationMapper::toResponseDTO)
+//            .toList();
+//  }
+//
+//  /** ✅ 약 키워드 검색 (부분검색) */
+//  @Transactional(readOnly = true)
+//  public List<MedicationResponseDTO> searchMedications(String keyword) {
+//    keyword = keyword.trim(); // 공백 제거
+//    return medicationRepository.findByNameKoCompanyContainingIgnoreCase(keyword).stream()
+//            .map(medicationMapper::toResponseDTO)
+//            .toList();
+//  }
+//
+//  /** ✅ 약 단일 조회 */
+//  @Transactional(readOnly = true)
+//  public MedicationResponseDTO getMedicationById(Long id) {
+//    Medication medication = medicationRepository.findById(id)
+//            .orElseThrow(() -> new IllegalArgumentException("해당 약품이 존재하지 않습니다."));
+//    return medicationMapper.toResponseDTO(medication);
+//  }
 }
