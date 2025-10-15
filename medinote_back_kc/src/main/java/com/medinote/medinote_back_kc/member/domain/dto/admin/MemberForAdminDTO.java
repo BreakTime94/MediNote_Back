@@ -20,7 +20,7 @@ public class MemberForAdminDTO {
   private String email;
   private String extraEmail;
   private String nickname;
-  private Role role;
+  private String role;
   private String profileImagePath;
   private String profileMimeType;
   private Status status;

@@ -27,9 +27,6 @@ import java.util.Map;
 public class SocialAuthController {
 
   private final MemberSocialService memberSocialService;
-  private final CookieUtil cookieUtil;
-  private final RedisUtil redisUtil;
-  private final JWTUtil jwtUtil;
   private final TokenAuthService tokenAuthService;
 
   @PostMapping("/register")

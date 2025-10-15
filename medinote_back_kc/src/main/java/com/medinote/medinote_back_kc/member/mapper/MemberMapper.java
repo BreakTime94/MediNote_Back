@@ -45,7 +45,7 @@ public interface MemberMapper {
   Member socialToMemberRegister(SocialToMemberRegisterDTO dto);
 
   //3. 관리자용 MemberDTO
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "password", ignore = true)
+
+  @Mapping(target = "role", expression = "java(member.getRole().name())")
   MemberForAdminDTO toMemberForAdminDTO(Member member);
 }
