@@ -3,7 +3,6 @@ package com.medinote.medinote_back_khs.health.controller;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionItemDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionResponseDTO;
-import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.service.ConditionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
