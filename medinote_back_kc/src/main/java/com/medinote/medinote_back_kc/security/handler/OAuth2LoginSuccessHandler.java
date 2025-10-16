@@ -80,7 +80,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     // 4. 기존 소셜회원이 맞는지 check
     if(memberSocialService.isSocialMember(dto)) {
 
-      Member member = memberRepository.findByEmail(dto.getEmail()).orElseThrow(()-> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
+      Member member = memberRepository.findByEmailOrExtraEmail(dto.getEmail(), dto.getEmail()).orElseThrow(()-> new CustomException(ErrorCode.MEMBER_NOT_FOUND));
       // authService에 존재하는 Status 체크하는 메서드 public으로 변경
 
       try{
@@ -129,6 +129,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
         MemberDTO memberDTO = memberMapper.toMemberDTO(member);
         result = Map.of(
                 "status", "LOGIN_SUCCESS",
+                "message", "기존에 일반 이메일로 가입되어 있으며 소셜 연동을 진행합니다.",
                 "provider", provider.name(),
                 "member", memberDTO
         );
