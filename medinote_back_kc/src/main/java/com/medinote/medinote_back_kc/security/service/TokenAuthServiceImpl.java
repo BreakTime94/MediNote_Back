@@ -65,7 +65,7 @@ public class TokenAuthServiceImpl implements TokenAuthService {
 
   @Override
   public void makeCookieWithToken(String email, HttpServletResponse response) {
-    Member member = memberRepository.findByEmail(email).orElseThrow(()-> new UsernameNotFoundException("존재하지 않는 이메일입니다."));
+    Member member = memberRepository.findByEmailOrExtraEmail(email, email).orElseThrow(()-> new UsernameNotFoundException("존재하지 않는 이메일입니다."));
     // 4-2. 토큰 발급
     String accessToken = jwtUtil.createAccessToken(member.getId(), member.getRole());
     String refreshToken = jwtUtil.createRefreshToken(member.getId(), member.getRole());
