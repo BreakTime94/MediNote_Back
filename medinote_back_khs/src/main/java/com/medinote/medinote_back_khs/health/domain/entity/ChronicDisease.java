@@ -2,6 +2,7 @@ package com.medinote.medinote_back_khs.health.domain.entity;
 
 
 import com.medinote.medinote_back_khs.common.entity.ModiEntity;
+import com.medinote.medinote_back_khs.health.domain.enums.ChronicDiseaseStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -21,7 +22,10 @@ public class ChronicDisease extends ModiEntity {
   @Column(nullable = false, unique = true)
   private String code;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
+  private ChronicDiseaseStatus category;
+
   private String nameEn;
 
   @Column(nullable = false)

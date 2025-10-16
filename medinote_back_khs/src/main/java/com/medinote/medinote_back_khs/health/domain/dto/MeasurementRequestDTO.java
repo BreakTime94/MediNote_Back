@@ -1,6 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.dto;
 
-import com.medinote.medinote_back_khs.health.domain.en.MeasurementStatus;
+import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -10,17 +10,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class MeasurementRequestDTO {
 
-    @NotNull(message = "회원ID(은)는 필수 입니다.")
-    private Long memberId;
-
     @NotNull(message = "성별(은)는 필수 입니다.")
-    private MeasurementStatus gender;
+    private GenderStatus gender;
 
     @NotNull(message = "흡연여부(은)는 필수 입니다.")
     private boolean smoking;
@@ -39,11 +38,17 @@ public class MeasurementRequestDTO {
     @NotNull(message = "만성질환 여부는 필수입니다")
     private Boolean chronicDiseaseYn;
 
+    private List<Long> chronicDiseaseIds;
+
     @NotNull(message = "알레르기 여부는 필수입니다")
     private Boolean allergyYn;
 
+    private List<Long> allergyIds ;
+
     @NotNull(message = "복용약물 여부는 필수입니다")
     private Boolean medicationYn;
+
+    private List<Long> medicationIds;
 
     @Positive(message = "신장은 양수여야 합니다")
     @Max(value = 300, message = "입력 가능한 최대 신장은 300cm 입니다")
@@ -64,10 +69,6 @@ public class MeasurementRequestDTO {
     @Positive(message = "혈당은 양수여야 합니다")
     @Max(value = 1000, message = "혈당은 1000mg/dL 이하여야 합니다")
     private Double bloodSugar;
-
-    @Min(value = 30, message = "심박수는 30bpm 이상이어야 합니다.")
-    @Max(value = 250, message = "심박수는 250bpm 이하여야 합니다.")
-    private Integer heartRate;          // 심박수 (bpm)
 
     @Positive(message = "수면 시간은 0 이상이어야 합니다.")
     @Max(value = 24, message = "하루 수면 시간은 24시간을 초과할 수 없습니다.")

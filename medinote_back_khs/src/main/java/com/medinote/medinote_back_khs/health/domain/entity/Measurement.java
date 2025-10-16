@@ -2,7 +2,8 @@ package com.medinote.medinote_back_khs.health.domain.entity;
 
 
 import com.medinote.medinote_back_khs.common.entity.BaseEntity;
-import com.medinote.medinote_back_khs.health.domain.en.MeasurementStatus;
+import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
+import com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -28,7 +29,7 @@ public class Measurement extends BaseEntity {
   //MALE, FEMALE, OTHER
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private MeasurementStatus gender;
+  private GenderStatus gender;
 
   @Column(nullable = false)
   private boolean smoking;          // 필수: 기본 건강 정보
@@ -53,8 +54,11 @@ public class Measurement extends BaseEntity {
   private Integer bloodPressureSystolic;  // 혈압(수축기 mmHg)
   private Integer bloodPressureDiastolic; // 혈압(이완기 mmHg)
   private Double bloodSugar;              // 혈당 (mg/dL)
-  private Integer heartRate;              // 심박수 (bpm)
   private Double sleepHours;              // 평균 수면시간 (시간)
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private MeasurementStatus status;
 
   @Column(nullable = false)
   private LocalDateTime measuredDate;     // 측정일시

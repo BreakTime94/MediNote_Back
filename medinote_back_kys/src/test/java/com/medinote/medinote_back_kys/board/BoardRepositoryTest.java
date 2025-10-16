@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @SpringBootTest
 @Transactional
@@ -307,5 +308,56 @@ class BoardRepositoryTest {
         Assertions.assertEquals(createDto.content(), deleted.getContent(), "내용은 수정되면 안 된다.");
         Assertions.assertEquals(createDto.boardCategoryId(), deleted.getBoardCategoryId(), "카테고리는 수정되면 안 된다.");
         Assertions.assertEquals(createDto.memberId(), deleted.getMemberId(), "작성자는 수정되면 안 된다.");
+    }
+
+    @Test
+    @DisplayName("상위 카테고리(공지=1) + 직계 자식(4,5,7) 게시글만 조회")
+    void list_root_and_children_categories_success() {
+        // given
+        // 기존 seed()의 공지(1) 2건 + 일반(2) 2건 존재
+        // 여기에 자식 카테고리(4,5,7)에 새 글 추가
+        BoardCreateRequestDTO c4 = new BoardCreateRequestDTO(
+                3L, 4L, "업데이트 공지", "업데이트 본문", false, true, QnaStatus.WAITING, PostStatus.PUBLISHED);
+        BoardCreateRequestDTO c5 = new BoardCreateRequestDTO(
+                3L, 5L, "점검 안내", "점검 본문", false, true, QnaStatus.WAITING, PostStatus.PUBLISHED);
+        BoardCreateRequestDTO c7 = new BoardCreateRequestDTO(
+                3L, 7L, "이벤트 진행", "이벤트 본문", false, true, QnaStatus.WAITING, PostStatus.PUBLISHED);
+        save(c4);
+        save(c5);
+        save(c7);
+
+        // spec: categoryRootOrChild(1) + 공개글 + PUBLISHED
+        Specification<Board> spec = Specification.allOf(
+                BoardSpecs.categoryRootOrChild(1L),
+                BoardSpecs.isPublicTrue(),
+                BoardSpecs.statusIn(EnumSet.of(PostStatus.PUBLISHED))
+        );
+
+        PageCriteria criteria = new PageCriteria();
+        criteria.setPage(1);
+        criteria.setSize(20);
+        criteria.setSort(List.of("id,asc"));
+
+        // when
+        var page = boardRepository.findAll(spec, criteria.toPageable(SORT_WHITELIST));
+        BoardListResponseDTO resp = boardMapper.toListResponse(page, criteria, null);
+
+        // then
+        Assertions.assertNotNull(resp, "응답은 null이면 안 된다.");
+        Assertions.assertTrue(resp.page().totalElements() >= 5,
+                "공지(1) 및 자식(4,5,7) 포함 5건 이상이어야 한다.");
+
+        // 결과 검증: 모두 공개글 & PUBLISHED 여야 함
+        resp.items().forEach(item -> {
+            Assertions.assertTrue(Boolean.TRUE.equals(item.getIsPublic()), "공개글만 나와야 함");
+            Assertions.assertEquals(PostStatus.PUBLISHED, item.getPostStatus(), "PUBLISHED 상태만 나와야 함");
+        });
+
+        // 카테고리 ID가 1 또는 4/5/7 중 하나인지 확인
+        Set<Long> allowed = Set.of(1L, 4L, 5L, 7L);
+        resp.items().forEach(item -> {
+            Assertions.assertTrue(allowed.contains(item.getBoardCategoryId()),
+                    "카테고리는 1,4,5,7 중 하나여야 함");
+        });
     }
 }

@@ -3,7 +3,10 @@ package com.medinote.medinote_back_kys.board.repository;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
+import com.medinote.medinote_back_kys.board.domain.entity.BoardCategory; // ★ subquery용
 import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
@@ -20,9 +23,35 @@ public class BoardSpecs {
     }
 
     /** 카테고리 ID 일치 */
-    public static Specification<Board> categoryEquals(Long categoryId) {
+    public static   Specification<Board> categoryEquals(Long categoryId) {
         if (categoryId == null) return null;
         return (root, q, cb) -> cb.equal(root.get("boardCategoryId"), categoryId);
+    }
+
+    /** 카테고리 IN (여러 개) */
+    public static Specification<Board> categoryIn(Set<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) return null;
+        return (root, q, cb) -> root.get("boardCategoryId").in(categoryIds);
+    }
+
+    /**
+     * 상위 카테고리(rootId) 자신 + 그 자식들(직계 1단계) 조회
+     * - 연관관계 없이도 Subquery로 해결 (현재 스키마 depth=0/1에 최적)
+     */
+    public static Specification<Board> categoryRootOrChild(Long rootId) {
+        if (rootId == null) return null;
+        return (root, q, cb) -> {
+            Subquery<Long> sub = q.subquery(Long.class);
+            Root<BoardCategory> c = sub.from(BoardCategory.class);
+
+            // parent.id 로 접근해야 함
+            sub.select(c.get("id")).where(cb.equal(c.get("parent").get("id"), rootId));
+
+            return cb.or(
+                    cb.equal(root.get("boardCategoryId"), rootId),
+                    root.get("boardCategoryId").in(sub)
+            );
+        };
     }
 
     /** 제목+내용 LIKE 검색 */

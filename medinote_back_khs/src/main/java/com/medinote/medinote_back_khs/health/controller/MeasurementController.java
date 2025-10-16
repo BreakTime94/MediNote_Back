@@ -1,12 +1,14 @@
 package com.medinote.medinote_back_khs.health.controller;
 
 import com.medinote.medinote_back_khs.health.domain.dto.MeasurementRequestDTO;
-import com.medinote.medinote_back_khs.health.domain.entity.Measurement;
+import com.medinote.medinote_back_khs.health.domain.dto.MeasurementResponseDTO;
 import com.medinote.medinote_back_khs.health.service.MeasurementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController //json으로 요청/응답 처리
 @RequestMapping("/health/measurement")
@@ -16,28 +18,59 @@ public class MeasurementController {
 
   private final MeasurementService measurementService;
 
-  @PostMapping ("/create") //create
-  public ResponseEntity<Long> createMeasurement(@RequestBody @Valid MeasurementRequestDTO dto) {
-    Long id = measurementService.saveMeasurement(dto);
-    return ResponseEntity.ok(id); //w저장된 pk 반환
+  @PostMapping  //create
+  public ResponseEntity<MeasurementResponseDTO> createMeasurement(
+          @RequestBody @Valid MeasurementRequestDTO dto,  @RequestHeader("X-Member-Id") Long memberId) {
+    MeasurementResponseDTO response = measurementService.saveMeasurement(dto, memberId);
+    return ResponseEntity.ok(response);
   }
 
-  //단일 조회(read)
+  // 단일 조회 (read)
   @GetMapping("/{id}")
-  public MeasurementRequestDTO getMeasurement(@PathVariable @Valid Long id) {
-    return measurementService.findById(id);
+  public ResponseEntity<MeasurementResponseDTO> getMeasurement(@PathVariable Long id) {
+    MeasurementResponseDTO response = measurementService.findById(id);
+    return ResponseEntity.ok(response);
   }
 
-  //수정(update)
+  // 수정 (update)
   @PutMapping("/{id}")
-  public Long updateMeasurement(@PathVariable Long id, @RequestBody @Valid MeasurementRequestDTO dto) {
-    return measurementService.update(id, dto);
+  public ResponseEntity<MeasurementResponseDTO> addNewVersion(
+          @RequestHeader("X-Member-Id") Long memberId,
+          @RequestBody MeasurementRequestDTO dto) {
+
+    MeasurementResponseDTO response = measurementService.addNewVersion(memberId, dto);
+    return ResponseEntity.ok(response);
   }
 
-  //삭제(delete)
+  // 삭제 (delete)
   @DeleteMapping("/{id}")
-  public void deleteMeasurement(@PathVariable @Valid Long id) {
-    measurementService.deleteById(id);
+  public ResponseEntity<Void> deactivateMeasurement(@PathVariable Long id) {
+    measurementService.deactivateMeasurement(id);
+    return ResponseEntity.noContent().build(); // 204 반환
   }
 
+  //회원의 모든 리스트 조회
+  @GetMapping("/list")
+  public ResponseEntity<List<MeasurementResponseDTO>> getMeasurementList(
+          @RequestHeader("X-Member-Id") Long memberId) {
+    List<MeasurementResponseDTO> list = measurementService.getMeasurementList(memberId);
+    return ResponseEntity.ok(list);
+  }
+
+  @GetMapping("/chart")
+  public ResponseEntity<List<MeasurementResponseDTO>> getChartData(
+          @RequestHeader("X-Member-Id") Long memberId,
+          @RequestParam(required = false) String period) {
+
+    List<MeasurementResponseDTO> list = measurementService.getChartData(memberId, period);
+    return ResponseEntity.ok(list);
+  }
+
+  @GetMapping("/summary")
+  public ResponseEntity<MeasurementResponseDTO> getLatestSummary(
+          @RequestHeader("X-Member-Id") Long memberId) {
+    MeasurementResponseDTO summary = measurementService.getLatestSummary(memberId);
+    return ResponseEntity.ok(summary);
+
+  }
 }

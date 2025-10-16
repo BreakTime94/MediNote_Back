@@ -70,7 +70,9 @@ dependencies {
 
     //소셜 로그인 관련 의존성
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client' //구글 소셜 로그인을 위한 의존성
-    
+
+    //백단 내에 간단한 유효성 검증 의존성 기능 추가
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 
     //log4j2
     implementation 'org.springframework.boot:spring-boot-starter-log4j2:3.5.3'
@@ -82,6 +84,13 @@ dependencies {
 
     //redis 관련
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    //스프링에서 이메일을 보내주는 기능
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    //JAVA 8버젼의 date/time 지원해주는 라이브러리 별도 추가
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
 
 }
 

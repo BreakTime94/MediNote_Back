@@ -3,8 +3,11 @@ package com.medinote.medinote_back_khs.health.domain.mapper;
 import com.medinote.medinote_back_khs.health.domain.dto.MedicationApiDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.MedicationResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Medication;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.List;
 
@@ -12,26 +15,30 @@ import java.util.List;
 public interface MedicationMapper {
 
   //api dto -> entity
-  @Mapping(source = "itemSeq", target = "drugCode")
-  @Mapping(source = "itemName", target = "nameKo")
-  @Mapping(source = "entpName", target = "company")
-  @Mapping(source = "efcyQesitm", target = "effect")
-  @Mapping(source = "useMethodQesitm", target = "useMethod")
-  @Mapping(source = "atpnWarnQesitm", target = "warning")
-  @Mapping(source = "atpnQesitm", target = "caution")
-  @Mapping(source = "intrcQesitm", target = "interaction")
-  @Mapping(source = "seQesitm", target = "sideEffect")
-  @Mapping(source = "depositMethodQesitm", target = "storage")
-  @Mapping(source = "openDe", target = "openDate")
-  @Mapping(source = "updateDe", target = "updateDate")
-  @Mapping(source = "itemImage", target = "image")
-  @Mapping(source = "bizrno", target = "bizNo")
-  // DTO에는 없으니까 상수값 넣기
-  @Mapping(target = "source", constant = "식약처 API")
+  @Mapping(target = "drugCode", source = "itemSeq")
+  @Mapping(target = "nameKo", source = "itemName")
+  @Mapping(target = "company", source = "entpName")
+  @Mapping(target = "effect", source = "efcyQesitm")
+  @Mapping(target = "useMethod", source = "useMethodQesitm")
+  @Mapping(target = "caution", source = "atpnQesitm")
+  @Mapping(target = "sideEffect", source = "seQesitm")
+  @Mapping(target = "storage", source = "depositMethodQesitm")
+  @Mapping(target = "interaction", source = "intrcQesitm")
+  @Mapping(target = "warning", source = "atpnWarnQesitm")
+  @Mapping(target = "image", source = "itemImage")
+  @Mapping(target = "source", constant = "공공데이터포털")
+  @Mapping(target = "bizNo", source = "bizrno")
+  @Mapping(target = "openDate", source = "openDe")
+  @Mapping(target = "updateDate", source = "updateDe")
+  @Mapping(target = "nameKoCompany", ignore = true)
   Medication toEntity(MedicationApiDTO dto);
 
-  //entity -> dto
+  // Entity → 프론트 ResponseDTO 변환
+  @Mapping(target = "nameKoCompany", source = "nameKoCompany")
   MedicationResponseDTO toResponseDTO(Medication entity);
 
+  // 리스트 변환
   List<MedicationResponseDTO> toResponseDTOList(List<Medication> listEntity);
+  @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+  void updateFromApiDTO(MedicationApiDTO dto, @MappingTarget Medication entity);
 }
