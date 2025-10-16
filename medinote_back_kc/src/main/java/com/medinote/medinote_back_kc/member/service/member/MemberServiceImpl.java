@@ -199,7 +199,7 @@ public class MemberServiceImpl implements MemberService{
 
     //회원이 존재하지 않거나, social member이면 묻지도 따지지도 않고 return
     if(optionalMember.isEmpty() || optionalMember.get().isFromSocial()) {
-      log.info("회원이 아니거나, 소셜 멤버는 비밀번호를 바꾸실 수 없습니다.");
+      log.info("회원이 아니거나, 소셜 최초 가입 멤버는 비밀번호를 바꾸실 수 없습니다.");
       return;
     }
 

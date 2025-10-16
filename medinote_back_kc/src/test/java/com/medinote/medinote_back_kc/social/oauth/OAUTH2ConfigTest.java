@@ -20,7 +20,6 @@ public class OAUTH2ConfigTest {
   public void checkGoogleClientRegistration() {
     ClientRegistration google = ((InMemoryClientRegistrationRepository) clientRegistrationRepository)
             .findByRegistrationId("google");
-    .
 
     Assertions.assertNotNull(google, "Google OAuth2 client registration is not loaded!");
 
