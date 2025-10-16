@@ -210,5 +210,216 @@ class NewsRepositoryTest {
         NewsIngestResponseDTO ingest = newsMapper.toIngestResponse(entity, now);
         assertEquals(now, ingest.ingestedAt());
         assertEquals(entity.getContentType(), ingest.contentType());
+
     }
+
+    // ----------------------------------------------------
+    // 4. 리스트 출력 및 정렬 검증
+    // ----------------------------------------------------
+    @Test
+    void findPublicList_paging_and_sorting() {
+        // given
+        seed("뉴스-1", "l1", true,  LocalDateTime.now().minusHours(5), "S1N1");
+        seed("뉴스-2", "l2", true,  LocalDateTime.now().minusHours(2), "S1N1");
+        seed("뉴스-3", "l3", true,  LocalDateTime.now().minusHours(1), "S1N4");
+        seed("비공개-제외", "l4", false, LocalDateTime.now().minusHours(3), "S1N1");
+
+        // when — pubDate DESC 정렬
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("pubDate"), Sort.Order.desc("id")));
+        Page<News> page = newsRepository.findPublicList(null, pageable);
+
+        // then
+        assertEquals(3, page.getTotalElements(), "공개 뉴스만 조회되어야 함");
+        assertTrue(page.stream().allMatch(News::getIsPublished), "모두 공개 상태여야 함");
+
+        List<News> content = page.getContent();
+
+        // 정렬 순서 확인 (pubDate DESC)
+        assertTrue(content.get(0).getPubDate().isAfter(content.get(1).getPubDate())
+                        || content.get(0).getPubDate().isEqual(content.get(1).getPubDate()),
+                "pubDate 내림차순 정렬되어야 함");
+
+        // 콘솔 출력 확인용
+        System.out.println("===== 최신순 공개 뉴스 목록 =====");
+        content.forEach(n ->
+                System.out.printf("[#%d] %s | %s | %s | pubDate=%s%n",
+                        n.getId(),
+                        n.getContentType(),
+                        n.getTitle(),
+                        n.getSourceName(),
+                        n.getPubDate()
+                ));
+    }
+
+    @Test
+    void findPublicList_byContentType_filtering_and_sorting() {
+        // given
+        seed("뉴스-1", "n1", true,  LocalDateTime.now().minusHours(3), "S1N1");
+        seed("칼럼-1", "c1", true,  LocalDateTime.now().minusHours(2), "S1N4");
+        seed("칼럼-2", "c2", true,  LocalDateTime.now().minusHours(1), "S1N4");
+        seed("건강정보", "h1", true,  LocalDateTime.now().minusHours(5), "S1N10");
+
+        // when — contentType=COLUMN 필터
+        Pageable pageable = PageRequest.of(0, 5, Sort.by(Sort.Order.desc("pubDate")));
+        Page<News> page = newsRepository.findPublicList(ContentType.COLUMN, pageable);
+
+        // then
+        assertEquals(2, page.getTotalElements(), "칼럼 타입만 조회되어야 함");
+        assertTrue(page.stream().allMatch(n -> n.getContentType() == ContentType.COLUMN));
+
+        // 정렬 순서 검증
+        List<News> content = page.getContent();
+        assertTrue(content.get(0).getPubDate().isAfter(content.get(1).getPubDate()),
+                "칼럼 목록은 pubDate DESC 순서여야 함");
+
+        System.out.println("===== COLUMN 타입 최신순 =====");
+        content.forEach(n ->
+                System.out.printf("[#%d] %s | %s | %s%n",
+                        n.getId(), n.getContentType(), n.getTitle(), n.getPubDate())
+        );
+    }
+
+    // ----------------------------------------------------
+// 5. 관리자(Admin) 기능 검증
+// ----------------------------------------------------
+    @Test
+    void admin_updatePublishStatus_and_verify() {
+        // given
+        News a = seed("A-비공개", "ad1", false, LocalDateTime.now().minusHours(1), "S1N1");
+        News b = seed("B-비공개", "ad2", false, LocalDateTime.now().minusHours(2), "S1N4");
+        News c = seed("C-공개",   "ad3", true,  LocalDateTime.now().minusHours(3), "S1N10");
+
+        List<Long> idsToPublish = List.of(a.getId(), b.getId());
+
+        // when — 관리자 공개처리
+        int updatedCount = newsRepository.updatePublishStatus(idsToPublish, true);
+
+        // then
+        assertEquals(2, updatedCount, "2건이 공개 상태로 변경되어야 함");
+
+        // 변경된 엔티티 다시 조회
+        Page<News> page = newsRepository.findByIsPublishedTrue(page(0, 10, Sort.by("id").descending()));
+        Set<Long> ids = new HashSet<>();
+        page.forEach(n -> ids.add(n.getId()));
+
+        assertTrue(ids.contains(a.getId()));
+        assertTrue(ids.contains(b.getId()));
+        assertTrue(ids.contains(c.getId()));
+
+        System.out.println("===== 관리자 공개상태 변경 후 목록 =====");
+        page.forEach(n ->
+                System.out.printf("[#%d] %s | %s | isPublished=%s%n",
+                        n.getId(), n.getTitle(), n.getContentType(), n.getIsPublished())
+        );
+    }
+
+    @Test
+    void admin_searchAdminList_with_filters() {
+        // given
+        seed("칼럼-1 공개", "adm1", true,  LocalDateTime.now().minusHours(1), "S1N4");
+        seed("칼럼-2 비공개", "adm2", false, LocalDateTime.now().minusHours(2), "S1N4");
+        seed("뉴스-1 공개", "adm3", true,  LocalDateTime.now().minusHours(3), "S1N1");
+        seed("건강정보 공개", "adm4", true,  LocalDateTime.now().minusHours(4), "S1N10");
+        seed("테스트 칼럼", "adm5", true,  LocalDateTime.now().minusHours(5), "S1N4");
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.desc("pubDate")));
+
+        // when — 관리자: 칼럼 + 공개여부 true + keyword='테스트'
+        Page<News> page = newsRepository.searchAdmin(ContentType.COLUMN, true, "테스트", pageable);
+
+        // then
+        assertEquals(1, page.getTotalElements(), "keyword '테스트' 포함 칼럼만 조회되어야 함");
+        News result = page.getContent().get(0);
+        assertEquals(ContentType.COLUMN, result.getContentType());
+        assertTrue(result.getIsPublished());
+        assertTrue(result.getTitle().contains("테스트"));
+
+        System.out.println("===== 관리자 검색 결과 (칼럼 + 공개 + keyword='테스트') =====");
+        page.forEach(n ->
+                System.out.printf("[#%d] %s | %s | %s | isPublished=%s%n",
+                        n.getId(), n.getContentType(), n.getTitle(), n.getAuthor(), n.getIsPublished())
+        );
+    }
+
+    @Test
+    void admin_getDetail_byId() {
+        // given
+        News saved = seed("단일 뉴스 상세조회", "admDetail", true, LocalDateTime.now().minusHours(1), "S1N1");
+
+        // when
+        Optional<News> foundOpt = newsRepository.findById(saved.getId());
+
+        // then
+        assertTrue(foundOpt.isPresent(), "ID로 조회 가능한 상태여야 함");
+        News found = foundOpt.get();
+        assertEquals(saved.getId(), found.getId());
+        assertEquals("단일 뉴스 상세조회", found.getTitle());
+        assertEquals(ContentType.NEWS, found.getContentType());
+
+        // DTO 매핑 확인 (관리자 상세 DTO)
+        AdminNewsDetailResponseDTO detailDTO = newsMapper.toAdminDetail(found);
+        assertEquals(found.getTitle(), detailDTO.title());
+        assertEquals(found.getLink(), detailDTO.link());
+        assertEquals(found.getContentType(), detailDTO.contentType());
+        assertNotNull(detailDTO.regDate(), "등록일자 매핑되어야 함");
+
+        System.out.println("===== 관리자 단일 상세 DTO =====");
+        System.out.printf("[#%d] %s | %s | %s | published=%s | pubDate=%s%n",
+                detailDTO.id(),
+                detailDTO.contentType(),
+                detailDTO.title(),
+                detailDTO.author(),
+                detailDTO.isPublished(),
+                detailDTO.pubDate()
+        );
+    }
+
+    // ----------------------------------------------------
+// 2-x. 공개 제목 검색(searchPublicByTitle) 검증
+// ----------------------------------------------------
+    @Test
+    void searchPublicByTitle_only_title_and_published_all_types() {
+        // given
+        // 공개 + 제목 매칭
+        seed("면역 체계 강화법", "kw1", true,  LocalDateTime.now().minusHours(1),  "S1N1");   // NEWS
+        // 공개 + 제목 불일치
+        seed("수면과 건강",      "kw2", true,  LocalDateTime.now().minusHours(2),  "S1N4");   // COLUMN
+        // 비공개 + 제목 매칭(제외되어야 함)
+        seed("면역 식단 가이드",  "kw3", false, LocalDateTime.now().minusHours(3),  "S1N10");  // HEALTH_INFO
+
+        Pageable pageable = page(0, 10, Sort.by(Sort.Order.desc("id")));
+
+        // when: 타입 미지정(null) + 제목에 "면역"
+        Page<News> page = newsRepository.searchPublicByTitle(null, "면역", pageable);
+
+        // then
+        assertEquals(1, page.getTotalElements(), "공개 + 제목 매칭 1건만 나와야 함");
+        News n = page.getContent().get(0);
+        assertTrue(n.getIsPublished(), "반드시 공개 상태여야 함");
+        assertTrue(n.getTitle().contains("면역"), "제목에 키워드가 포함되어야 함");
+    }
+
+    @Test
+    void searchPublicByTitle_with_contentType_filter() {
+        // given
+        // 같은 키워드 "비만" 이지만 타입을 섞어서 저장
+        seed("비만 관리 가이드", "t1", true,  LocalDateTime.now().minusHours(1), "S1N4");   // COLUMN
+        seed("비만과 대사증후군", "t2", true,  LocalDateTime.now().minusHours(2), "S1N1");   // NEWS
+        seed("비만 예방 식단",   "t3", true,  LocalDateTime.now().minusHours(3), "S1N10");  // HEALTH_INFO
+        // 타입은 맞지만 비공개 → 제외
+        seed("비만 바로알기",    "t4", false, LocalDateTime.now().minusHours(4), "S1N4");   // COLUMN (비공개)
+
+        Pageable pageable = page(0, 10, Sort.by(Sort.Order.desc("pubDate"), Sort.Order.desc("id")));
+
+        // when: COLUMN 타입만 + 제목 "비만"
+        Page<News> page = newsRepository.searchPublicByTitle(ContentType.COLUMN, "비만", pageable);
+
+        // then
+        assertEquals(1, page.getTotalElements(), "COLUMN 타입 + 공개 + 제목 매칭 1건만 나와야 함");
+        News only = page.getContent().get(0);
+        assertEquals(ContentType.COLUMN, only.getContentType());
+        assertTrue(only.getIsPublished());
+        assertTrue(only.getTitle().contains("비만"));
+    }
+
 }
