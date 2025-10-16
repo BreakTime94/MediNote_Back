@@ -34,6 +34,12 @@ public interface MeasurementMapper {
   @Mapping(target = "bloodSugarTrend", ignore = true)
   @Mapping(target = "sleepHoursChange", ignore = true)
   @Mapping(target = "sleepTrend", ignore = true)
+  @Mapping(target = "allergyIds", ignore = true)
+  @Mapping(target = "allergyNames", ignore = true)
+  @Mapping(target = "chronicDiseaseIds", ignore = true)
+  @Mapping(target = "chronicDiseaseNames", ignore = true)
+  @Mapping(target = "medicationIds", ignore = true)
+  @Mapping(target = "medicationNames", ignore = true)
   MeasurementResponseDTO toResponseDTO(Measurement entity);
 
   // RequestDTO -> 기존 Entity 업데이트
