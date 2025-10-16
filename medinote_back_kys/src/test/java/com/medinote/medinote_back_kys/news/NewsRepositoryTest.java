@@ -374,4 +374,52 @@ class NewsRepositoryTest {
         );
     }
 
+    // ----------------------------------------------------
+// 2-x. 공개 제목 검색(searchPublicByTitle) 검증
+// ----------------------------------------------------
+    @Test
+    void searchPublicByTitle_only_title_and_published_all_types() {
+        // given
+        // 공개 + 제목 매칭
+        seed("면역 체계 강화법", "kw1", true,  LocalDateTime.now().minusHours(1),  "S1N1");   // NEWS
+        // 공개 + 제목 불일치
+        seed("수면과 건강",      "kw2", true,  LocalDateTime.now().minusHours(2),  "S1N4");   // COLUMN
+        // 비공개 + 제목 매칭(제외되어야 함)
+        seed("면역 식단 가이드",  "kw3", false, LocalDateTime.now().minusHours(3),  "S1N10");  // HEALTH_INFO
+
+        Pageable pageable = page(0, 10, Sort.by(Sort.Order.desc("id")));
+
+        // when: 타입 미지정(null) + 제목에 "면역"
+        Page<News> page = newsRepository.searchPublicByTitle(null, "면역", pageable);
+
+        // then
+        assertEquals(1, page.getTotalElements(), "공개 + 제목 매칭 1건만 나와야 함");
+        News n = page.getContent().get(0);
+        assertTrue(n.getIsPublished(), "반드시 공개 상태여야 함");
+        assertTrue(n.getTitle().contains("면역"), "제목에 키워드가 포함되어야 함");
+    }
+
+    @Test
+    void searchPublicByTitle_with_contentType_filter() {
+        // given
+        // 같은 키워드 "비만" 이지만 타입을 섞어서 저장
+        seed("비만 관리 가이드", "t1", true,  LocalDateTime.now().minusHours(1), "S1N4");   // COLUMN
+        seed("비만과 대사증후군", "t2", true,  LocalDateTime.now().minusHours(2), "S1N1");   // NEWS
+        seed("비만 예방 식단",   "t3", true,  LocalDateTime.now().minusHours(3), "S1N10");  // HEALTH_INFO
+        // 타입은 맞지만 비공개 → 제외
+        seed("비만 바로알기",    "t4", false, LocalDateTime.now().minusHours(4), "S1N4");   // COLUMN (비공개)
+
+        Pageable pageable = page(0, 10, Sort.by(Sort.Order.desc("pubDate"), Sort.Order.desc("id")));
+
+        // when: COLUMN 타입만 + 제목 "비만"
+        Page<News> page = newsRepository.searchPublicByTitle(ContentType.COLUMN, "비만", pageable);
+
+        // then
+        assertEquals(1, page.getTotalElements(), "COLUMN 타입 + 공개 + 제목 매칭 1건만 나와야 함");
+        News only = page.getContent().get(0);
+        assertEquals(ContentType.COLUMN, only.getContentType());
+        assertTrue(only.getIsPublished());
+        assertTrue(only.getTitle().contains("비만"));
+    }
+
 }

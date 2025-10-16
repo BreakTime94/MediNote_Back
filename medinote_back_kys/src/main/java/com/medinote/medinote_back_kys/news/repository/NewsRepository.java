@@ -1,5 +1,8 @@
 package com.medinote.medinote_back_kys.news.repository;
 
+import com.medinote.medinote_back_kys.common.paging.NewsSortWhitelist;
+import com.medinote.medinote_back_kys.common.paging.PageCriteria;
+import com.medinote.medinote_back_kys.news.domain.dto.NewsPublicListItemResponseDTO;
 import com.medinote.medinote_back_kys.news.domain.en.ContentType;
 import com.medinote.medinote_back_kys.news.domain.entity.News;
 import org.springframework.data.domain.Page;
@@ -86,4 +89,14 @@ public interface NewsRepository extends JpaRepository<News, Long>, JpaSpecificat
     Optional<News> findTop1ByContentTypeAndIsPublishedTrueOrderByPubDateDesc(ContentType contentType);
 
     boolean isPublished(Boolean isPublished);
+
+    @Query("""
+    select n from News n
+    where n.isPublished = true
+      and (:contentType is null or n.contentType = :contentType)
+      and (:keyword is null or n.title like concat('%', :keyword, '%'))
+    """)
+    Page<News> searchPublicByTitle(@Param("contentType") ContentType contentType,
+                                   @Param("keyword") String keyword,
+                                   Pageable pageable);
 }
