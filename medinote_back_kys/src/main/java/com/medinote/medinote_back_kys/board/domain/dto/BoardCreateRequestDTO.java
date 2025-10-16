@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record BoardCreateRequestDTO (
-    @NotNull Long memberId,
+    Long memberId,
     @NotNull Long boardCategoryId,
     @NotBlank String title,
     String content,
