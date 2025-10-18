@@ -208,4 +208,12 @@ public class MemberController {
     ));
   }
 
+  @GetMapping("/list/info")
+  public ResponseEntity<?> infoList() {
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "MEMBER_INFO_LIST",
+            "memberInfoList", service.memberInfoList()
+    ));
+  }
+
 }

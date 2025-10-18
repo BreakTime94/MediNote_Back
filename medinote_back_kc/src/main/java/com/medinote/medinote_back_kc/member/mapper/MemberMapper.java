@@ -2,6 +2,7 @@ package com.medinote.medinote_back_kc.member.mapper;
 
 import com.medinote.medinote_back_kc.member.domain.dto.admin.MemberForAdminDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberForBoardsDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialToMemberRegisterDTO;
@@ -48,4 +49,7 @@ public interface MemberMapper {
 
   @Mapping(target = "role", expression = "java(member.getRole().name())")
   MemberForAdminDTO toMemberForAdminDTO(Member member);
+
+  @Mapping(target = "role", expression = "java(member.getRole().name())")
+  MemberForBoardsDTO toMemberForBoardsDTO(Member member);
 }
