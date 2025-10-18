@@ -20,5 +20,6 @@ public class MemberDTO {
   private String profileImagePath;
   private String profileMimeType;
   private boolean fromSocial;
+  private boolean extraEmailVerified;
   private LocalDateTime regDate;
 }

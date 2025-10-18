@@ -25,7 +25,7 @@ public class GateWayController {
   @RequestMapping("/**")
   public ResponseEntity<String> proxy(HttpServletRequest request) throws IOException {
     //1. token 관련 유효성 검증은 컨트롤러에 들어오기 직전에 Filter로 처리가 된다.
-
+    log.info("모든 요청은 GateWayController를 탄답니다?");
     //2. 쿠키파싱 -> accessToken 추출 -> memberId 추출
     String accessToken = cookieUtil.getCookieValue(request,"ACCESS_COOKIE");
     Long memberId = null;
@@ -51,7 +51,7 @@ public class GateWayController {
 
     if(path.startsWith("/health")){
       targetBase = "http://localhost:8081/api";
-    } else if(path.startsWith("/member")){
+    } else if(path.startsWith("/member") || path.startsWith("/social")){
       targetBase = "http://localhost:8083/api";
     } else {
       targetBase = "http://localhost:8082/api";

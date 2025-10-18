@@ -10,12 +10,15 @@ import com.medinote.medinote_back_kc.security.util.RedisUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,12 +32,15 @@ public class AuthController {
 
   @PostMapping("/login")
   public ResponseEntity<?> Login (@RequestBody LoginRequestDTO dto, HttpServletResponse response) {
-    log.info("dto: {}" , dto);
-    log.info(dto.getEmail());
-    log.info(dto.getPassword());
+
+    log.info("로그인한 이메일: {} 로그인한 pw:{}", dto.getEmail(), dto.getPassword());
     MemberDTO respDto = service.login(dto, response);
     log.info(respDto);
-    return ResponseEntity.ok(respDto);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "LOGIN_SUCCESS",
+            "message", "로그인이 성공하였습니다.",
+            "member", respDto
+    ));
   }
 
   @PostMapping("/logout")
@@ -60,7 +66,10 @@ public class AuthController {
     // 3. Security Context 정리
     SecurityContextHolder.clearContext();
 
-    return ResponseEntity.ok("로그아웃 완료");
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "LOGOUT_SUCCESS",
+            "message", "로그아웃이 성공하였습니다."
+    ));
   }
 
 }

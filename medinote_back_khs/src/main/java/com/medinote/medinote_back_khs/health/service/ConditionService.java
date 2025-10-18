@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_khs.health.service;
 
+import com.medinote.medinote_back_khs.health.domain.dto.ConditionItemDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionRequestDTO;
 import com.medinote.medinote_back_khs.health.domain.dto.ConditionResponseDTO;
 import com.medinote.medinote_back_khs.health.domain.entity.Allergy;
@@ -39,8 +40,8 @@ public class ConditionService {
     }
 
     if(requestDTO.isChronicDiseaseYn() && requestDTO.getChronicDiseaseIds() != null) {
-      requestDTO.getChronicDiseaseIds().forEach(diseaseId ->
-              memberCdRepository.save(conditionMapper.toMemberChronicDisease(memberId, diseaseId)));
+      requestDTO.getChronicDiseaseIds().forEach(chronicDiseaseId ->
+              memberCdRepository.save(conditionMapper.toMemberChronicDisease(memberId, chronicDiseaseId)));
     }
 
     return getCondition(memberId);
@@ -73,5 +74,65 @@ public class ConditionService {
     memberAllergyRepository.deleteAll(memberAllergyRepository.findByMemberId(memberId));
     memberCdRepository.deleteAll(memberCdRepository.findByMemberId(memberId));
   }
+
+  //==================기저질환, 알러지 검색 및 리스트 조회============================
+
+  //기저질환 리스트 조회
+  @Transactional(readOnly = true)
+  public List<ConditionItemDTO> getAllChronicDiseass() {
+    return cdRepository.findAll().stream()
+            .map(conditionMapper::toChronicDiseaseDTO)
+            .toList();
+  }
+
+
+  //기저질환 키워드 검색
+  @Transactional(readOnly = true)
+  public List<ConditionItemDTO> searchChronicDiseases(String keyword) {
+    return cdRepository.findByNameKoContainingIgnoreCase(keyword).stream()
+            .map(conditionMapper::toChronicDiseaseDTO)
+            .toList();
+  }
+
+  //기저질환 키워드 검색
+  @Transactional(readOnly = true)
+  public List<ConditionItemDTO> searchAllergy(String keyword) {
+    return cdRepository.findByNameKoContainingIgnoreCase(keyword).stream()
+            .map(conditionMapper::toChronicDiseaseDTO)
+            .toList();
+  }
+
+  //알러지 리스트 조회
+  @Transactional(readOnly = true)
+  public List<ConditionItemDTO> getAllAllergies() {
+    return allergyRepository.findAll().stream()
+            .map(conditionMapper::toAllergyDTO)
+            .toList();
+  }
+  //알러지 키워드 검색
+  @Transactional(readOnly = true)
+  public List<ConditionItemDTO> searchAllergies(String keyword) {
+    return allergyRepository.findByNameKoContainingIgnoreCase(keyword).stream()
+            .map(conditionMapper::toAllergyDTO)
+            .toList();
+  }
+
+  //기저질환 단일 조회
+  @Transactional(readOnly = true)
+  public ConditionItemDTO getChronicDiseaseById(Long id) {
+    return cdRepository.findById(id)
+            .map(conditionMapper::toChronicDiseaseDTO)
+            .orElseThrow( () -> new IllegalArgumentException("해당 기저질환 없음"));
+  }
+
+  //알러지 단일 조회
+  @Transactional(readOnly = true)
+  public ConditionItemDTO getAllergyById(Long id) {
+    return allergyRepository.findById(id)
+            .map(conditionMapper::toAllergyDTO)
+            .orElseThrow(() -> new IllegalArgumentException("해당 알러지 없음"));
+  }
+
+
 
 }

@@ -105,8 +105,8 @@ public class JWTUtil {
       log.warn("토큰 구조 이상: {}", e.getMessage());
       return TokenStatus.MALFORMED;
     } catch (Exception e) {
-      log.error("토큰이 없거나 알 수 없는 토큰 오류", e);
-      return TokenStatus.UNKNOWN;
+      log.error("지원하지 않는 토큰 형식 또는 알 수 없는 오류", e);
+      return TokenStatus.UNSUPPORTED;
     }
   }
 

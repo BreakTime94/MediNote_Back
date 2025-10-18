@@ -2,6 +2,7 @@ package com.medinote.medinote_back_kc.member.service.social;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialRegisterRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.domain.entity.social.Provider;
 
 import java.util.Optional;
@@ -24,6 +25,8 @@ public interface MemberSocialService {
 
   String resolveMimeType(String profileImageUrl);
 
+  //이미 Member table에는 등록되어 있는데, social에만 없는 경우 link 시키기
+  void linkSocialAccount(Member member, SocialRegisterRequestDTO dto);
 
 }
 

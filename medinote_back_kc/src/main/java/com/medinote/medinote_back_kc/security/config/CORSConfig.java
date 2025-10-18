@@ -16,7 +16,7 @@ public class CORSConfig {//CORSFilter가 스프링에 내장되어 있으므로,
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowCredentials(true);
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
     config.setAllowedOrigins(List.of( "http://localhost:8080",
             "http://localhost:8081",
             "http://localhost:8082",

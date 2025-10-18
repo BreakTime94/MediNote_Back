@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ConditionResponseDTO {
   //기저질환 + 알러지 합쳐서(보유 여부와 다중선택뿐이기 때문에)
+  //memberId, chronicDiseases, allergies -> 회원 보유 정보 확인용
 
   private Long memberId;                   // 회원 ID
   private List<String> chronicDiseases;    // 기저질환 이름 리스트
