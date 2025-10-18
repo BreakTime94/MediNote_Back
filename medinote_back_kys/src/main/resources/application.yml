@@ -7,6 +7,8 @@ server:
       enabled: true
       force: true
 
+
+
 spring:
   config:
     import:
@@ -15,7 +17,7 @@ spring:
     name: medinote
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
       naming:
         physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: true
@@ -23,3 +25,14 @@ spring:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.dialect.MariaDBDialect
+  task:
+    scheduling:
+      pool:
+        size: 2
+      thread-name-prefix: news-scheduler-
+news:
+  scheduler:
+    enabled: true
+member:
+  service:
+    base-url: http://localhost:8081/api
