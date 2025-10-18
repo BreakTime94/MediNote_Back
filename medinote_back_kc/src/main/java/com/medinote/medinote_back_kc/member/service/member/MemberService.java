@@ -1,9 +1,8 @@
 package com.medinote.medinote_back_kc.member.service.member;
 
-import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.*;
+
+import java.util.List;
 
 public interface MemberService {
   //등록
@@ -44,4 +43,6 @@ public interface MemberService {
   boolean verifyResetPassword(String email, String code);
 
   void resetPassword(String email);
+
+  List<MemberForBoardsDTO> memberInfoList();
 }
