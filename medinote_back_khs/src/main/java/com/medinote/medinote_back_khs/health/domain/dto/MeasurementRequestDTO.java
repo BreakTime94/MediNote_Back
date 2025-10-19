@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.dto;
 
+import com.medinote.medinote_back_khs.health.domain.enums.DrinkingTypeStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -10,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -18,14 +20,20 @@ import java.util.List;
 @AllArgsConstructor
 public class MeasurementRequestDTO {
 
+
     @NotNull(message = "성별(은)는 필수 입니다.")
     private GenderStatus gender;
+
+    private LocalDate birthDate;
 
     @NotNull(message = "흡연여부(은)는 필수 입니다.")
     private boolean smoking;
 
     @NotNull(message = "음주여부(은)는 필수 입니다.")
     private boolean drinking;
+
+    @NotNull(message = "주종을 선택은 필수입니다.")
+    private DrinkingTypeStatus drinkingType;    //주종
 
     @Min(value = 0, message = "주당 최소 음주 횟수 0회입니다")
     @Max(value = 30, message = "주당 최대 음주 횟수 30회입니다")
@@ -42,12 +50,10 @@ public class MeasurementRequestDTO {
 
     @NotNull(message = "알레르기 여부는 필수입니다")
     private Boolean allergyYn;
-
     private List<Long> allergyIds ;
 
-    @NotNull(message = "복용약물 여부는 필수입니다")
+    @NotNull(message = "복용약 여부는 필수입니다")
     private Boolean medicationYn;
-
     private List<Long> medicationIds;
 
     @Positive(message = "신장은 양수여야 합니다")
