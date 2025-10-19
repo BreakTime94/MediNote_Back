@@ -50,6 +50,8 @@ public interface MeasurementMapper {
     if (!dto.isDrinking()) {
       entity.setDrinkingPerWeek(null);
       entity.setDrinkingPerOnce(null);
+      entity.setDrinkingType(null);
+      entity.setDrinkingUnit(null);
     }
   }
 }

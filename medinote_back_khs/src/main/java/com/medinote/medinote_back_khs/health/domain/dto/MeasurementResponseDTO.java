@@ -1,5 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.dto;
 
+import com.medinote.medinote_back_khs.health.domain.enums.DrinkingTypeStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus;
 import lombok.AllArgsConstructor;
@@ -20,8 +21,10 @@ public class MeasurementResponseDTO {
   private GenderStatus gender;
   private boolean smoking;
   private boolean drinking;
+  private DrinkingTypeStatus drinkingType;
   private Integer drinkingPerWeek;
   private Integer drinkingPerOnce;
+  private String drinkingUnit;
 
   private Boolean chronicDiseaseYn;
   private Boolean allergyYn;

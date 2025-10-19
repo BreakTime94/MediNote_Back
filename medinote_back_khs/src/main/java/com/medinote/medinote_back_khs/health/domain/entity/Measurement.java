@@ -2,6 +2,7 @@ package com.medinote.medinote_back_khs.health.domain.entity;
 
 
 import com.medinote.medinote_back_khs.common.entity.BaseEntity;
+import com.medinote.medinote_back_khs.health.domain.enums.DrinkingTypeStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus;
 import jakarta.persistence.*;
@@ -62,5 +63,10 @@ public class Measurement extends BaseEntity {
 
   @Column(nullable = false)
   private LocalDateTime measuredDate;     // 측정일시
+
+  @Enumerated(EnumType.STRING)
+  private DrinkingTypeStatus drinkingType;
+
+  private String drinkingUnit;
 
 }
