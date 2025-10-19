@@ -183,7 +183,7 @@ public class MeasurementService {
       memberAllergyRepository.flush();
 
       for (Long allergyId : dto.getAllergyIds()) {
-        if (allergyId != null) { // ✅ null 체크
+        if (allergyId != null) { //  null 체크
           MemberAllergy ma = new MemberAllergy();
           ma.setMemberId(memberId);
           ma.setAllergyId(allergyId);
@@ -201,7 +201,7 @@ public class MeasurementService {
       memberChronicDiseaseRepository.flush();
 
       for (Long diseaseId : dto.getChronicDiseaseIds()) {
-        if (diseaseId != null) { // ✅ null 체크
+        if (diseaseId != null) { //  null 체크
           MemberChronicDisease md = new MemberChronicDisease();
           md.setMemberId(memberId);
           md.setChronicDiseaseId(diseaseId);
@@ -219,7 +219,7 @@ public class MeasurementService {
       memberMedicationRepository.flush();
 
       for (Long medicationId : dto.getMedicationIds()) {
-        if (medicationId != null) { // ✅ null 체크
+        if (medicationId != null) { //  null 체크
           MemberMedication mm = new MemberMedication();
           mm.setMemberId(memberId);
           mm.setMedicationId(medicationId);
@@ -240,7 +240,7 @@ public class MeasurementService {
   private void setMedicationNames(MeasurementResponseDTO response, List<Long> medicationIds) {
     if (medicationIds != null && !medicationIds.isEmpty()) {
       List<String> medicationNames = medicationIds.stream()
-              .filter(id -> id != null) // ✅ null 필터링
+              .filter(id -> id != null) //  null 필터링
               .map(id -> medicationRepository.findById(id)
                       .map(Medication::getNameKo)
                       .orElse("약품명 없음"))
@@ -363,6 +363,7 @@ public class MeasurementService {
       else sleepStatus = "수면 과다";
       response.setSleepStatus(sleepStatus);
     }
+
 
     // 건강 점수 계산
     int score = 100;

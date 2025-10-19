@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -22,6 +23,8 @@ public class MeasurementRequestDTO {
 
     @NotNull(message = "성별(은)는 필수 입니다.")
     private GenderStatus gender;
+
+    private LocalDate birthDate;
 
     @NotNull(message = "흡연여부(은)는 필수 입니다.")
     private boolean smoking;

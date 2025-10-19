@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,6 +20,9 @@ public class MeasurementResponseDTO {
   private Long id;                // PK
   private Long memberId;          // 회원 ID
   private GenderStatus gender;
+
+  private LocalDate birthDate; // 생년월일
+  private String ageGroup;     // 연령대 (Service에서 자동 계산)
   private boolean smoking;
   private boolean drinking;
   private DrinkingTypeStatus drinkingType;

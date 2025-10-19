@@ -6,10 +6,13 @@ import com.medinote.medinote_back_khs.health.domain.enums.DrinkingTypeStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
 import com.medinote.medinote_back_khs.health.domain.enums.MeasurementStatus;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.lang.Double;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,6 +34,11 @@ public class Measurement extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private GenderStatus gender;
+
+  private LocalDate birthDate; // 생년월일 (자동 연령 계산용)
+
+  @Transient
+  private String ageGroup; // DB에 저장 안 함, 계산 결과만 응답 DTO로 보냄
 
   @Column(nullable = false)
   private boolean smoking;          // 필수: 기본 건강 정보

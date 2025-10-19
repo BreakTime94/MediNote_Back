@@ -8,6 +8,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
+import java.time.LocalDate;
+import java.time.Period;
+
 @Mapper(componentModel = "spring")
 public interface MeasurementMapper {
 
@@ -40,12 +43,14 @@ public interface MeasurementMapper {
   @Mapping(target = "chronicDiseaseNames", ignore = true)
   @Mapping(target = "medicationIds", ignore = true)
   @Mapping(target = "medicationNames", ignore = true)
+  @Mapping(target = "ageGroup", ignore = true)
   MeasurementResponseDTO toResponseDTO(Measurement entity);
 
   // RequestDTO -> 기존 Entity 업데이트
   void updateFromDto(MeasurementRequestDTO dto, @MappingTarget Measurement entity);
 
-  @AfterMapping
+
+  @AfterMapping //음주 주종 관련
   default void handleDrinking(MeasurementRequestDTO dto, @MappingTarget Measurement entity) {
     if (!dto.isDrinking()) {
       entity.setDrinkingPerWeek(null);
@@ -53,5 +58,25 @@ public interface MeasurementMapper {
       entity.setDrinkingType(null);
       entity.setDrinkingUnit(null);
     }
+  }
+
+  @AfterMapping //연령대 자동 계산용
+  default void handleAgeGroup(Measurement entity, @MappingTarget MeasurementResponseDTO dto) {
+    LocalDate birthDate = entity.getBirthDate();
+    if (birthDate == null) {
+      dto.setAgeGroup("정보 없음");
+      return;
+    }
+
+    int age = Period.between(birthDate, LocalDate.now()).getYears();
+
+    if (age < 10) dto.setAgeGroup("10세 미만");
+    else if (age < 20) dto.setAgeGroup("10대");
+    else if (age < 30) dto.setAgeGroup("20대");
+    else if (age < 40) dto.setAgeGroup("30대");
+    else if (age < 50) dto.setAgeGroup("40대");
+    else if (age < 60) dto.setAgeGroup("50대");
+    else if (age < 70) dto.setAgeGroup("60대");
+    else dto.setAgeGroup("70대 이상");
   }
 }
