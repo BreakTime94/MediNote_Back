@@ -38,6 +38,10 @@ public class SocialAuthController {
     MemberDTO memberDTO = memberSocialService.register(dto);
     //TokenAuthService를 통해 토큰 발급, 쿠키 & 레디스 세팅
     tokenAuthService.makeCookieWithToken(dto.getEmail(), response);
-    return ResponseEntity.ok(memberDTO);
+    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
+            "status", "SOCIAL_REGISTER_SUCCESS",
+            "provider", dto.getProvider(),
+            "member", memberDTO
+    ));
   }
 }

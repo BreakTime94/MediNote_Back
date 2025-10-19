@@ -1,6 +1,6 @@
 package com.medinote.medinote_back_khs.health.domain.dto;
 
-import com.medinote.medinote_back_khs.health.domain.en.MeasurementStatus;
+import com.medinote.medinote_back_khs.health.domain.enums.GenderStatus;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -19,7 +19,7 @@ import java.util.List;
 public class MeasurementRequestDTO {
 
     @NotNull(message = "성별(은)는 필수 입니다.")
-    private MeasurementStatus gender;
+    private GenderStatus gender;
 
     @NotNull(message = "흡연여부(은)는 필수 입니다.")
     private boolean smoking;
@@ -48,7 +48,7 @@ public class MeasurementRequestDTO {
     @NotNull(message = "복용약물 여부는 필수입니다")
     private Boolean medicationYn;
 
-    private List<Long> medications;
+    private List<Long> medicationIds;
 
     @Positive(message = "신장은 양수여야 합니다")
     @Max(value = 300, message = "입력 가능한 최대 신장은 300cm 입니다")

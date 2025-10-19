@@ -4,6 +4,7 @@ import com.medinote.medinote_back_kys.board.domain.dto.*;
 import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.service.BoardService;
 import com.medinote.medinote_back_kys.common.paging.PageCriteria;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;

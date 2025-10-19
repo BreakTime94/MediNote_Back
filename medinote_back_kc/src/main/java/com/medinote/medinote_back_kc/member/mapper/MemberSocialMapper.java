@@ -10,10 +10,8 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface MemberSocialMapper {
-  MemberSocialMapper INSTANCE = Mappers.getMapper(MemberSocialMapper.class);
 
   //1. Member Entity를 통한 회원가입 이후, MemberSocial 필요정보 table 맵핑
-
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "member", source = "member")
   @Mapping(target = "provider", source = "dto.provider")
@@ -29,6 +27,7 @@ public interface MemberSocialMapper {
   //구글 OAuth2가 보내주는 정보에 추가로 사용자에게 입력을 받아서 Member로 가입시키는 mapper 역할 // 프론트에서 추가 입력 받아야 함
   @Mapping(target = "profileImagePath", source = "profileImageUrl")
   @Mapping(target = "fromSocial", constant = "true")
+  @Mapping(source = "agreements", target = "agreements")
   SocialToMemberRegisterDTO socialToMemberLink(SocialRegisterRequestDTO dto);
 
 }
