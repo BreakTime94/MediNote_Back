@@ -74,6 +74,7 @@ dependencies {
     implementation "com.rometools:rome:2.1.0"
     implementation "com.rometools:rome-modules:2.1.0"
 
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.named('test') {
