@@ -35,8 +35,6 @@ public class MeasurementRequestDTO {
     @NotNull(message = "주종을 선택은 필수입니다.")
     private DrinkingTypeStatus drinkingType;    //주종
 
-    private String drinkingUnit;            // 단위 (잔, 캔, 컵 등)
-
     @Min(value = 0, message = "주당 최소 음주 횟수 0회입니다")
     @Max(value = 30, message = "주당 최대 음주 횟수 30회입니다")
     private Integer drinkingPerWeek;
