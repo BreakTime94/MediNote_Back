@@ -29,9 +29,11 @@ public class GateWayController {
     //2. 쿠키파싱 -> accessToken 추출 -> memberId 추출
     String accessToken = cookieUtil.getCookieValue(request,"ACCESS_COOKIE");
     Long memberId = null;
+    String role = null;
     if (accessToken != null && !accessToken.isBlank()) {
       try {
         memberId = jwtUtil.getUserId(accessToken);
+        role = String.valueOf(jwtUtil.getRole(accessToken));
         log.info("Gateway에서 추출한 memberId = {}", memberId);
       } catch (Exception e) {
         log.error("토큰 파싱 실패", e);
@@ -67,6 +69,7 @@ public class GateWayController {
 
     if (memberId != null) {
       headers.add("X-Member-Id", memberId.toString()); //
+      headers.add("X-Member-Role", role);
     }
 
     HttpEntity<String> entity = new HttpEntity<>(body.isBlank() ? null : body, headers);

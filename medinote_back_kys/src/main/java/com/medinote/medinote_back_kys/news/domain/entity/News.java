@@ -73,7 +73,7 @@ public class News extends BaseEntity {
     /** 관리자 승인 여부 */
     @Builder.Default
     @Column(name = "is_published", nullable = false)
-    private Boolean isPublished = false;
+    private Boolean isPublished = true;
 
     // ===== 편의 메서드 =====
     public void approve() { this.isPublished = true; }

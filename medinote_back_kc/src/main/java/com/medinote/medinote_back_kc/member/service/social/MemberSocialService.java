@@ -1,10 +1,12 @@
 package com.medinote.medinote_back_kc.member.service.social;
 
 import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.MemberForBoardsDTO;
 import com.medinote.medinote_back_kc.member.domain.dto.social.SocialRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.domain.entity.social.Provider;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MemberSocialService {

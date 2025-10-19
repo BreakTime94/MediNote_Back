@@ -1,14 +1,15 @@
 package com.medinote.medinote_back_kys.board.service;
 
-
 import com.medinote.medinote_back_kys.board.domain.dto.*;
 import com.medinote.medinote_back_kys.board.domain.en.BoardCategory;
 import com.medinote.medinote_back_kys.board.domain.en.PostStatus;
+import com.medinote.medinote_back_kys.board.domain.en.QnaStatus;
 import com.medinote.medinote_back_kys.board.domain.entity.Board;
 import com.medinote.medinote_back_kys.board.mapper.BoardMapper;
 import com.medinote.medinote_back_kys.board.repository.BoardRepository;
 import com.medinote.medinote_back_kys.board.repository.BoardSpecs;
 import com.medinote.medinote_back_kys.common.paging.PageCriteria;
+import com.medinote.medinote_back_kys.common.security.RoleGuard;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
@@ -26,8 +27,9 @@ public class BoardService {
 
     private final BoardRepository boardRepository;
     private final BoardMapper boardMapper;
+    private final RoleGuard roleGuard; // ✅ 추가
 
-    /** 정렬 허용 화이트리스트 (클라이언트 sort 필드 → 엔티티 컬럼) */
+    /** 정렬 허용 화이트리스트 */
     private static final Map<String, String> SORT_WHITELIST = Map.of(
             "id", "id",
             "regDate", "regDate",
@@ -49,26 +51,54 @@ public class BoardService {
         return boardMapper.toDetailResponse(board);
     }
 
-    // ========== 부분 수정(Patch) ==========
+    // ========== 수정 ==========
     @Transactional
-    public void update(BoardUpdateRequestDTO dto) {
+    public void update(BoardUpdateRequestDTO dto, Long requesterId) {
         Objects.requireNonNull(dto.id(), "id is required");
         Board board = boardRepository.findById(dto.id())
                 .orElseThrow(() -> new EntityNotFoundException("Board not found: " + dto.id()));
 
-        // MapStruct가 null은 무시하고 덮어씀(NullValuePropertyMappingStrategy.IGNORE)
+        // ✅ 본인만 수정 가능
+        roleGuard.requireSelf(requesterId, board.getMemberId());
+
+        // null 값은 무시하고 덮어쓰기
         boardMapper.updateEntityFromDto(dto, board);
-        // 영속 상태이므로 save 호출 없이도 flush 시 반영되지만, 명시적 save 허용
         boardRepository.save(board);
     }
 
-    // ========== 소프트 삭제 ==========
     @Transactional
-    public void delete(BoardDeleteRequestDTO dto) {
+    public void updateQnaStatusTemp(Long boardId, QnaStatus newStatus) {
+        var board = boardRepository.findById(boardId)
+                .orElseThrow(() -> new EntityNotFoundException("Board not found: " + boardId));
+
+        // qnaStatus만 채운 DTO (나머지는 null)
+        BoardUpdateRequestDTO patch = new BoardUpdateRequestDTO(
+                boardId,   // id (필수)
+                null,      // boardCategoryId
+                null,      // title
+                null,      // content
+                null,      // isPublic
+                null,      // requireAdminPost
+                newStatus, // ✅ qnaStatus만 세팅
+                null       // postStatus
+        );
+
+        // MapStruct 업데이트: null은 무시되므로 qnaStatus만 반영됨
+        boardMapper.updateEntityFromDto(patch, board);
+        boardRepository.save(board);
+
+    }
+
+    // ========== 삭제 ==========
+    @Transactional
+    public void delete(BoardDeleteRequestDTO dto, Long requesterId) {
         Board board = boardRepository.findById(dto.id())
                 .orElseThrow(() -> new EntityNotFoundException("Board not found: " + dto.id()));
 
-        // mapper 의 default 메서드(도메인 메서드 호출) 사용
+        // ✅ 본인만 삭제 가능
+        roleGuard.requireSelf(requesterId, board.getMemberId());
+
+        // mapper 의 default 메서드(도메인 메서드 호출)
         boardMapper.deleteEntityFromDto(dto, board);
         boardRepository.save(board);
     }
@@ -84,7 +114,7 @@ public class BoardService {
         return listByCategoryAndBaseline(cond, criteria, BoardCategory.QNA);
     }
 
-    // ===== 공통 구현 =====
+    // ===== 공통 =====
     private BoardListResponseDTO listByCategoryAndBaseline(BoardSearchCond cond,
                                                            PageCriteria criteria,
                                                            BoardCategory category) {
@@ -102,14 +132,12 @@ public class BoardService {
         return boardMapper.toListResponse(page, criteria, c.keyword());
     }
 
-    /** null 방지용: cond가 null이면 빈 record를 생성 */
     private BoardSearchCond ensureCond(BoardSearchCond cond) {
         return (cond != null)
                 ? cond
                 : new BoardSearchCond(null, null, null, null, null, null);
     }
 
-    /** record accessor(필드명())로 접근해서 선택 조건을 합성 */
     private Specification<Board> appendOptionalConditions(Specification<Board> base, BoardSearchCond c) {
         Specification<Board> spec = base;
 
@@ -125,8 +153,6 @@ public class BoardService {
         if (c.writerId() != null) {
             spec = spec.and(BoardSpecs.writerEquals(c.writerId()));
         }
-        // categoryId()는 이 서비스 메서드에서 이미 category로 고정하므로 추가 합성은 불필요
-
         return spec;
     }
 }

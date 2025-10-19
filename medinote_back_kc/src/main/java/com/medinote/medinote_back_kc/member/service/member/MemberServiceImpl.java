@@ -4,10 +4,7 @@ import com.medinote.medinote_back_kc.common.ErrorCode;
 import com.medinote.medinote_back_kc.common.exception.CustomException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateEmailException;
 import com.medinote.medinote_back_kc.common.exception.DuplicateNicknameException;
-import com.medinote.medinote_back_kc.member.domain.dto.member.ChangePasswordRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.member.MemberDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.member.RegisterRequestDTO;
-import com.medinote.medinote_back_kc.member.domain.dto.member.UpdateRequestDTO;
+import com.medinote.medinote_back_kc.member.domain.dto.member.*;
 import com.medinote.medinote_back_kc.member.domain.dto.terms.MemberTermsRegisterRequestDTO;
 import com.medinote.medinote_back_kc.member.domain.entity.member.Member;
 import com.medinote.medinote_back_kc.member.domain.entity.terms.MemberTerms;
@@ -27,9 +24,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -199,7 +194,7 @@ public class MemberServiceImpl implements MemberService{
 
     //회원이 존재하지 않거나, social member이면 묻지도 따지지도 않고 return
     if(optionalMember.isEmpty() || optionalMember.get().isFromSocial()) {
-      log.info("회원이 아니거나, 소셜 멤버는 비밀번호를 바꾸실 수 없습니다.");
+      log.info("회원이 아니거나, 소셜 최초 가입 멤버는 비밀번호를 바꾸실 수 없습니다.");
       return;
     }
 
@@ -243,5 +238,21 @@ public class MemberServiceImpl implements MemberService{
     String subject = "Medinote 임시 비밀번호를 발급";
     String text = "임시 비밀번호 : " + tempPassword + " 입니다. 로그인 후에 마이페이지에서 비밀번호를 수정하여 주시기 바랍니다.";
     mailService.sendEmail(email, subject, text);
+  }
+
+  @Override
+  @Transactional
+  public List<MemberForBoardsDTO> memberInfoList() {
+    List<Member> members = repository.findAll();
+    List<MemberForBoardsDTO> memberForBoardsDTOList = new ArrayList<>();
+    for (Member member : members) {
+      MemberForBoardsDTO memberForBoardsDTO = MemberForBoardsDTO.builder()
+              .id(member.getId())
+              .nickname(member.getNickname())
+              .role(member.getRole().name())
+              .build();
+      memberForBoardsDTOList.add(memberForBoardsDTO);
+    }
+    return memberForBoardsDTOList;
   }
 }

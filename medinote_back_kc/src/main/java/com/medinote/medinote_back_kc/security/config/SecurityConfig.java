@@ -53,10 +53,11 @@ public class SecurityConfig {
         .authorizeHttpRequests(a -> a
                 .requestMatchers("/member/auth/login", "/member/register", "/social/auth/register"
                 , "/member/check/email", "/member/check/nickname", "/member/email/verify", "/member/email/send",
-                        "member/find/email", "member/reset/password", "/terms/list").permitAll()
+                        "member/find/email", "member/reset/password", "/terms/list", "/member/list/info").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
                 .requestMatchers("/boards/read/**", "/boards/notice/list", "/boards/faq/list", "/boards/qna/list").permitAll()
+                .requestMatchers("/news/**").permitAll()
                 .requestMatchers("/api/admin/member/list").hasRole("ADMIN")
                 .anyRequest().authenticated())
             //form 로그인 불가

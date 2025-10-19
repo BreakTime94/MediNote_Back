@@ -7,6 +7,8 @@ server:
       enabled: true
       force: true
 
+
+
 spring:
   config:
     import:
@@ -31,4 +33,6 @@ spring:
 news:
   scheduler:
     enabled: true
-
+member:
+  service:
+    base-url: http://localhost:8081/api
