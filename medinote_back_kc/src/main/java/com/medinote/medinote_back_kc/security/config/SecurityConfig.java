@@ -44,7 +44,7 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    log.info("security 필터 체인 들어왔다 이 자식아");
+    log.info("security 필터 체인 진입");
     http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
         .csrf(c -> c.disable())
         .cors(c -> c.configurationSource(corsConfig.corsConfigurationSource()))
@@ -56,7 +56,8 @@ public class SecurityConfig {
                         "member/find/email", "member/reset/password", "/terms/list", "/member/list/info").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
-                .requestMatchers("/boards/read/**", "/boards/notice/list", "/boards/faq/list", "/boards/qna/list").permitAll()
+                .requestMatchers("/boards/read/**").permitAll()
+                .requestMatchers("/boards/notice/list/**", "/boards/faq/list/**", "/boards/qna/list/**").permitAll()
                 .requestMatchers("/news/**").permitAll()
                 .requestMatchers("/api/admin/member/list").hasRole("ADMIN")
                 .anyRequest().authenticated())
