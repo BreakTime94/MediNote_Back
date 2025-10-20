@@ -17,13 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @Transactional
-class BoardServiceTest{
+class BoardServiceTest {
 
     @Autowired private BoardService boardService;
     @Autowired private BoardRepository boardRepository;
     @Autowired private BoardMapper boardMapper;
 
-    private static final Long EXISTING_MEMBER_ID = 1L; // FK 존재 전제
+    private static final Long EXISTING_MEMBER_ID = 1L; // FK 존재 전제 (작성자 본인)
 
     // ===== 공통 시드 유틸 =====
     private Long seed(String title, Long categoryId, boolean isPublic, PostStatus status, QnaStatus qna) {
@@ -50,8 +50,8 @@ class BoardServiceTest{
         Assertions.assertEquals(id, detail.id());
         Assertions.assertEquals("서비스-생성", detail.title());
         Assertions.assertEquals("서비스-본문", detail.content());
-        Assertions.assertTrue(detail.isPublic());                 // 기본 true
-        Assertions.assertFalse(detail.requireAdminPost());        // 기본 false
+        Assertions.assertTrue(detail.isPublic());
+        Assertions.assertFalse(detail.requireAdminPost());
         Assertions.assertEquals(PostStatus.PUBLISHED, detail.postStatus());
     }
 
@@ -61,7 +61,7 @@ class BoardServiceTest{
         // given
         Long id = seed("수정 전", 2L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
 
-        // when
+        // when (요청자 = 작성자 동일)
         boardService.update(new BoardUpdateRequestDTO(
                 id,
                 null,                       // boardCategoryId 유지
@@ -71,14 +71,13 @@ class BoardServiceTest{
                 null,                       // requireAdminPost 유지
                 null,                       // qnaStatus 유지
                 PostStatus.HIDDEN           // 상태 변경
-        ));
+        ), EXISTING_MEMBER_ID);              // ✅ 본인 ID 전달
 
         // then
         Board updated = boardRepository.findById(id).orElseThrow();
         Assertions.assertEquals("수정 후", updated.getTitle());
         Assertions.assertEquals("수정된 본문", updated.getContent());
         Assertions.assertEquals(PostStatus.HIDDEN, updated.getPostStatus());
-        // 나머지는 유지
         Assertions.assertEquals(2L, updated.getBoardCategoryId());
         Assertions.assertTrue(updated.getIsPublic());
         Assertions.assertFalse(updated.getRequireAdminPost());
@@ -91,8 +90,8 @@ class BoardServiceTest{
         // given
         Long id = seed("삭제 대상", 1L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
 
-        // when
-        boardService.delete(new BoardDeleteRequestDTO(id, 999L, "사유"));
+        // when (요청자 = 작성자 동일)
+        boardService.delete(new BoardDeleteRequestDTO(id, EXISTING_MEMBER_ID, "사유"), EXISTING_MEMBER_ID);
 
         // then
         Board deleted = boardRepository.findById(id).orElseThrow();
@@ -108,8 +107,7 @@ class BoardServiceTest{
         seed("공지-보임2", 1L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
         seed("공지-숨김(HIDDEN)", 1L, true,  PostStatus.HIDDEN,    QnaStatus.WAITING); // 제외
         seed("공지-비공개",     1L, false, PostStatus.PUBLISHED, QnaStatus.WAITING); // 제외
-        // 다른 카테고리
-        seed("일반-보임", 2L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("일반-보임", 2L, true, PostStatus.PUBLISHED, QnaStatus.WAITING); // 다른 카테고리
 
         PageCriteria c = new PageCriteria();
         c.setPage(1); c.setSize(10);
@@ -119,7 +117,6 @@ class BoardServiceTest{
 
         // then
         Assertions.assertNotNull(resp);
-        // 결과는 공지(1L) + 공개 + PUBLISHED 만
         Assertions.assertTrue(resp.items().size() >= 2);
         resp.items().forEach(it -> {
             Assertions.assertEquals(1L, it.getBoardCategoryId());
@@ -132,32 +129,42 @@ class BoardServiceTest{
     @DisplayName("FAQ 목록: category=3, 공개 & PUBLISHED + 키워드 조건")
     void list_faq_keyword() {
         // given
-        seed("FAQ: 비밀번호 초기화", 3L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
-        seed("FAQ: 로그인 오류",   3L, true,  PostStatus.PUBLISHED, QnaStatus.WAITING);
-        seed("FAQ: 내부문서",     3L, false, PostStatus.PUBLISHED, QnaStatus.WAITING); // 비공개 → 제외
+        // 공개 FAQ (검색 대상)
+        seed("FAQ: 비밀번호 초기화", 3L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
+        seed("FAQ: 로그인 오류",    3L, true, PostStatus.PUBLISHED, QnaStatus.WAITING);
+        // 비공개 FAQ (제외 대상)
+        seed("FAQ: 내부문서",      3L, false, PostStatus.PUBLISHED, QnaStatus.WAITING);
 
-        PageCriteria c = new PageCriteria();
-        c.setPage(1); c.setSize(5);
+        PageCriteria criteria = new PageCriteria();
+        criteria.setPage(1);
+        criteria.setSize(10);
 
+        // 검색 조건: keyword = "로그인"
         BoardSearchCond cond = new BoardSearchCond(
-                null,         // categoryId는 서비스에서 고정
-                "로그인",      // keyword
-                null, null, null, null
+                null, "로그인", null, null, null, null
         );
 
         // when
-        BoardListResponseDTO resp = boardService.listFaq(cond, c);
+        BoardListResponseDTO resp = boardService.listFaq(cond, criteria);
 
         // then
-        Assertions.assertNotNull(resp);
-        Assertions.assertTrue(resp.items().size() >= 1);
-        resp.items().forEach(it -> {
-            Assertions.assertEquals(3L, it.getBoardCategoryId());
-            Assertions.assertTrue(it.getIsPublic());
-            Assertions.assertEquals(PostStatus.PUBLISHED, it.getPostStatus());
-            Assertions.assertTrue(it.getTitle().contains("로그인") || it.getTitle().contains("FAQ"),
-                    "키워드 매칭(느슨한 검증)");
-        });
+        Assertions.assertNotNull(resp, "응답이 null이면 안 됩니다.");
+        Assertions.assertFalse(resp.items().isEmpty(), "FAQ 검색 결과가 비어서는 안 됩니다.");
+
+        boolean containsLogin = false;
+        for (var it : resp.items()) {
+            // 필터 검증
+            Assertions.assertEquals(3L, it.getBoardCategoryId(), "카테고리 ID가 FAQ(3L) 이어야 합니다.");
+            Assertions.assertTrue(it.getIsPublic(), "FAQ는 공개글이어야 합니다.");
+            Assertions.assertEquals(PostStatus.PUBLISHED, it.getPostStatus(), "FAQ는 PUBLISHED 상태여야 합니다.");
+
+            // 제목 내 '로그인' 포함 검증
+            if (it.getTitle().contains("로그인")) {
+                containsLogin = true;
+            }
+        }
+
+        Assertions.assertTrue(containsLogin, "제목에 '로그인'이 포함된 FAQ가 최소 1개 이상이어야 합니다.");
     }
 
     @Test
