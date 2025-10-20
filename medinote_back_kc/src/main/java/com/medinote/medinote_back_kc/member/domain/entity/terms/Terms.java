@@ -27,11 +27,11 @@ public class Terms {
   private PolicyCode policyCode;
 
   // 버전 (정책 개정 버전)
-  @Column(length = 50, nullable = false)
+  @Column(nullable = false)
   private String version;
 
   //  약관 제목
-  @Column(length = 255, nullable = false)
+  @Column(nullable = false)
   private String title;
 
   // 약관 내용 (text)
