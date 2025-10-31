@@ -30,3 +30,23 @@ content-admin-service/build/
 
 # Node (혹시 백엔드에 섞이면)
 node_modules/
+
+### Docker & Build ###
+*.jar
+*.war
+*.pid
+**/build/
+**/target/
+**/.docker/
+
+### Logs ###
+logs/
+log/
+
+### Secrets & Config ###
+src/main/resources/secret/
+src/main/resources/application-*.yml
+src/main/resources/application-*.properties
+
+### Node (React) ###
+dist/

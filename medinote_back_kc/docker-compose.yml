@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  medinote-back-kc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: medinote-back-kc
+    ports:
+      - "8083:8083"
+    environment:
+      - LANG=ko_KR.UTF-8
+      - LC_ALL=ko_KR.UTF-8
+    restart: always

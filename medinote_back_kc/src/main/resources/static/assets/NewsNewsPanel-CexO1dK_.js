@@ -1,0 +1,1 @@
+import{ao as s}from"./index-D3Bzzjcr.js";import{N as t}from"./NewsListPanel-CC77d-wd.js";function o({className:e=""}){return s.jsx(t,{mode:"news",searchType:"NEWS",title:"뉴스",className:e,asideSectionIds:{latest:"latest",search:"search-result"}})}export{o as default};
