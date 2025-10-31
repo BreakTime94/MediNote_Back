@@ -61,3 +61,6 @@ dist/
 
 ### OS & Temporary files ###
 .DS_Store
+
+### 환경변수 (Docker 배포용)
+.env
