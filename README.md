@@ -29,4 +29,6 @@
 ### 📅 250916
 - 일반 MemberLogin, Register 초안 구현 완료, SecurityContext 등록에 필요한 UserDetails, UserDetailsService 토큰 검증에 필요한, JWTAuthentication 초안 구현 완료
 
+### 📅 251031
+- 프로젝트 자동배포 준비(github action 활용)
 
