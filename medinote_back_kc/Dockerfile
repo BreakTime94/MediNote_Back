@@ -20,7 +20,7 @@ RUN ./gradlew dependencies --no-daemon || true
 COPY src /app/src
 
 # Gradle 빌드 (테스트 생략)
-RUN ./gradlew clean build -x test -- no-daemon
+RUN ./gradlew clean build -x test --no-daemon
 
 
 # ======================================================
