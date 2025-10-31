@@ -50,3 +50,6 @@ src/main/resources/application-*.properties
 
 ### Node (React) ###
 dist/
+
+### 환경변수 (Docker 배포용)
+.env
