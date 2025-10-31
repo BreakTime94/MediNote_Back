@@ -35,3 +35,29 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Docker & Build ###
+*.jar
+*.war
+*.pid
+.gradle/
+**/build/
+**/target/
+**/.docker/
+
+### Logs ###
+*.log
+logs/
+log/
+
+### Secrets & Config ###
+src/main/resources/secret/
+src/main/resources/application-*.yml
+src/main/resources/application-*.properties
+
+### Node (React) ###
+node_modules/
+dist/
+
+### OS & Temporary files ###
+.DS_Store

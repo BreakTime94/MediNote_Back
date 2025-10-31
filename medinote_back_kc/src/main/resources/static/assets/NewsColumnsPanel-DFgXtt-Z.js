@@ -1,0 +1,1 @@
+import{ao as s}from"./index-D3Bzzjcr.js";import{N as t}from"./NewsListPanel-CC77d-wd.js";function r({className:e=""}){return s.jsx(t,{mode:"columns",searchType:"COLUMN",title:"칼럼",className:e,asideSectionIds:{latest:"latest",search:"search-result"}})}export{r as default};

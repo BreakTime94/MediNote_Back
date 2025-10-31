@@ -1,0 +1,1 @@
+import{ao as t}from"./index-D3Bzzjcr.js";import{N as s}from"./NewsListPanel-CC77d-wd.js";function r({className:e=""}){return t.jsx(s,{mode:"health-info",searchType:"HEALTH_INFO",title:"건강정보",className:e,asideSectionIds:{latest:"latest",search:"search-result"}})}export{r as default};
