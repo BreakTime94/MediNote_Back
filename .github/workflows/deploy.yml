@@ -24,7 +24,9 @@ jobs:
 
       - name: Build Spring Boot Project
         working-directory: ./medinote_back_kc
-        run: ./gradlew clean build -x test
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
 
       - name: Transfer and Deploy via SSH
         uses: appleboy/ssh-action@master
