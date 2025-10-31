@@ -10,14 +10,17 @@ WORKDIR /app
 COPY build.gradle settings.gradle gradlew /app/
 COPY gradle /app/gradle
 
+# Gradle 캐시 디렉터리 설정
+ENV GRADLE_USER_HOME=/cache
+
 # Gradle 의존성 미리 다운로드 (캐시화)
-RUN ./gradlew dependencies || true
+RUN ./gradlew dependencies --no-daemon || true
 
 # 소스코드 복사
 COPY src /app/src
 
 # Gradle 빌드 (테스트 생략)
-RUN ./gradlew clean build -x test
+RUN ./gradlew clean build -x test -- no-daemon
 
 
 # ======================================================
