@@ -6,6 +6,7 @@ server:
       charset: UTF-8
       enabled: true
       force: true
+  forward-headers-strategy: framework
 logging:
   level:
     org.springframework.security: DEBUG
