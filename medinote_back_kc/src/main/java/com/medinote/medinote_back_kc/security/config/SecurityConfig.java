@@ -51,21 +51,20 @@ public class SecurityConfig {
         .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             // 권한별 접근 가능한 controller 분리
         .authorizeHttpRequests(a -> a
+                //정적파일 접근용
+                .requestMatchers(
+                        "/", "/index.html", "/static/**", "/assets/**", "/favicon.ico", "/*.js", "/*.css",
+                        "/*.png", "/*.jpg", "/*.svg"
+                ).permitAll()
                 .requestMatchers("/member/auth/login", "/member/register", "/social/auth/register"
                 , "/member/check/email", "/member/check/nickname", "/member/email/verify", "/member/email/send",
-                        "member/find/email", "member/reset/password", "/terms/list", "/member/list/info").permitAll()
+                        "/member/find/email", "/member/reset/password", "/terms/list", "/member/list/info").permitAll()
                 .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                 .requestMatchers(HttpMethod.OPTIONS, "/**","/user").permitAll()
                 .requestMatchers("/boards/read/**").permitAll()
                 .requestMatchers("/boards/notice/list/**", "/boards/faq/list/**", "/boards/qna/list/**").permitAll()
                 .requestMatchers("/news/**").permitAll()
                 .requestMatchers("/api/admin/member/list").hasRole("ADMIN")
-                //정적파일 접근용
-                .requestMatchers(
-                        "/", "/index.html", "/static/**", "/assets/**", "/favicon.ico", "/*.js", "/*.css",
-                        "/*.png", "/*.jpg", "/*.svg"
-                ).permitAll()
-
                 .anyRequest().authenticated())
             //form 로그인 불가
         .formLogin(f -> f.disable())
