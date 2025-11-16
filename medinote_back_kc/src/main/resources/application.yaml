@@ -22,7 +22,12 @@ spring:
       - optional:classpath:secret/application-oauth.yml
       - optional:classpath:secret/google-email.yml
   application:
-    name: board
+    name: medinote
+
+  web:
+    resources:
+      static-locations: classpath:/static/
+      
   jpa:
     hibernate:
       ddl-auto: validate
