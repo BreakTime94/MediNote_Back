@@ -62,16 +62,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/admin/member/list").hasRole("ADMIN")
                 //정적파일 접근용
                 .requestMatchers(
-                        "/",
-                        "/index.html",
-                        "/static/**",
-                        "/assets/**",
-                        "/favicon.ico",
-                        "/*.js",
-                        "/*.css",
-                        "/*.png",
-                        "/*.jpg",
-                        "/*.svg"
+                        "/", "/index.html", "/static/**", "/assets/**", "/favicon.ico", "/*.js", "/*.css",
+                        "/*.png", "/*.jpg", "/*.svg"
                 ).permitAll()
 
                 .anyRequest().authenticated())

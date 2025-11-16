@@ -8,7 +8,7 @@ public class IndexController {
   // 점(.)이 없는 모든 경로 → index.html 로 포워드
   @GetMapping(value = {"/", "/{path:[^\\.]*}"})
   public String forward() {
-    return "forward:/index.html";
+    return "forward:/api/index.html";
   }
 }
 
