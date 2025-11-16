@@ -26,7 +26,7 @@ RUN ./gradlew clean build -x test --no-daemon
 # ======================================================
 # Stage 2 — Runtime 단계 (경량 실행용)
 # ======================================================
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk
 
 # 실행용 작업 디렉토리 설정
 WORKDIR /app
