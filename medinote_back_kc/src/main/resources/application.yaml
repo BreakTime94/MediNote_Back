@@ -27,7 +27,7 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/
-      
+
   jpa:
     hibernate:
       ddl-auto: validate
