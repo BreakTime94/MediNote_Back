@@ -42,6 +42,13 @@ public class GateWayController {
 
     //3. 내부 서비스 추출
     String originUri = request.getRequestURI();
+
+    // 정적 파일 요청 프록시 대상 제외
+    if (originUri.matches(".*\\.(html|css|js|png|jpg|jpeg|gif|ico|svg)$")) {
+      log.info("정적 리소스 요청은 프록시하지 않습니다: {}", originUri);
+      return ResponseEntity.notFound().build();
+    }
+
     String queryString = request.getQueryString();
     String path = originUri.replace("/api", "");
 
