@@ -44,6 +44,12 @@ public class GateWayController {
     String originUri = request.getRequestURI();
     String queryString = request.getQueryString();
     String path = originUri.replace("/api", "");
+
+    if (path.equals("/") || path.equals("") || originUri.equals("/api/")) {
+      log.info("루트 요청이라 프록시 안 함");
+      return ResponseEntity.ok("MediNote Gateway is alive!");
+    }
+
     log.info("Origin URI: " + originUri);
     log.info("Path: " + path);
     String body = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
