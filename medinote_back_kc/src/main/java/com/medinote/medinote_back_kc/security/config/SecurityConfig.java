@@ -60,6 +60,20 @@ public class SecurityConfig {
                 .requestMatchers("/boards/notice/list/**", "/boards/faq/list/**", "/boards/qna/list/**").permitAll()
                 .requestMatchers("/news/**").permitAll()
                 .requestMatchers("/api/admin/member/list").hasRole("ADMIN")
+                //정적파일 접근용
+                .requestMatchers(
+                        "/",
+                        "/index.html",
+                        "/static/**",
+                        "/assets/**",
+                        "/favicon.ico",
+                        "/*.js",
+                        "/*.css",
+                        "/*.png",
+                        "/*.jpg",
+                        "/*.svg"
+                ).permitAll()
+
                 .anyRequest().authenticated())
             //form 로그인 불가
         .formLogin(f -> f.disable())
